@@ -43,6 +43,12 @@ const [selectedTicket, setSelectedTicket] =
         null
     );
 
+const [refresh, setRefresh] =
+    useState(0);
+
+const [responseMsg, setResponseMsg] =
+    useState("");
+
     useEffect(() => {
 
     const getTickets = async () => {
@@ -100,7 +106,7 @@ const [selectedTicket, setSelectedTicket] =
 
     getTickets();
 
-}, []);
+}, [refresh]);
 
 const filteredTickets =
     status
@@ -109,6 +115,76 @@ const filteredTickets =
                 ticket.status == status
         )
         : tickets;
+
+
+    const cancelTicket = (
+    id: number
+) => {
+
+    const cancelData = async () => {
+
+        const token =
+            localStorage.getItem(
+                "access_token"
+            );
+
+        try {
+
+            await axios.patch(
+                `http://localhost:3000/tickets/${id}/cancel`,
+                {},
+                {
+                    headers: {
+                        Authorization:
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+            setResponseMsg(
+                "Ticket cancelled successfully"
+            );
+
+            setErr("");
+
+            setSelectedTicket(
+                null
+            );
+
+            setRefresh(
+                refresh + 1
+            );
+
+        }
+
+        catch (error) {
+
+            if (
+                axios.isAxiosError(error) &&
+                error.response?.data?.message
+            ) {
+
+                setErr(
+                    error.response.data.message
+                );
+
+            }
+
+            else {
+
+                setErr(
+                    "Could not cancel ticket"
+                );
+
+            }
+
+        }
+
+    }
+
+    cancelData();
+
+}
 
     return (
         <div className="max-w-6xl mx-auto py-8">
@@ -120,6 +196,17 @@ const filteredTickets =
             <p className="mb-6">
                 View your queue tickets
             </p>
+
+{
+    responseMsg &&
+    <div className="alert alert-success mb-4">
+
+        <span>
+            {responseMsg}
+        </span>
+
+    </div>
+}
 {
     err &&
     <div className="alert alert-error mb-4">
@@ -250,7 +337,24 @@ const filteredTickets =
     View Details
 </button>
 
-                    </div>
+
+{
+    ticket.status == "waiting" &&
+
+    <button
+        className="btn btn-error mt-2"
+        onClick={
+            () =>
+                cancelTicket(
+                    ticket.id
+                )
+        }
+    >
+        Cancel Ticket
+    </button>
+}
+
+                 </div>
 
                 </div>
 
