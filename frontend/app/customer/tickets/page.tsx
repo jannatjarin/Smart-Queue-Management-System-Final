@@ -35,6 +35,8 @@ export default function CustomerTicketsPage() {
 
 const [err, setErr] =
     useState("");
+const [status, setStatus] =
+    useState("");
 
     useEffect(() => {
 
@@ -95,6 +97,14 @@ const [err, setErr] =
 
 }, []);
 
+const filteredTickets =
+    status
+        ? tickets.filter(
+            (ticket: Ticket) =>
+                ticket.status == status
+        )
+        : tickets;
+
     return (
         <div className="max-w-6xl mx-auto py-8">
 
@@ -116,19 +126,63 @@ const [err, setErr] =
     </div>
 }
             {
-    tickets.length == 0 &&
+    filteredTickets.length == 0 &&
     !err &&
 
     <p>
         No tickets found
     </p>
 }
+<div className="card bg-base-100 shadow border mb-6">
+
+    <div className="card-body">
+
+        <label className="label">
+            Filter by Status
+        </label>
+
+        <select
+            className="select select-bordered max-w-sm"
+            value={status}
+            onChange={
+                (e) =>
+                    setStatus(
+                        e.target.value
+                    )
+            }
+        >
+
+            <option value="">
+                All Tickets
+            </option>
+
+            <option value="waiting">
+                Waiting
+            </option>
+
+            <option value="called">
+                Called
+            </option>
+
+            <option value="completed">
+                Completed
+            </option>
+
+            <option value="cancelled">
+                Cancelled
+            </option>
+
+        </select>
+
+    </div>
+
+</div>
 
 <div className="grid md:grid-cols-2 gap-5">
 
     {
         tickets &&
-        tickets.map(
+        filteredTickets.map(
             (ticket: Ticket) => (
 
                 <div
