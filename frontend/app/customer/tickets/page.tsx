@@ -38,6 +38,11 @@ const [err, setErr] =
 const [status, setStatus] =
     useState("");
 
+const [selectedTicket, setSelectedTicket] =
+    useState<Ticket | null>(
+        null
+    );
+
     useEffect(() => {
 
     const getTickets = async () => {
@@ -233,6 +238,18 @@ const filteredTickets =
                             }
                         </p>
 
+<button
+    className="btn btn-outline mt-3"
+    onClick={
+        () =>
+        setSelectedTicket(
+            ticket
+            )
+    }
+>
+    View Details
+</button>
+
                     </div>
 
                 </div>
@@ -242,6 +259,101 @@ const filteredTickets =
     }
 
 </div>
+{
+    selectedTicket &&
+
+    <div className="card bg-base-100 shadow border mt-8">
+
+        <div className="card-body">
+
+            <div className="flex justify-between items-center">
+
+                <h2 className="card-title">
+                    Ticket Details
+                </h2>
+
+                <button
+                    className="btn btn-sm"
+                    onClick={
+                        () =>
+                            setSelectedTicket(
+                                null
+                            )
+                    }
+                >
+                    Close
+                </button>
+
+            </div>
+
+            <p>
+                Ticket Number:{" "}
+                {selectedTicket.ticketNumber}
+            </p>
+
+            <p>
+                Service:{" "}
+                {selectedTicket.service?.name}
+            </p>
+
+            <p>
+                Queue:{" "}
+                {selectedTicket.queue?.name}
+            </p>
+
+            <p>
+                Priority:{" "}
+                {selectedTicket.priority}
+            </p>
+
+            <p>
+                Status:{" "}
+                {selectedTicket.status}
+            </p>
+
+            <p>
+                Counter:{" "}
+                {
+                    selectedTicket.counter?.name ||
+                    "Not Assigned"
+                }
+            </p>
+
+            <p>
+                Issued At:{" "}
+                {
+                    new Date(
+                        selectedTicket.issuedAt
+                    ).toLocaleString()
+                }
+            </p>
+
+            <p>
+                Called At:{" "}
+                {
+                    selectedTicket.calledAt
+                        ? new Date(
+                            selectedTicket.calledAt
+                        ).toLocaleString()
+                        : "-"
+                }
+            </p>
+
+            <p>
+                Completed At:{" "}
+                {
+                    selectedTicket.completedAt
+                        ? new Date(
+                            selectedTicket.completedAt
+                        ).toLocaleString()
+                        : "-"
+                }
+            </p>
+
+        </div>
+
+    </div>
+}
 
         </div>
     )
