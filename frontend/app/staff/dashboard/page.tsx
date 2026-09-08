@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import axios from "axios";
+import Link from "next/link";
 
 interface Staff {
     id: number,
@@ -24,6 +25,11 @@ interface Counter {
     services: Service[]
 }
 
+interface Ticket {
+    id: number,
+    status: string
+}
+
 export default function StaffDashboard() {
 
     const [staff, setStaff] =
@@ -36,6 +42,9 @@ export default function StaffDashboard() {
 
     const [counters, setCounters] =
     useState<Counter[]>([]);
+
+    const [tickets, setTickets] =
+    useState<Ticket[]>([]);
 
     useEffect(() => {
 
@@ -70,12 +79,26 @@ export default function StaffDashboard() {
                     }
                 );
 
+            const ticketsResponse =
+                await axios.get<Ticket[]>(
+                    "http://localhost:3000/tickets",
+                    {
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`                            }
+                    }
+                );
+
             setStaff(
                 response.data
             );
 
             setCounters(
                 countersResponse.data
+            );
+
+            setTickets(
+                ticketsResponse.data
             );
 
             setErr("");
@@ -124,6 +147,18 @@ const assignedCounter =
             }
         )
         : undefined;
+
+const waitingTickets =
+    tickets.filter(
+        (ticket: Ticket) =>
+            ticket.status == "waiting"
+    ).length;
+
+const calledTickets =
+    tickets.filter(
+        (ticket: Ticket) =>
+            ticket.status == "called"
+    ).length;
 
     return (
         <div className="max-w-6xl mx-auto py-8">
@@ -186,6 +221,109 @@ const assignedCounter =
                     )
             }
 
+            <div className="grid md:grid-cols-2 gap-5 mt-8">
+
+                <div className="card bg-base-100 shadow border">
+
+                    <div className="card-body">
+
+                        <h2 className="card-title">
+                            Waiting Tickets
+                        </h2>
+
+                        <p className="text-3xl font-bold">
+                            {waitingTickets}
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div className="card bg-base-100 shadow border">
+
+                    <div className="card-body">
+
+                        <h2 className="card-title">
+                            Called Tickets
+                        </h2>
+
+                        <p className="text-3xl font-bold">
+                            {calledTickets}
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <h2 className="text-2xl font-bold mt-8 mb-4">
+                Staff Actions
+            </h2>
+
+            <div className="grid md:grid-cols-3 gap-4">
+
+                <Link
+                    href="/staff/queue"
+                    className="card bg-base-100 shadow border"
+                >
+
+                    <div className="card-body">
+
+                        <h2 className="font-bold">
+                            Queue
+                        </h2>
+
+                        <p>
+                            Manage queue tickets
+                        </p>
+
+                    </div>
+
+                </Link>
+
+                <Link
+                    href="/staff/counter"
+                    className="card bg-base-100 shadow border"
+                >
+
+                    <div className="card-body">
+
+                        <h2 className="font-bold">
+                            Counter
+                        </h2>
+
+                        <p>
+                            Manage your counter
+                        </p>
+
+                    </div>
+
+                </Link>
+
+                <Link
+                    href="/staff/profile"
+                    className="card bg-base-100 shadow border"
+                >
+
+                    <div className="card-body">
+
+                        <h2 className="font-bold">
+                            Profile
+                        </h2>
+
+                        <p>
+                            View your profile
+                        </p>
+
+                    </div>
+
+                </Link>
+
+            </div>
+
         </div>
+
+        
     )
 }
