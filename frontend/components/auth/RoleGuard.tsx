@@ -21,118 +21,108 @@ export default function RoleGuard(
 
     const router = useRouter();
 
-    const [userRole, setUserRole] =
-        useState<string | null>(null);
+    const [allowed, setAllowed] =
+        useState(false);
 
     useEffect(() => {
 
-        const token =
-            localStorage.getItem(
-                "access_token"
-            );
+        const checkRole = async () => {
 
-        if (!token) {
-
-            router.push(
-                "/login"
-            );
-
-            return;
-
-        }
-
-        try {
-
-            const user =
-                jwtDecode<TokenData>(
-                    token
+            const token =
+                localStorage.getItem(
+                    "access_token"
                 );
 
-            setUserRole(
-                user.role
-            );
+            if (!token) {
 
-        }
+                router.push(
+                    "/login"
+                );
 
-        catch {
+                return;
+            }
 
-            localStorage.removeItem(
-                "access_token"
-            );
+            try {
 
-            localStorage.removeItem(
-                "refresh_token"
-            );
+                const user =
+                    jwtDecode<TokenData>(
+                        token
+                    );
 
-            router.push(
-                "/login"
-            );
+                if (
+                    user.role ==
+                    allowedRole
+                ) {
 
-        }
+                    await Promise.resolve();
 
-    }, [router]);
+                    setAllowed(true);
 
-    useEffect(() => {
+                }
 
-        if (!userRole) {
-            return;
-        }
+                else if (
+                    user.role == "admin"
+                ) {
 
-        if (
-            userRole == allowedRole
-        ) {
+                    router.push(
+                        "/admin/dashboard"
+                    );
 
-            return;
+                }
 
-        }
+                else if (
+                    user.role == "staff"
+                ) {
 
-        if (
-            userRole == "admin"
-        ) {
+                    router.push(
+                        "/staff/dashboard"
+                    );
 
-            router.push(
-                "/admin/dashboard"
-            );
+                }
 
-        }
+                else if (
+                    user.role == "customer"
+                ) {
 
-        else if (
-            userRole == "staff"
-        ) {
+                    router.push(
+                        "/customer/dashboard"
+                    );
 
-            router.push(
-                "/staff/dashboard"
-            );
+                }
 
-        }
+                else {
 
-        else if (
-            userRole == "customer"
-        ) {
+                    router.push(
+                        "/login"
+                    );
 
-            router.push(
-                "/customer/dashboard"
-            );
+                }
 
-        }
+            }
 
-        else {
+            catch {
 
-            router.push(
-                "/login"
-            );
+                localStorage.removeItem(
+                    "access_token"
+                );
 
-        }
+                localStorage.removeItem(
+                    "refresh_token"
+                );
 
-    }, [
-        userRole,
-        allowedRole,
-        router
-    ]);
+                router.push(
+                    "/login"
+                );
 
-    if (
-        userRole != allowedRole
-    ) {
+            }
+
+        };
+
+        checkRole();
+
+    }, [allowedRole, router]);
+
+    if (!allowed) {
 
         return (
             <div className="flex items-center justify-center p-8">
