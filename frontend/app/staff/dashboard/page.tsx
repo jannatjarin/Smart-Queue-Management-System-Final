@@ -11,6 +11,19 @@ interface Staff {
     role: string
 }
 
+interface Service {
+    id: number,
+    name: string
+}
+
+interface Counter {
+    id: number,
+    name: string,
+    status: string,
+    staff: Staff | null,
+    services: Service[]
+}
+
 export default function StaffDashboard() {
 
     const [staff, setStaff] =
@@ -20,6 +33,9 @@ export default function StaffDashboard() {
 
     const [err, setErr] =
     useState("")
+
+    const [counters, setCounters] =
+    useState<Counter[]>([]);
 
     useEffect(() => {
 
@@ -43,8 +59,23 @@ export default function StaffDashboard() {
                     }
                 );
 
+            const countersResponse =
+                await axios.get<Counter[]>(
+                    "http://localhost:3000/counters",
+                    {
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`
+                        }
+                    }
+                );
+
             setStaff(
                 response.data
+            );
+
+            setCounters(
+                countersResponse.data
             );
 
             setErr("");
@@ -109,6 +140,14 @@ export default function StaffDashboard() {
                     Welcome, {staff.fullName}
                 </p>
             }
+
+            <h2 className="text-2xl font-bold mt-8 mb-4">
+                Counters
+            </h2>
+
+            <p>
+                Available counters: {counters.length}
+            </p>
 
         </div>
     )
