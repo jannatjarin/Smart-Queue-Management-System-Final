@@ -26,67 +26,89 @@ export default function RoleGuard(
 
     useEffect(() => {
 
-        const token =
-            localStorage.getItem(
-                "access_token"
-            );
+        const checkRole = async () => {
 
-        if (!token) {
-
-            router.push(
-                "/login"
-            );
-
-            return;
-
-        }
-
-        try {
-
-            const user =
-                jwtDecode<TokenData>(
-                    token
+            const token =
+                localStorage.getItem(
+                    "access_token"
                 );
 
-            if (
-                user.role == allowedRole
-            ) {
-
-                setAllowed(true);
-
-            }
-
-            else if (
-                user.role == "admin"
-            ) {
+            if (!token) {
 
                 router.push(
-                    "/admin/dashboard"
+                    "/login"
                 );
+
+                return;
+            }
+
+            try {
+
+                const user =
+                    jwtDecode<TokenData>(
+                        token
+                    );
+
+                if (
+                    user.role ==
+                    allowedRole
+                ) {
+
+                    await Promise.resolve();
+
+                    setAllowed(true);
+
+                }
+
+                else if (
+                    user.role == "admin"
+                ) {
+
+                    router.push(
+                        "/admin/dashboard"
+                    );
+
+                }
+
+                else if (
+                    user.role == "staff"
+                ) {
+
+                    router.push(
+                        "/staff/dashboard"
+                    );
+
+                }
+
+                else if (
+                    user.role == "customer"
+                ) {
+
+                    router.push(
+                        "/customer/dashboard"
+                    );
+
+                }
+
+                else {
+
+                    router.push(
+                        "/login"
+                    );
+
+                }
 
             }
 
-            else if (
-                user.role == "staff"
-            ) {
+            catch {
 
-                router.push(
-                    "/staff/dashboard"
+                localStorage.removeItem(
+                    "access_token"
                 );
 
-            }
-
-            else if (
-                user.role == "customer"
-            ) {
-
-                router.push(
-                    "/customer/dashboard"
+                localStorage.removeItem(
+                    "refresh_token"
                 );
-
-            }
-
-            else {
 
                 router.push(
                     "/login"
@@ -94,23 +116,9 @@ export default function RoleGuard(
 
             }
 
-        }
+        };
 
-        catch {
-
-            localStorage.removeItem(
-                "access_token"
-            );
-
-            localStorage.removeItem(
-                "refresh_token"
-            );
-
-            router.push(
-                "/login"
-            );
-
-        }
+        checkRole();
 
     }, [allowedRole, router]);
 
