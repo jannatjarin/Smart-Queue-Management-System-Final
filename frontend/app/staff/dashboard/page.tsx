@@ -111,6 +111,20 @@ export default function StaffDashboard() {
 
 }, []);
 
+const assignedCounter =
+    staff
+        ? counters.find(
+            (counter: Counter) => {
+
+                return (
+                    counter.staff?.id ==
+                    staff.id
+                );
+
+            }
+        )
+        : undefined;
+
     return (
         <div className="max-w-6xl mx-auto py-8">
 
@@ -142,12 +156,35 @@ export default function StaffDashboard() {
             }
 
             <h2 className="text-2xl font-bold mt-8 mb-4">
-                Counters
+                Assigned Counter
             </h2>
 
-            <p>
-                Available counters: {counters.length}
-            </p>
+            {
+                assignedCounter
+                    ? (
+                        <div className="card bg-base-100 shadow border">
+
+                            <div className="card-body">
+
+                                <h2 className="card-title">
+                                    {assignedCounter.name}
+                                </h2>
+
+                                <p>
+                                    Status:{" "}
+                                    {assignedCounter.status}
+                                </p>
+
+                            </div>
+
+                        </div>
+                    )
+                    : (
+                        <p>
+                            No counter assigned
+                        </p>
+                    )
+            }
 
         </div>
     )
