@@ -21,8 +21,8 @@ export default function RoleGuard(
 
     const router = useRouter();
 
-    const [allowed, setAllowed] =
-        useState(false);
+    const [userRole, setUserRole] =
+        useState<string | null>(null);
 
     useEffect(() => {
 
@@ -48,51 +48,9 @@ export default function RoleGuard(
                     token
                 );
 
-            if (
-                user.role == allowedRole
-            ) {
-
-                setAllowed(true);
-
-            }
-
-            else if (
-                user.role == "admin"
-            ) {
-
-                router.push(
-                    "/admin/dashboard"
-                );
-
-            }
-
-            else if (
-                user.role == "staff"
-            ) {
-
-                router.push(
-                    "/staff/dashboard"
-                );
-
-            }
-
-            else if (
-                user.role == "customer"
-            ) {
-
-                router.push(
-                    "/customer/dashboard"
-                );
-
-            }
-
-            else {
-
-                router.push(
-                    "/login"
-                );
-
-            }
+            setUserRole(
+                user.role
+            );
 
         }
 
@@ -112,9 +70,69 @@ export default function RoleGuard(
 
         }
 
-    }, [allowedRole, router]);
+    }, [router]);
 
-    if (!allowed) {
+    useEffect(() => {
+
+        if (!userRole) {
+            return;
+        }
+
+        if (
+            userRole == allowedRole
+        ) {
+
+            return;
+
+        }
+
+        if (
+            userRole == "admin"
+        ) {
+
+            router.push(
+                "/admin/dashboard"
+            );
+
+        }
+
+        else if (
+            userRole == "staff"
+        ) {
+
+            router.push(
+                "/staff/dashboard"
+            );
+
+        }
+
+        else if (
+            userRole == "customer"
+        ) {
+
+            router.push(
+                "/customer/dashboard"
+            );
+
+        }
+
+        else {
+
+            router.push(
+                "/login"
+            );
+
+        }
+
+    }, [
+        userRole,
+        allowedRole,
+        router
+    ]);
+
+    if (
+        userRole != allowedRole
+    ) {
 
         return (
             <div className="flex items-center justify-center p-8">
