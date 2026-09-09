@@ -38,6 +38,15 @@ export default function AdminUsersPage() {
     const [sort, setSort] =
         useState("DESC");
 
+    const [page, setPage] =
+        useState(1);
+
+    const [total, setTotal] =
+        useState(0);
+
+    const limit = 10;
+
+
     useEffect(() => {
 
         const getUsers = async () => {
@@ -50,7 +59,7 @@ export default function AdminUsersPage() {
             try {
 
                 let url =
-                    `http://localhost:3000/users?page=1&limit=10&sort=${sort}`;
+                    `http://localhost:3000/users?page=${page}&limit=${limit}&sort=${sort}`;
 
                 if (search) {
 
@@ -82,7 +91,9 @@ export default function AdminUsersPage() {
                 setUsers(
                     response.data.data
                 );
-
+                setTotal(
+                    response.data.total
+                );
                 setErr("");
 
             }
@@ -114,7 +125,12 @@ export default function AdminUsersPage() {
 
         getUsers();
 
-    }, [search, role, sort]);
+    }, [search, role, sort, page]);
+
+    const totalPages =
+        Math.ceil(
+            total / limit
+        );
 
     return (
         <div className="max-w-7xl mx-auto py-8">
@@ -277,6 +293,43 @@ export default function AdminUsersPage() {
                     </tbody>
 
                 </table>
+
+                <div className="flex justify-between items-center mt-6">
+
+                    <button
+                        className="btn btn-outline"
+                        disabled={page <= 1}
+                        onClick={
+                            () =>
+                                setPage(
+                                    page - 1
+                                )
+                        }
+                    >
+                        Previous
+                    </button>
+
+                    <span>
+                        Page {page} of {totalPages || 1}
+                    </span>
+
+                    <button
+                        className="btn btn-outline"
+                        disabled={
+                            page >= totalPages
+                        }
+                        onClick={
+                            () =>
+                                setPage(
+                                    page + 1
+                                )
+                        }
+                    >
+                        Next
+                    </button>
+
+                </div>
+
 
             </div>
 
