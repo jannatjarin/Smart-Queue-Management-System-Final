@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -265,74 +263,77 @@ export default function AdminDashboard() {
                         <p className="text-3xl font-bold">
                             {stats.staff}
                         </p>
-                        <div className="card bg-base-100 shadow border">
-                            <div className="card-body">
 
-                                <h2 className="card-title">
-                                    Services
-                                </h2>
+                    </div>
+                </div>
 
-                                <p className="text-3xl font-bold">
-                                    {stats.services}
-                                </p>
+                <div className="card bg-base-100 shadow border">
+                    <div className="card-body">
 
-                            </div>
-                        </div>
+                        <h2 className="card-title">
+                            Services
+                        </h2>
 
-                        <div className="card bg-base-100 shadow border">
-                            <div className="card-body">
+                        <p className="text-3xl font-bold">
+                            {stats.services}
+                        </p>
 
-                                <h2 className="card-title">
-                                    Queues
-                                </h2>
+                    </div>
+                </div>
 
-                                <p className="text-3xl font-bold">
-                                    {stats.queues}
-                                </p>
+                <div className="card bg-base-100 shadow border">
+                    <div className="card-body">
 
-                            </div>
-                        </div>
+                        <h2 className="card-title">
+                            Queues
+                        </h2>
 
-                        <div className="card bg-base-100 shadow border">
-                            <div className="card-body">
+                        <p className="text-3xl font-bold">
+                            {stats.queues}
+                        </p>
 
-                                <h2 className="card-title">
-                                    Counters
-                                </h2>
+                    </div>
+                </div>
 
-                                <p className="text-3xl font-bold">
-                                    {stats.counters}
-                                </p>
+                <div className="card bg-base-100 shadow border">
+                    <div className="card-body">
 
-                            </div>
-                        </div>
-                        <div className="card bg-base-100 shadow border">
-                            <div className="card-body">
+                        <h2 className="card-title">
+                            Counters
+                        </h2>
 
-                                <h2 className="card-title">
-                                    Waiting Tickets
-                                </h2>
+                        <p className="text-3xl font-bold">
+                            {stats.counters}
+                        </p>
 
-                                <p className="text-3xl font-bold">
-                                    {stats.waiting}
-                                </p>
+                    </div>
+                </div>
 
-                            </div>
-                        </div>
+                <div className="card bg-base-100 shadow border">
+                    <div className="card-body">
 
-                        <div className="card bg-base-100 shadow border">
-                            <div className="card-body">
+                        <h2 className="card-title">
+                            Waiting Tickets
+                        </h2>
 
-                                <h2 className="card-title">
-                                    Completed Tickets
-                                </h2>
+                        <p className="text-3xl font-bold">
+                            {stats.waiting}
+                        </p>
 
-                                <p className="text-3xl font-bold">
-                                    {stats.completed}
-                                </p>
+                    </div>
+                </div>
 
-                            </div>
-                        </div>
+                <div className="card bg-base-100 shadow border">
+                    <div className="card-body">
+
+                        <h2 className="card-title">
+                            Completed Tickets
+                        </h2>
+
+                        <p className="text-3xl font-bold">
+                            {stats.completed}
+                        </p>
+
                     </div>
                 </div>
 
