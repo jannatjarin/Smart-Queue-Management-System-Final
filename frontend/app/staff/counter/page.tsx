@@ -32,6 +32,12 @@ export default function StaffCounterPage() {
     const [counters, setCounters] =
         useState<Counter[]>([]);
 
+    const [refresh, setRefresh] =
+        useState(0);
+
+    const [responseMsg, setResponseMsg] =
+        useState("");
+
     const [err, setErr] =
         useState("");
 
@@ -107,7 +113,7 @@ export default function StaffCounterPage() {
 
         getData();
 
-    }, []);
+    }, [refresh]);
 
     const assignedCounter =
         staff
@@ -117,6 +123,75 @@ export default function StaffCounterPage() {
                     staff.id
             )
             : undefined;
+
+    const updateCounterStatus = (
+        id: number,
+        status: string
+    ) => {
+
+        const updateData = async () => {
+
+            const token =
+                localStorage.getItem(
+                    "access_token"
+                );
+
+            try {
+
+                await axios.patch(
+                    `http://localhost:3000/counters/${id}/status`,
+                    {
+                        status:
+                            status
+                    },
+                    {
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`
+                        }
+                    }
+                );
+
+                setResponseMsg(
+                    "Counter status updated successfully"
+                );
+
+                setErr("");
+
+                setRefresh(
+                    refresh + 1
+                );
+
+            }
+
+            catch (error) {
+
+                if (
+                    axios.isAxiosError(error) &&
+                    error.response?.data?.message
+                ) {
+
+                    setErr(
+                        error.response.data.message
+                    );
+
+                }
+
+                else {
+
+                    setErr(
+                        "Could not update counter status"
+                    );
+
+                }
+
+            }
+
+        }
+
+        updateData();
+
+    }
 
     return (
         <div className="max-w-4xl mx-auto py-8">
@@ -128,6 +203,18 @@ export default function StaffCounterPage() {
             <p className="mb-6">
                 View your assigned counter
             </p>
+
+            {
+                responseMsg &&
+
+                <div className="alert alert-success mb-4">
+
+                    <span>
+                        {responseMsg}
+                    </span>
+
+                </div>
+            }
 
             {
                 err &&
@@ -163,6 +250,36 @@ export default function StaffCounterPage() {
                                     Status:{" "}
                                     {assignedCounter.status}
                                 </p>
+
+                                <label className="label mt-4">
+                                    Change Status
+                                </label>
+
+                                <select
+                                    className="select select-bordered max-w-sm"
+                                    value={assignedCounter.status}
+                                    onChange={
+                                        (e) =>
+                                            updateCounterStatus(
+                                                assignedCounter.id,
+                                                e.target.value
+                                            )
+                                    }
+                                >
+
+                                    <option value="open">
+                                        Open
+                                    </option>
+
+                                    <option value="closed">
+                                        Closed
+                                    </option>
+
+                                    <option value="on_break">
+                                        On Break
+                                    </option>
+
+                                </select>
 
                                 <h3 className="font-bold mt-4">
                                     Assigned Services
