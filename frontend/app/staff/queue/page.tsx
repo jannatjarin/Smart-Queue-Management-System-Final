@@ -279,6 +279,71 @@ export default function StaffQueuePage() {
 
         }
 
+        const completeTicket = (
+            id: number
+        ) => {
+
+            const completeData = async () => {
+
+                const token =
+                    localStorage.getItem(
+                        "access_token"
+                    );
+
+                try {
+
+                    await axios.patch(
+                        `http://localhost:3000/tickets/${id}/complete`,
+                        {},
+                        {
+                            headers: {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
+                        }
+                    );
+
+                    setResponseMsg(
+                        "Ticket completed successfully"
+                    );
+
+                    setErr("");
+
+                    setRefresh(
+                        refresh + 1
+                    );
+
+                }
+
+                catch (error) {
+
+                    if (
+                        axios.isAxiosError(error) &&
+                        error.response?.data?.message
+                    ) {
+
+                        setErr(
+                            error.response.data.message
+                        );
+
+                    }
+
+                    else {
+
+                        setErr(
+                            "Could not complete ticket"
+                        );
+
+                    }
+
+                }
+
+            }
+
+            completeData();
+
+        }
+
     return (
         <div className="max-w-7xl mx-auto py-8">
 
@@ -420,6 +485,24 @@ export default function StaffQueuePage() {
                             >
                                 Call Next
                             </button>
+
+                            {
+                                calledTicket &&
+
+                                <button
+                                    className="btn btn-success mt-4 ml-2"
+                                    onClick={
+                                        () =>
+                                            completeTicket(
+                                                calledTicket.id
+                                            )
+                                    }
+                                >
+                                    Complete {
+                                        calledTicket.ticketNumber
+                                    }
+                                </button>
+                            }
 
                         </div>
 
