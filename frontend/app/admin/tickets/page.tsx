@@ -259,6 +259,72 @@ const cancelTicket = (
 
 }
 
+
+const completeTicket = (
+    id: number
+) => {
+
+    const completeData = async () => {
+
+        const token =
+            localStorage.getItem(
+                "access_token"
+            );
+
+        try {
+
+            await axios.patch(
+                `http://localhost:3000/tickets/${id}/complete`,
+                {},
+                {
+                    headers: {
+                        Authorization:
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+            setResponseMsg(
+                "Ticket completed successfully"
+            );
+
+            setErr("");
+
+            setRefresh(
+                refresh + 1
+            );
+
+        }
+
+        catch (error) {
+
+            if (
+                axios.isAxiosError(error) &&
+                error.response?.data?.message
+            ) {
+
+                setErr(
+                    error.response.data.message
+                );
+
+            }
+
+            else {
+
+                setErr(
+                    "Could not complete ticket"
+                );
+
+            }
+
+        }
+
+    }
+
+    completeData();
+
+}
+
     return (
         <div className="max-w-7xl mx-auto py-8">
 
@@ -485,22 +551,43 @@ const cancelTicket = (
 
 
  <td>
-{
-        ticket.status != "completed" &&
-        ticket.status != "cancelled" &&
 
-        <button
-            className="btn btn-sm btn-error"
-            onClick={
-                () =>
-                    cancelTicket(
-                        ticket.id
-                    )
-            }
-        >
-            Cancel
-        </button>
-    }
+    <div className="flex gap-2 flex-wrap">
+
+        {
+            ticket.status == "called" &&
+
+            <button
+                className="btn btn-sm btn-success"
+                onClick={
+                    () =>
+                        completeTicket(
+                            ticket.id
+                        )
+                }
+            >
+                Complete
+            </button>
+        }
+
+        {
+            ticket.status != "completed" &&
+            ticket.status != "cancelled" &&
+
+            <button
+                className="btn btn-sm btn-error"
+                onClick={
+                    () =>
+                        cancelTicket(
+                            ticket.id
+                        )
+                }
+            >
+                Cancel
+            </button>
+        }
+
+    </div>
 
 </td>
 
