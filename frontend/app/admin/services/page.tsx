@@ -232,275 +232,355 @@ export default function AdminServicesPage() {
 
                 setEditId(null);
 
-    setFormData(
-        {
-            name: "",
-            description: "",
-            estimatedTime: "",
-            department: ""
-        }
-    );
+                setFormData(
+                    {
+                        name: "",
+                        description: "",
+                        estimatedTime: "",
+                        department: ""
+                    }
+                );
 
-    setRefresh(
-        refresh + 1
-    );
+                setRefresh(
+                    refresh + 1
+                );
 
-}
+            }
 
             catch (error) {
 
-    if (
-        axios.isAxiosError(error) &&
-        error.response?.data?.message
-    ) {
+                if (
+                    axios.isAxiosError(error) &&
+                    error.response?.data?.message
+                ) {
 
-        if (
-            Array.isArray(
-                error.response.data.message
-            )
-        ) {
+                    if (
+                        Array.isArray(
+                            error.response.data.message
+                        )
+                    ) {
 
-            setErr(
-                error.response.data.message.join(
-                    ", "
-                )
-            );
+                        setErr(
+                            error.response.data.message.join(
+                                ", "
+                            )
+                        );
 
-        }
-
-        else {
-
-            setErr(
-                error.response.data.message
-            );
-
-        }
-
-    }
-
-    else {
-
-        setErr(
-            "Could not create service"
-        );
-
-    }
-
-}
-
-        }
-
-createService();
-
-    }
-
-return (
-    <div className="max-w-7xl mx-auto py-8">
-
-        <h1 className="text-3xl font-bold mb-2">
-            Service Management
-        </h1>
-
-        <p className="mb-6">
-            Create and manage services
-        </p>
-
-        {
-            responseMsg &&
-            <div className="alert alert-success mb-4">
-                {responseMsg}
-            </div>
-        }
-
-        {
-            err &&
-            <div className="alert alert-error mb-4">
-                {err}
-            </div>
-        }
-
-        <div className="card bg-base-100 shadow border mb-8">
-
-            <div className="card-body">
-
-                <h2 className="card-title">
-
-                    {
-                        editId == null
-                            ? "Create Service"
-                            : "Edit Service"
                     }
 
-                </h2>
+                    else {
 
-                <form onSubmit={onSubmitHandle}>
+                        setErr(
+                            error.response.data.message
+                        );
 
-                    <div className="grid md:grid-cols-2 gap-4">
+                    }
 
-                        <div>
+                }
 
-                            <label className="label">
-                                Name
-                            </label>
+                else {
 
-                            <input
-                                type="text"
-                                name="name"
-                                className="input input-bordered w-full"
-                                value={formData.name}
-                                onChange={onChangeHandle}
-                                required
-                            />
+                    setErr(
+                        "Could not create service"
+                    );
 
-                        </div>
+                }
 
-                        <div>
+            }
 
-                            <label className="label">
-                                Department
-                            </label>
+        }
 
-                            <input
-                                type="text"
-                                name="department"
-                                className="input input-bordered w-full"
-                                value={formData.department}
-                                onChange={onChangeHandle}
-                                required
-                            />
+        createService();
 
-                        </div>
+    }
+    const deactivateService = (
+        id: number
+    ) => {
 
-                        <div>
+        const updateService = async () => {
 
-                            <label className="label">
-                                Estimated Time
-                            </label>
+            const token =
+                localStorage.getItem(
+                    "access_token"
+                );
 
-                            <input
-                                type="number"
-                                name="estimatedTime"
-                                className="input input-bordered w-full"
-                                value={formData.estimatedTime}
-                                onChange={onChangeHandle}
-                                min="1"
-                                required
-                            />
+            try {
 
-                        </div>
+                await axios.patch(
+                    `http://localhost:3000/services/${id}/deactivate`,
+                    {},
+                    {
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`
+                        }
+                    }
+                );
 
-                        <div>
+                setResponseMsg(
+                    "Service deactivated successfully"
+                );
 
-                            <label className="label">
-                                Description
-                            </label>
+                setErr("");
 
-                            <textarea
-                                name="description"
-                                className="textarea textarea-bordered w-full"
-                                value={formData.description}
-                                onChange={onChangeHandle}
-                            />
+                setRefresh(
+                    refresh + 1
+                );
 
-                        </div>
+            }
 
-                    </div>
+            catch (error) {
 
-                    <input
-                        type="submit"
-                        value={
+                if (
+                    axios.isAxiosError(error) &&
+                    error.response?.data?.message
+                ) {
+
+                    setErr(
+                        error.response.data.message
+                    );
+
+                }
+
+                else {
+
+                    setErr(
+                        "Could not deactivate service"
+                    );
+
+                }
+
+            }
+
+        }
+
+        updateService();
+
+    }
+
+    return (
+        <div className="max-w-7xl mx-auto py-8">
+
+            <h1 className="text-3xl font-bold mb-2">
+                Service Management
+            </h1>
+
+            <p className="mb-6">
+                Create and manage services
+            </p>
+
+            {
+                responseMsg &&
+                <div className="alert alert-success mb-4">
+                    {responseMsg}
+                </div>
+            }
+
+            {
+                err &&
+                <div className="alert alert-error mb-4">
+                    {err}
+                </div>
+            }
+
+            <div className="card bg-base-100 shadow border mb-8">
+
+                <div className="card-body">
+
+                    <h2 className="card-title">
+
+                        {
                             editId == null
                                 ? "Create Service"
-                                : "Update Service"
+                                : "Edit Service"
                         }
-                        className="btn btn-primary mt-6"
-                    />
 
-                </form>
+                    </h2>
+
+                    <form onSubmit={onSubmitHandle}>
+
+                        <div className="grid md:grid-cols-2 gap-4">
+
+                            <div>
+
+                                <label className="label">
+                                    Name
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="name"
+                                    className="input input-bordered w-full"
+                                    value={formData.name}
+                                    onChange={onChangeHandle}
+                                    required
+                                />
+
+                            </div>
+
+                            <div>
+
+                                <label className="label">
+                                    Department
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="department"
+                                    className="input input-bordered w-full"
+                                    value={formData.department}
+                                    onChange={onChangeHandle}
+                                    required
+                                />
+
+                            </div>
+
+                            <div>
+
+                                <label className="label">
+                                    Estimated Time
+                                </label>
+
+                                <input
+                                    type="number"
+                                    name="estimatedTime"
+                                    className="input input-bordered w-full"
+                                    value={formData.estimatedTime}
+                                    onChange={onChangeHandle}
+                                    min="1"
+                                    required
+                                />
+
+                            </div>
+
+                            <div>
+
+                                <label className="label">
+                                    Description
+                                </label>
+
+                                <textarea
+                                    name="description"
+                                    className="textarea textarea-bordered w-full"
+                                    value={formData.description}
+                                    onChange={onChangeHandle}
+                                />
+
+                            </div>
+
+                        </div>
+
+                        <input
+                            type="submit"
+                            value={
+                                editId == null
+                                    ? "Create Service"
+                                    : "Update Service"
+                            }
+                            className="btn btn-primary mt-6"
+                        />
+
+                    </form>
+
+                </div>
+
+            </div>
+
+            <div className="overflow-x-auto">
+
+                <table className="table table-zebra">
+
+                    <thead>
+
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Department</th>
+                            <th>Estimated Time</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {
+                            services &&
+                            services.map(
+                                (service: Service) => (
+
+                                    <tr key={service.id}>
+
+                                        <td>
+                                            {service.name}
+                                        </td>
+
+                                        <td>
+                                            {service.description}
+                                        </td>
+
+                                        <td>
+                                            {service.department}
+                                        </td>
+
+                                        <td>
+                                            {service.estimatedTime} minutes
+                                        </td>
+
+                                        <td>
+                                            {
+                                                service.isActive
+                                                    ? "Active"
+                                                    : "Inactive"
+                                            }
+                                        </td>
+
+                                        <td>
+
+                                            <button
+                                                className="btn btn-sm btn-outline"
+                                                onClick={
+                                                    () =>
+                                                        editService(
+                                                            service
+                                                        )
+                                                }
+                                            >
+                                                Edit
+                                            </button>
+
+                                            {
+                                                service.isActive &&
+
+                                                <button
+                                                    className="btn btn-sm btn-warning ml-2"
+                                                    onClick={
+                                                        () =>
+                                                            deactivateService(
+                                                                service.id
+                                                            )
+                                                    }
+                                                >
+                                                    Deactivate
+                                                </button>
+                                            }
+
+                                        </td>
+
+
+                                    </tr>
+
+                                )
+                            )
+                        }
+
+                    </tbody>
+
+                </table>
 
             </div>
 
         </div>
-
-        <div className="overflow-x-auto">
-
-            <table className="table table-zebra">
-
-                <thead>
-
-                    <tr>
-                        <th>Name</th>
-                        <th>Description</th>
-                        <th>Department</th>
-                        <th>Estimated Time</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    {
-                        services &&
-                        services.map(
-                            (service: Service) => (
-
-                                <tr key={service.id}>
-
-                                    <td>
-                                        {service.name}
-                                    </td>
-
-                                    <td>
-                                        {service.description}
-                                    </td>
-
-                                    <td>
-                                        {service.department}
-                                    </td>
-
-                                    <td>
-                                        {service.estimatedTime} minutes
-                                    </td>
-
-                                    <td>
-                                        {
-                                            service.isActive
-                                                ? "Active"
-                                                : "Inactive"
-                                        }
-                                    </td>
-
-                                    <td>
-
-                                        <button
-                                            className="btn btn-sm btn-outline"
-                                            onClick={
-                                                () =>
-                                                    editService(
-                                                        service
-                                                    )
-                                            }
-                                        >
-                                            Edit
-                                        </button>
-
-                                    </td>
-
-
-                                </tr>
-
-                            )
-                        )
-                    }
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </div>
-)
+    )
 }
