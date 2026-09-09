@@ -358,6 +358,70 @@ export default function AdminServicesPage() {
 
     }
 
+    const deleteService = (
+        id: number
+    ) => {
+
+        const removeService = async () => {
+
+            const token =
+                localStorage.getItem(
+                    "access_token"
+                );
+
+            try {
+
+                await axios.delete(
+                    `http://localhost:3000/services/${id}`,
+                    {
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`
+                        }
+                    }
+                );
+
+                setResponseMsg(
+                    "Service deleted successfully"
+                );
+
+                setErr("");
+
+                setRefresh(
+                    refresh + 1
+                );
+
+            }
+
+            catch (error) {
+
+                if (
+                    axios.isAxiosError(error) &&
+                    error.response?.data?.message
+                ) {
+
+                    setErr(
+                        error.response.data.message
+                    );
+
+                }
+
+                else {
+
+                    setErr(
+                        "Could not delete service"
+                    );
+
+                }
+
+            }
+
+        }
+
+        removeService();
+
+    }
+
     return (
         <div className="max-w-7xl mx-auto py-8">
 
@@ -564,7 +628,21 @@ export default function AdminServicesPage() {
                                                 >
                                                     Deactivate
                                                 </button>
+
+
                                             }
+
+                                            <button
+                                                className="btn btn-sm btn-error ml-2"
+                                                onClick={
+                                                    () =>
+                                                        deleteService(
+                                                            service.id
+                                                        )
+                                                }
+                                            >
+                                                Delete
+                                            </button>
 
                                         </td>
 
