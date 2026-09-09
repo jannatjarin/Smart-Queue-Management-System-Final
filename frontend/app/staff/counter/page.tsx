@@ -109,6 +109,15 @@ export default function StaffCounterPage() {
 
     }, []);
 
+    const assignedCounter =
+        staff
+            ? counters.find(
+                (counter: Counter) =>
+                    counter.staff?.id ==
+                    staff.id
+            )
+            : undefined;
+
     return (
         <div className="max-w-4xl mx-auto py-8">
 
@@ -130,6 +139,73 @@ export default function StaffCounterPage() {
                     </span>
 
                 </div>
+            }
+
+            {
+                assignedCounter
+                    ? (
+                        <div className="card bg-base-100 shadow border">
+
+                            <div className="card-body">
+
+                                <h2 className="card-title">
+                                    {assignedCounter.name}
+                                </h2>
+
+                                <p>
+                                    Staff:{" "}
+                                    {
+                                        assignedCounter.staff?.fullName
+                                    }
+                                </p>
+
+                                <p>
+                                    Status:{" "}
+                                    {assignedCounter.status}
+                                </p>
+
+                                <h3 className="font-bold mt-4">
+                                    Assigned Services
+                                </h3>
+
+                                {
+                                    assignedCounter.services &&
+                                    assignedCounter.services.length > 0
+                                        ? (
+                                            <div className="flex flex-col gap-2">
+
+                                                {
+                                                    assignedCounter.services.map(
+                                                        (
+                                                            service: Service
+                                                        ) => (
+
+                                                            <p key={service.id}>
+                                                                {service.name}
+                                                            </p>
+
+                                                        )
+                                                    )
+                                                }
+
+                                            </div>
+                                        )
+                                        : (
+                                            <p>
+                                                No services assigned
+                                            </p>
+                                        )
+                                }
+
+                            </div>
+
+                        </div>
+                    )
+                    : (
+                        <p>
+                            No counter assigned
+                        </p>
+                    )
             }
 
         </div>
