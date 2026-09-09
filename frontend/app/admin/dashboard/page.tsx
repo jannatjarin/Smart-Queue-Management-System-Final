@@ -25,6 +25,12 @@ interface Counter {
     name: string
 }
 
+interface Ticket {
+    id: number,
+    status: string
+}
+
+
 export default function AdminDashboard() {
 
     const [stats, setStats] = useState(
@@ -108,6 +114,28 @@ export default function AdminDashboard() {
                             }
                         }
                     );
+                const ticketsResponse =
+                    await axios.get<Ticket[]>(
+                        "http://localhost:3000/tickets",
+                        {
+                            headers: {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
+                        }
+                    );
+
+                const waiting =
+                    ticketsResponse.data.filter(
+                        (ticket: Ticket) =>
+                            ticket.status == "waiting"
+                    ).length;
+
+                const completed =
+                    ticketsResponse.data.filter(
+                        (ticket: Ticket) =>
+                            ticket.status == "completed"
+                    ).length;
 
                 setStats(
                     {
@@ -129,7 +157,13 @@ export default function AdminDashboard() {
                             queuesResponse.data.length,
 
                         counters:
-                            countersResponse.data.length
+                            countersResponse.data.length,
+
+                        waiting:
+                            waiting,
+
+                        completed:
+                            completed
                     }
                 );
 
