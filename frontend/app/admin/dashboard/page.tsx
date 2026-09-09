@@ -10,6 +10,21 @@ interface UsersResponse {
     limit: number
 }
 
+interface Service {
+    id: number,
+    name: string
+}
+
+interface Queue {
+    id: number,
+    name: string
+}
+
+interface Counter {
+    id: number,
+    name: string
+}
+
 export default function AdminDashboard() {
 
     const [stats, setStats] = useState(
@@ -71,6 +86,7 @@ export default function AdminDashboard() {
                             }
                         }
                     );
+
 
                 setStats(
                     {
