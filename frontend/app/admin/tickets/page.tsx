@@ -14,6 +14,8 @@ interface Ticket {
     calledAt: string | null,
     completedAt: string | null,
 
+    
+
     user: {
         id: number,
         fullName: string,
@@ -36,6 +38,11 @@ interface Ticket {
     } | null
 }
 
+interface Queue {
+    id: number,
+    name: string
+}
+
 export default function AdminTicketsPage() {
 
     const [tickets, setTickets] =
@@ -46,6 +53,46 @@ export default function AdminTicketsPage() {
 
     const [status, setStatus] =
     useState("");
+
+
+    const [queues, setQueues] =
+    useState<Queue[]>([]);
+
+    const [queueId, setQueueId] =
+    useState("");
+
+
+
+    useEffect(() => {
+
+    const getQueues = async () => {
+
+        try {
+
+            const response =
+                await axios.get<Queue[]>(
+                    "http://localhost:3000/queues"
+                );
+
+            setQueues(
+                response.data
+            );
+
+        }
+
+        catch {
+
+            setErr(
+                "Could not load queues"
+            );
+
+        }
+
+    }
+
+    getQueues();
+
+}, []);
 
 
     useEffect(() => {
@@ -60,13 +107,23 @@ export default function AdminTicketsPage() {
             try {
 
                 let url =
-    "http://localhost:3000/tickets";
+    "http://localhost:3000/tickets?";
 
 if (status) {
 
     url =
         url +
-        `?status=${status}`;
+        `status=${status}&`;
+
+}
+
+if (queueId) {
+
+    url =
+        url +
+        `queueId=${queueId}&`;
+
+
 
 }
 
@@ -116,7 +173,7 @@ const response =
 
         getTickets();
 
-    }, [status]);
+    }, [status, queueId]);
 
     return (
         <div className="max-w-7xl mx-auto py-8">
@@ -182,6 +239,44 @@ const response =
             </option>
 
         </select>
+
+
+        <label className="label mt-4">
+    Queue
+</label>
+
+<select
+    className="select select-bordered max-w-sm"
+    value={queueId}
+    onChange={
+        (e) =>
+            setQueueId(
+                e.target.value
+            )
+    }
+>
+
+    <option value="">
+        All Queues
+    </option>
+
+    {
+        queues &&
+        queues.map(
+            (queue: Queue) => (
+
+                <option
+                    key={queue.id}
+                    value={queue.id}
+                >
+                    {queue.name}
+                </option>
+
+            )
+        )
+    }
+
+</select>
 
     </div>
 
