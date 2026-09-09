@@ -26,6 +26,12 @@ export default function AdminUsersPage() {
     const [err, setErr] =
         useState("");
 
+    const [searchInput, setSearchInput] =
+        useState("");
+
+    const [search, setSearch] =
+        useState("");
+
     useEffect(() => {
 
         const getUsers = async () => {
@@ -37,9 +43,20 @@ export default function AdminUsersPage() {
 
             try {
 
+                let url =
+                    "http://localhost:3000/users?page=1&limit=10";
+
+                if (search) {
+
+                    url =
+                        url +
+                        `&search=${encodeURIComponent(search)}`;
+
+                }
+
                 const response =
                     await axios.get<UsersResponse>(
-                        "http://localhost:3000/users?page=1&limit=10",
+                        url,
                         {
                             headers: {
                                 Authorization:
@@ -83,7 +100,7 @@ export default function AdminUsersPage() {
 
         getUsers();
 
-    }, []);
+    }, [search]);
 
     return (
         <div className="max-w-7xl mx-auto py-8">
@@ -108,6 +125,43 @@ export default function AdminUsersPage() {
             }
 
             <div className="overflow-x-auto">
+
+                <div className="card bg-base-100 shadow border mb-6">
+
+                    <div className="card-body">
+
+                        <div className="flex gap-3">
+
+                            <input
+                                type="text"
+                                className="input input-bordered w-full"
+                                placeholder="Search name or email"
+                                value={searchInput}
+                                onChange={
+                                    (e) =>
+                                        setSearchInput(
+                                            e.target.value
+                                        )
+                                }
+                            />
+
+                            <button
+                                className="btn btn-primary"
+                                onClick={
+                                    () =>
+                                        setSearch(
+                                            searchInput
+                                        )
+                                }
+                            >
+                                Search
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
 
                 <table className="table table-zebra">
 
