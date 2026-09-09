@@ -66,6 +66,13 @@ export default function AdminTicketsPage() {
     useState("DESC");
 
 
+    const [refresh, setRefresh] =
+    useState(0);
+
+    const [responseMsg, setResponseMsg] =
+    useState("");
+
+
 
     useEffect(() => {
 
@@ -183,8 +190,74 @@ const response =
     }, [
     status,
     queueId,
-    sort
+    sort,
+    refresh
 ]);
+
+const cancelTicket = (
+    id: number
+) => {
+
+    const cancelData = async () => {
+
+        const token =
+            localStorage.getItem(
+                "access_token"
+            );
+
+        try {
+
+            await axios.patch(
+                `http://localhost:3000/tickets/${id}/cancel`,
+                {},
+                {
+                    headers: {
+                        Authorization:
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+            setResponseMsg(
+                "Ticket cancelled successfully"
+            );
+
+            setErr("");
+
+            setRefresh(
+                refresh + 1
+            );
+
+        }
+
+        catch (error) {
+
+            if (
+                axios.isAxiosError(error) &&
+                error.response?.data?.message
+            ) {
+
+                setErr(
+                    error.response.data.message
+                );
+
+            }
+
+            else {
+
+                setErr(
+                    "Could not cancel ticket"
+                );
+
+            }
+
+        }
+
+    }
+
+    cancelData();
+
+}
 
     return (
         <div className="max-w-7xl mx-auto py-8">
@@ -196,6 +269,18 @@ const response =
             <p className="mb-6">
                 View and manage system tickets
             </p>
+
+
+            {
+    responseMsg &&
+    <div className="alert alert-success mb-4">
+
+        <span>
+            {responseMsg}
+        </span>
+
+    </div>
+}
 
             {
                 err &&
@@ -332,6 +417,7 @@ const response =
                             <th>Status</th>
                             <th>Counter</th>
                             <th>Issued</th>
+                            <th>Actions</th>
                         </tr>
 
                     </thead>
@@ -395,6 +481,28 @@ const response =
                                             }
 
                                         </td>
+
+
+
+ <td>
+{
+        ticket.status != "completed" &&
+        ticket.status != "cancelled" &&
+
+        <button
+            className="btn btn-sm btn-error"
+            onClick={
+                () =>
+                    cancelTicket(
+                        ticket.id
+                    )
+            }
+        >
+            Cancel
+        </button>
+    }
+
+</td>
 
                                     </tr>
 
