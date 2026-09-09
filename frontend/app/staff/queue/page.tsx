@@ -60,6 +60,9 @@ export default function StaffQueuePage() {
     const [refresh, setRefresh] =
         useState(0);
 
+    const [selectedQueueId, setSelectedQueueId] =
+        useState("");
+
     const [err, setErr] =
         useState("");
 
@@ -168,6 +171,38 @@ export default function StaffQueuePage() {
 
         }, [refresh]);
 
+        const selectedQueue =
+            queues.find(
+                (queue: Queue) =>
+                    queue.id ==
+                    Number(
+                        selectedQueueId
+                    )
+            );
+
+        const queueTickets =
+            selectedQueueId
+                ? tickets.filter(
+                    (ticket: Ticket) =>
+                        ticket.queue?.id ==
+                        Number(
+                            selectedQueueId
+                        )
+                )
+                : [];
+
+        const waitingTickets =
+            queueTickets.filter(
+                (ticket: Ticket) =>
+                    ticket.status == "waiting"
+            );
+
+        const calledTicket =
+            queueTickets.find(
+                (ticket: Ticket) =>
+                    ticket.status == "called"
+            );
+
     return (
         <div className="max-w-7xl mx-auto py-8">
 
@@ -200,115 +235,155 @@ export default function StaffQueuePage() {
                 </p>
             }
 
-            <div className="grid md:grid-cols-2 gap-5">
+            <div className="card bg-base-100 shadow border mb-6">
 
-                {
-                    queues &&
-                    queues.map(
-                        (queue: Queue) => (
+                <div className="card-body">
 
-                            <div
-                                key={queue.id}
-                                className="card bg-base-100 shadow border"
-                            >
+                    <label className="label">
+                        Select Queue
+                    </label>
 
-                                <div className="card-body">
+                    <select
+                        className="select select-bordered max-w-md"
+                        value={selectedQueueId}
+                        onChange={
+                            (e) =>
+                                setSelectedQueueId(
+                                    e.target.value
+                                )
+                        }
+                    >
 
-                                    <h2 className="card-title">
-                                        {queue.name}
-                                    </h2>
-
-                                    <p>
-                                        Service:{" "}
-                                        {queue.service?.name}
-                                    </p>
-
-                                    <p>
-                                        Location:{" "}
-                                        {queue.location}
-                                    </p>
-
-                                    <p>
-                                        Status:{" "}
-                                        {queue.status}
-                                    </p>
-
-                                    <p>
-                                        Current Ticket:{" "}
-                                        {queue.currentTicketNumber}
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-                        )
-                    )
-                }
-
-            </div>
-
-            <h2 className="text-2xl font-bold mt-8 mb-4">
-                Tickets
-            </h2>
-
-            <div className="overflow-x-auto">
-
-                <table className="table table-zebra">
-
-                    <thead>
-
-                        <tr>
-                            <th>Ticket</th>
-                            <th>Customer</th>
-                            <th>Queue</th>
-                            <th>Priority</th>
-                            <th>Status</th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
+                        <option value="">
+                            Select Queue
+                        </option>
 
                         {
-                            tickets &&
-                            tickets.map(
-                                (ticket: Ticket) => (
+                            queues &&
+                            queues.map(
+                                (queue: Queue) => (
 
-                                    <tr key={ticket.id}>
-
-                                        <td>
-                                            {ticket.ticketNumber}
-                                        </td>
-
-                                        <td>
-                                            {ticket.user?.fullName}
-                                        </td>
-
-                                        <td>
-                                            {ticket.queue?.name}
-                                        </td>
-
-                                        <td>
-                                            {ticket.priority}
-                                        </td>
-
-                                        <td>
-                                            {ticket.status}
-                                        </td>
-
-                                    </tr>
+                                    <option
+                                        key={queue.id}
+                                        value={queue.id}
+                                    >
+                                        {queue.name}
+                                    </option>
 
                                 )
                             )
                         }
 
-                    </tbody>
+                    </select>
 
-                </table>
+                </div>
 
             </div>
 
+            <div className="grid md:grid-cols-2 gap-5">
+
+                {
+                    
+                    selectedQueue &&
+
+                    <div className="card bg-base-100 shadow border mb-6">
+
+                        <div className="card-body">
+
+                            <h2 className="card-title">
+                                {selectedQueue.name}
+                            </h2>
+
+                            <p>
+                                Service:{" "}
+                                {selectedQueue.service?.name}
+                            </p>
+
+                            <p>
+                                Location:{" "}
+                                {selectedQueue.location}
+                            </p>
+
+                            <p>
+                                Status:{" "}
+                                {selectedQueue.status}
+                            </p>
+
+                            <p>
+                                Waiting Tickets:{" "}
+                                {waitingTickets.length}
+                            </p>
+
+                            <p>
+                                Current Called Ticket:{" "}
+                                {
+                                    calledTicket
+                                        ? calledTicket.ticketNumber
+                                        : "None"
+                                }
+                            </p>
+
+                        </div>
+
+                    </div>
+                }
+
+                {
+                    selectedQueueId &&
+
+                    <div className="overflow-x-auto">
+
+                        <table className="table table-zebra">
+
+                            <thead>
+
+                                <tr>
+                                    <th>Ticket</th>
+                                    <th>Customer</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                {
+                                    queueTickets.map(
+                                        (ticket: Ticket) => (
+
+                                            <tr key={ticket.id}>
+
+                                                <td>
+                                                    {ticket.ticketNumber}
+                                                </td>
+
+                                                <td>
+                                                    {ticket.user?.fullName}
+                                                </td>
+
+                                                <td>
+                                                    {ticket.priority}
+                                                </td>
+
+                                                <td>
+                                                    {ticket.status}
+                                                </td>
+
+                                            </tr>
+
+                                        )
+                                    )
+                                }
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+                }
+
+            </div>
         </div>
     )
 }
