@@ -62,6 +62,10 @@ export default function AdminTicketsPage() {
     useState("");
 
 
+    const [sort, setSort] =
+    useState("DESC");
+
+
 
     useEffect(() => {
 
@@ -126,6 +130,9 @@ if (queueId) {
 
 
 }
+url =
+    url +
+    `sort=${sort}`;
 
 const response =
     await axios.get<Ticket[]>(
@@ -173,7 +180,11 @@ const response =
 
         getTickets();
 
-    }, [status, queueId]);
+    }, [
+    status,
+    queueId,
+    sort
+]);
 
     return (
         <div className="max-w-7xl mx-auto py-8">
@@ -275,6 +286,31 @@ const response =
             )
         )
     }
+
+</select>
+
+<label className="label mt-4">
+    Sort
+</label>
+
+<select
+    className="select select-bordered max-w-sm"
+    value={sort}
+    onChange={
+        (e) =>
+            setSort(
+                e.target.value
+            )
+    }
+>
+
+    <option value="DESC">
+        Newest First
+    </option>
+
+    <option value="ASC">
+        Oldest First
+    </option>
 
 </select>
 
