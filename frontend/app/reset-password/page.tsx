@@ -1,10 +1,18 @@
 "use client";
-
+import axios from "axios";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 
 export default function ResetPasswordPage() {
+
+    const router =
+    useRouter();
+    
     const [err, setErr] =
+    useState("");
+
+    const [responseMsg, setResponseMsg] =
     useState("");
 
 
@@ -33,7 +41,7 @@ export default function ResetPasswordPage() {
             }
         );
 
-    }
+    };
     const onSubmitHandle = (
     e: React.FormEvent<HTMLFormElement>
 ) => {
@@ -67,8 +75,68 @@ export default function ResetPasswordPage() {
 
     }
 
-}
+    const resetPassword = async () => {
 
+        try {
+
+            await axios.post(
+                "http://localhost:3000/auth/reset-password",
+                {
+                    token:
+                        formData.token,
+
+                    newPassword:
+                        formData.newPassword
+                }
+            );
+
+            setResponseMsg(
+                "Password reset successfully"
+            );
+
+            setErr("");
+
+            setTimeout(
+                () => {
+
+                    router.push(
+                        "/login"
+                    );
+
+                },
+                1500
+            );
+
+        }
+
+        catch (error) {
+
+            if (
+                axios.isAxiosError(error) &&
+                error.response?.data?.message
+            ) {
+
+                setErr(
+                    error.response.data.message
+                );
+
+            }
+
+            else {
+
+                setErr(
+                    "Could not reset password"
+                );
+
+            }
+
+        }
+
+    };
+
+    resetPassword();
+
+};
     return (
         <div className="max-w-md mx-auto py-10">
 
@@ -80,7 +148,21 @@ export default function ResetPasswordPage() {
                 Enter the reset token and your new password
             </p>
 
-            {
+        {
+    responseMsg &&
+    <div className="alert alert-success mb-4">
+
+        <span>
+            {responseMsg}
+        </span>
+
+    </div>
+    }   
+           
+           
+    {
+    
+    
     err &&
     <div className="alert alert-error mb-4">
 
