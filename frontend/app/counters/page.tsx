@@ -384,6 +384,75 @@ export default function AdminCountersPage() {
 
     }
 
+    const updateStatus = (
+        counterId: number,
+        status: string
+    ) => {
+
+        const updateData = async () => {
+
+            const token =
+                localStorage.getItem(
+                    "access_token"
+                );
+
+            try {
+
+                await axios.patch(
+                    `http://localhost:3000/counters/${counterId}/status`,
+                    {
+                        status:
+                            status
+                    },
+                    {
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`
+                        }
+                    }
+                );
+
+                setResponseMsg(
+                    "Counter status updated successfully"
+                );
+
+                setErr("");
+
+                setRefresh(
+                    refresh + 1
+                );
+
+            }
+
+            catch (error) {
+
+                if (
+                    axios.isAxiosError(error) &&
+                    error.response?.data?.message
+                ) {
+
+                    setErr(
+                        error.response.data.message
+                    );
+
+                }
+
+                else {
+
+                    setErr(
+                        "Could not update counter status"
+                    );
+
+                }
+
+            }
+
+        }
+
+        updateData();
+
+    }
+
     return (
         <div className="max-w-7xl mx-auto py-8">
 
@@ -577,7 +646,33 @@ export default function AdminCountersPage() {
                                         </td>
 
                                         <td>
-                                            {counter.status}
+
+                                            <select
+                                                className="select select-bordered select-sm"
+                                                value={counter.status}
+                                                onChange={
+                                                    (e) =>
+                                                        updateStatus(
+                                                            counter.id,
+                                                            e.target.value
+                                                        )
+                                                }
+                                            >
+
+                                                <option value="open">
+                                                    Open
+                                                </option>
+
+                                                <option value="closed">
+                                                    Closed
+                                                </option>
+
+                                                <option value="on_break">
+                                                    On Break
+                                                </option>
+
+                                            </select>
+
                                         </td>
 
                                     </tr>
