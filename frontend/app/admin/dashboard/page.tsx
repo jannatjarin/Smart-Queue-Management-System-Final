@@ -303,7 +303,33 @@ export default function AdminDashboard() {
 
                             </div>
                         </div>
+                        <div className="card bg-base-100 shadow border">
+                            <div className="card-body">
 
+                                <h2 className="card-title">
+                                    Waiting Tickets
+                                </h2>
+
+                                <p className="text-3xl font-bold">
+                                    {stats.waiting}
+                                </p>
+
+                            </div>
+                        </div>
+
+                        <div className="card bg-base-100 shadow border">
+                            <div className="card-body">
+
+                                <h2 className="card-title">
+                                    Completed Tickets
+                                </h2>
+
+                                <p className="text-3xl font-bold">
+                                    {stats.completed}
+                                </p>
+
+                            </div>
+                        </div>
                     </div>
                 </div>
 
