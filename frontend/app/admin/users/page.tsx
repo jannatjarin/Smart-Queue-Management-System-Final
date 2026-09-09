@@ -32,6 +32,9 @@ export default function AdminUsersPage() {
     const [search, setSearch] =
         useState("");
 
+    const [role, setRole] =
+        useState("");
+
     useEffect(() => {
 
         const getUsers = async () => {
@@ -51,6 +54,14 @@ export default function AdminUsersPage() {
                     url =
                         url +
                         `&search=${encodeURIComponent(search)}`;
+
+                }
+
+                if (role) {
+
+                    url =
+                        url +
+                        `&role=${role}`;
 
                 }
 
@@ -100,124 +111,151 @@ export default function AdminUsersPage() {
 
         getUsers();
 
-    }, [search]);
+    }, [search, role]);
 
-    return (
-        <div className="max-w-7xl mx-auto py-8">
+return (
+    <div className="max-w-7xl mx-auto py-8">
 
-            <h1 className="text-3xl font-bold mb-2">
-                User Management
-            </h1>
+        <h1 className="text-3xl font-bold mb-2">
+            User Management
+        </h1>
 
-            <p className="mb-6">
-                View registered users
-            </p>
+        <p className="mb-6">
+            View registered users
+        </p>
 
-            {
-                err &&
-                <div className="alert alert-error mb-4">
+        {
+            err &&
+            <div className="alert alert-error mb-4">
 
-                    <span>
-                        {err}
-                    </span>
+                <span>
+                    {err}
+                </span>
 
-                </div>
-            }
+            </div>
+        }
 
-            <div className="overflow-x-auto">
+        <div className="overflow-x-auto">
 
-                <div className="card bg-base-100 shadow border mb-6">
+            <div className="card bg-base-100 shadow border mb-6">
 
-                    <div className="card-body">
+                <div className="card-body">
 
-                        <div className="flex gap-3">
+                    <div className="flex gap-3">
 
-                            <input
-                                type="text"
-                                className="input input-bordered w-full"
-                                placeholder="Search name or email"
-                                value={searchInput}
-                                onChange={
-                                    (e) =>
-                                        setSearchInput(
-                                            e.target.value
-                                        )
-                                }
-                            />
+                        <input
+                            type="text"
+                            className="input input-bordered w-full"
+                            placeholder="Search name or email"
+                            value={searchInput}
+                            onChange={
+                                (e) =>
+                                    setSearchInput(
+                                        e.target.value
+                                    )
+                            }
+                        />
 
-                            <button
-                                className="btn btn-primary"
-                                onClick={
-                                    () =>
-                                        setSearch(
-                                            searchInput
-                                        )
-                                }
-                            >
-                                Search
-                            </button>
+                        <button
+                            className="btn btn-primary"
+                            onClick={
+                                () =>
+                                    setSearch(
+                                        searchInput
+                                    )
+                            }
+                        >
+                            Search
+                        </button>
+                        <select
+                            className="select select-bordered"
+                            value={role}
+                            onChange={
+                                (e) =>
+                                    setRole(
+                                        e.target.value
+                                    )
+                            }
+                        >
 
-                        </div>
+                            <option value="">
+                                All Roles
+                            </option>
 
+                            <option value="admin">
+                                Admin
+                            </option>
+
+                            <option value="staff">
+                                Staff
+                            </option>
+
+                            <option value="customer">
+                                Customer
+                            </option>
+
+                        </select>
                     </div>
 
                 </div>
 
-                <table className="table table-zebra">
-
-                    <thead>
-
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Role</th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                        {
-                            users &&
-                            users.map(
-                                (user: User) => (
-
-                                    <tr key={user.id}>
-
-                                        <td>
-                                            {user.id}
-                                        </td>
-
-                                        <td>
-                                            {user.fullName}
-                                        </td>
-
-                                        <td>
-                                            {user.email}
-                                        </td>
-
-                                        <td>
-                                            {user.phone || "-"}
-                                        </td>
-
-                                        <td>
-                                            {user.role}
-                                        </td>
-
-                                    </tr>
-
-                                )
-                            )
-                        }
-
-                    </tbody>
-
-                </table>
-
             </div>
 
+            <table className="table table-zebra">
+
+                <thead>
+
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {
+                        users &&
+                        users.map(
+                            (user: User) => (
+
+                                <tr key={user.id}>
+
+                                    <td>
+                                        {user.id}
+                                    </td>
+
+                                    <td>
+                                        {user.fullName}
+                                    </td>
+
+                                    <td>
+                                        {user.email}
+                                    </td>
+
+                                    <td>
+                                        {user.phone || "-"}
+                                    </td>
+
+                                    <td>
+                                        {user.role}
+                                    </td>
+
+                                </tr>
+
+                            )
+                        )
+                    }
+
+                </tbody>
+
+            </table>
+
         </div>
-    )
+
+    </div>
+)
 }
