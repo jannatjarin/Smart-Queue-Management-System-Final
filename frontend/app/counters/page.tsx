@@ -18,6 +18,13 @@ interface Staff {
     email: string
 }
 
+interface UsersResponse {
+    data: Staff[],
+    total: number,
+    page: number,
+    limit: number
+}
+
 interface Counter {
     id: number,
     name: string,
@@ -51,6 +58,10 @@ export default function AdminCountersPage() {
     const [err, setErr] =
         useState("");
 
+    const [staff, setStaff] =
+        useState<Staff[]>([]);
+
+
     useEffect(() => {
 
         const getData = async () => {
@@ -78,12 +89,27 @@ export default function AdminCountersPage() {
                         "http://localhost:3000/services"
                     );
 
+                const staffResponse =
+                    await axios.get<UsersResponse>(
+                        "http://localhost:3000/users?role=staff&limit=100",
+                        {
+                            headers: {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
+                        }
+                    );
+
                 setCounters(
                     countersResponse.data
                 );
 
                 setServices(
                     servicesResponse.data
+                );
+
+                setStaff(
+                    staffResponse.data.data
                 );
 
                 setErr("");
@@ -283,6 +309,81 @@ export default function AdminCountersPage() {
 
     }
 
+    const assignStaff = (
+        counterId: number,
+        staffId: string
+    ) => {
+
+        if (!staffId) {
+            return;
+        }
+
+        const assignData = async () => {
+
+            const token =
+                localStorage.getItem(
+                    "access_token"
+                );
+
+            try {
+
+                await axios.patch(
+                    `http://localhost:3000/counters/${counterId}/assign-staff`,
+                    {
+                        staffId:
+                            Number(
+                                staffId
+                            )
+                    },
+                    {
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`
+                        }
+                    }
+                );
+
+                setResponseMsg(
+                    "Staff assigned successfully"
+                );
+
+                setErr("");
+
+                setRefresh(
+                    refresh + 1
+                );
+
+            }
+
+            catch (error) {
+
+                if (
+                    axios.isAxiosError(error) &&
+                    error.response?.data?.message
+                ) {
+
+                    setErr(
+                        error.response.data.message
+                    );
+
+                }
+
+                else {
+
+                    setErr(
+                        "Could not assign staff"
+                    );
+
+                }
+
+            }
+
+        }
+
+        assignData();
+
+    }
+
     return (
         <div className="max-w-7xl mx-auto py-8">
 
@@ -435,11 +536,43 @@ export default function AdminCountersPage() {
 
                                         <td>
 
-                                            {
-                                                counter.staff
-                                                    ? counter.staff.fullName
-                                                    : "Not Assigned"
-                                            }
+                                            <select
+                                                className="select select-bordered select-sm"
+                                                value={
+                                                    counter.staff?.id || ""
+                                                }
+                                                onChange={
+                                                    (e) =>
+                                                        assignStaff(
+                                                            counter.id,
+                                                            e.target.value
+                                                        )
+                                                }
+                                            >
+
+                                                <option value="">
+                                                    Select Staff
+                                                </option>
+
+                                                {
+                                                    staff &&
+                                                    staff.map(
+                                                        (
+                                                            user: Staff
+                                                        ) => (
+
+                                                            <option
+                                                                key={user.id}
+                                                                value={user.id}
+                                                            >
+                                                                {user.fullName}
+                                                            </option>
+
+                                                        )
+                                                    )
+                                                }
+
+                                            </select>
 
                                         </td>
 
