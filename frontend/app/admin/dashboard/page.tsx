@@ -228,6 +228,47 @@ export default function AdminDashboard() {
                         <p className="text-3xl font-bold">
                             {stats.staff}
                         </p>
+                        <div className="card bg-base-100 shadow border">
+                            <div className="card-body">
+
+                                <h2 className="card-title">
+                                    Services
+                                </h2>
+
+                                <p className="text-3xl font-bold">
+                                    {stats.services}
+                                </p>
+
+                            </div>
+                        </div>
+
+                        <div className="card bg-base-100 shadow border">
+                            <div className="card-body">
+
+                                <h2 className="card-title">
+                                    Queues
+                                </h2>
+
+                                <p className="text-3xl font-bold">
+                                    {stats.queues}
+                                </p>
+
+                            </div>
+                        </div>
+
+                        <div className="card bg-base-100 shadow border">
+                            <div className="card-body">
+
+                                <h2 className="card-title">
+                                    Counters
+                                </h2>
+
+                                <p className="text-3xl font-bold">
+                                    {stats.counters}
+                                </p>
+
+                            </div>
+                        </div>
 
                     </div>
                 </div>
