@@ -1,0 +1,608 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import axios from "axios";
+
+
+
+interface Ticket {
+    id: number,
+    ticketNumber: string,
+    status: string,
+    priority: string,
+    issuedAt: string,
+    calledAt: string | null,
+    completedAt: string | null,
+
+    
+
+    user: {
+        id: number,
+        fullName: string,
+        email: string
+    },
+
+    service: {
+        id: number,
+        name: string
+    },
+
+    queue: {
+        id: number,
+        name: string
+    },
+
+    counter: {
+        id: number,
+        name: string
+    } | null
+}
+
+interface Queue {
+    id: number,
+    name: string
+}
+
+export default function AdminTicketsPage() {
+
+    const [tickets, setTickets] =
+        useState<Ticket[]>([]);
+
+    const [err, setErr] =
+        useState("");
+
+    const [status, setStatus] =
+    useState("");
+
+
+    const [queues, setQueues] =
+    useState<Queue[]>([]);
+
+    const [queueId, setQueueId] =
+    useState("");
+
+
+    const [sort, setSort] =
+    useState("DESC");
+
+
+    const [refresh, setRefresh] =
+    useState(0);
+
+    const [responseMsg, setResponseMsg] =
+    useState("");
+
+
+
+    useEffect(() => {
+
+    const getQueues = async () => {
+
+        try {
+
+            const response =
+                await axios.get<Queue[]>(
+                    "http://localhost:3000/queues"
+                );
+
+            setQueues(
+                response.data
+            );
+
+        }
+
+        catch {
+
+            setErr(
+                "Could not load queues"
+            );
+
+        }
+
+    }
+
+    getQueues();
+
+}, []);
+
+
+    useEffect(() => {
+
+        const getTickets = async () => {
+
+            const token =
+                localStorage.getItem(
+                    "access_token"
+                );
+
+            try {
+
+                let url =
+    "http://localhost:3000/tickets?";
+
+if (status) {
+
+    url =
+        url +
+        `status=${status}&`;
+
+}
+
+if (queueId) {
+
+    url =
+        url +
+        `queueId=${queueId}&`;
+
+
+
+}
+url =
+    url +
+    `sort=${sort}`;
+
+const response =
+    await axios.get<Ticket[]>(
+        url,
+{
+     headers: {
+             Authorization:
+              `Bearer ${token}`
+                            }
+                 }
+                    );
+
+            setTickets(
+                    response.data
+                );
+
+                setErr("");
+
+            }
+
+            catch (error) {
+
+                if (
+                    axios.isAxiosError(error) &&
+                    error.response?.data?.message
+                ) {
+
+                    setErr(
+                        error.response.data.message
+                    );
+
+                }
+
+                else {
+
+                    setErr(
+                        "Could not load tickets"
+                    );
+
+                }
+
+            }
+
+        }
+
+        getTickets();
+
+    }, [
+    status,
+    queueId,
+    sort,
+    refresh
+]);
+
+const cancelTicket = (
+    id: number
+) => {
+
+    const cancelData = async () => {
+
+        const token =
+            localStorage.getItem(
+                "access_token"
+            );
+
+        try {
+
+            await axios.patch(
+                `http://localhost:3000/tickets/${id}/cancel`,
+                {},
+                {
+                    headers: {
+                        Authorization:
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+            setResponseMsg(
+                "Ticket cancelled successfully"
+            );
+
+            setErr("");
+
+            setRefresh(
+                refresh + 1
+            );
+
+        }
+
+        catch (error) {
+
+            if (
+                axios.isAxiosError(error) &&
+                error.response?.data?.message
+            ) {
+
+                setErr(
+                    error.response.data.message
+                );
+
+            }
+
+            else {
+
+                setErr(
+                    "Could not cancel ticket"
+                );
+
+            }
+
+        }
+
+    }
+
+    cancelData();
+
+}
+
+
+const completeTicket = (
+    id: number
+) => {
+
+    const completeData = async () => {
+
+        const token =
+            localStorage.getItem(
+                "access_token"
+            );
+
+        try {
+
+            await axios.patch(
+                `http://localhost:3000/tickets/${id}/complete`,
+                {},
+                {
+                    headers: {
+                        Authorization:
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+            setResponseMsg(
+                "Ticket completed successfully"
+            );
+
+            setErr("");
+
+            setRefresh(
+                refresh + 1
+            );
+
+        }
+
+        catch (error) {
+
+            if (
+                axios.isAxiosError(error) &&
+                error.response?.data?.message
+            ) {
+
+                setErr(
+                    error.response.data.message
+                );
+
+            }
+
+            else {
+
+                setErr(
+                    "Could not complete ticket"
+                );
+
+            }
+
+        }
+
+    }
+
+    completeData();
+
+}
+
+    return (
+        <div className="max-w-7xl mx-auto py-8">
+
+            <h1 className="text-3xl font-bold mb-2">
+                Ticket Management
+            </h1>
+
+            <p className="mb-6">
+                View and manage system tickets
+            </p>
+
+
+            {
+    responseMsg &&
+    <div className="alert alert-success mb-4">
+
+        <span>
+            {responseMsg}
+        </span>
+
+    </div>
+}
+
+            {
+                err &&
+                <div className="alert alert-error mb-4">
+
+                    <span>
+                        {err}
+                    </span>
+
+                </div>
+            }
+
+            
+
+            <div className="card bg-base-100 shadow border mb-6">
+
+    <div className="card-body">
+
+        <label className="label">
+            Status
+        </label>
+
+        <select
+            className="select select-bordered max-w-sm"
+            value={status}
+            onChange={
+                (e) =>
+                    setStatus(
+                        e.target.value
+                    )
+            }
+        >
+
+            <option value="">
+                All Statuses
+            </option>
+
+            <option value="waiting">
+                Waiting
+            </option>
+
+            <option value="called">
+                Called
+            </option>
+
+            <option value="completed">
+                Completed
+            </option>
+
+            <option value="cancelled">
+                Cancelled
+            </option>
+
+        </select>
+
+
+        <label className="label mt-4">
+    Queue
+</label>
+
+<select
+    className="select select-bordered max-w-sm"
+    value={queueId}
+    onChange={
+        (e) =>
+            setQueueId(
+                e.target.value
+            )
+    }
+>
+
+    <option value="">
+        All Queues
+    </option>
+
+    {
+        queues &&
+        queues.map(
+            (queue: Queue) => (
+
+                <option
+                    key={queue.id}
+                    value={queue.id}
+                >
+                    {queue.name}
+                </option>
+
+            )
+        )
+    }
+
+</select>
+
+<label className="label mt-4">
+    Sort
+</label>
+
+<select
+    className="select select-bordered max-w-sm"
+    value={sort}
+    onChange={
+        (e) =>
+            setSort(
+                e.target.value
+            )
+    }
+>
+
+    <option value="DESC">
+        Newest First
+    </option>
+
+    <option value="ASC">
+        Oldest First
+    </option>
+
+</select>
+
+    </div>
+
+</div>
+<div className="overflow-x-auto">
+
+                <table className="table table-zebra">
+
+                    <thead>
+
+                        <tr>
+                            <th>Ticket</th>
+                            <th>Customer</th>
+                            <th>Service</th>
+                            <th>Queue</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Counter</th>
+                            <th>Issued</th>
+                            <th>Actions</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {
+                            tickets &&
+                            tickets.map(
+                                (ticket: Ticket) => (
+
+                                    <tr key={ticket.id}>
+
+                                        <td>
+                                            {ticket.ticketNumber}
+                                        </td>
+
+                                        <td>
+
+                                            <p>
+                                                {ticket.user?.fullName}
+                                            </p>
+
+                                            <p className="text-sm opacity-70">
+                                                {ticket.user?.email}
+                                            </p>
+
+                                        </td>
+
+                                        <td>
+                                            {ticket.service?.name}
+                                        </td>
+
+                                        <td>
+                                            {ticket.queue?.name}
+                                        </td>
+
+                                        <td>
+                                            {ticket.priority}
+                                        </td>
+
+                                        <td>
+                                            {ticket.status}
+                                        </td>
+
+                                        <td>
+
+                                            {
+                                                ticket.counter?.name ||
+                                                "Not Assigned"
+                                            }
+
+                                        </td>
+
+                                        <td>
+
+                                            {
+                                                new Date(
+                                                    ticket.issuedAt
+                                                ).toLocaleString()
+                                            }
+
+                                        </td>
+
+
+
+ <td>
+
+    <div className="flex gap-2 flex-wrap">
+
+        {
+            ticket.status == "called" &&
+
+            <button
+                className="btn btn-sm btn-success"
+                onClick={
+                    () =>
+                        completeTicket(
+                            ticket.id
+                        )
+                }
+            >
+                Complete
+            </button>
+        }
+
+        {
+            ticket.status != "completed" &&
+            ticket.status != "cancelled" &&
+
+            <button
+                className="btn btn-sm btn-error"
+                onClick={
+                    () =>
+                        cancelTicket(
+                            ticket.id
+                        )
+                }
+            >
+                Cancel
+            </button>
+        }
+
+    </div>
+
+</td>
+
+                                    </tr>
+
+                                )
+                            )
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+    )
+}
