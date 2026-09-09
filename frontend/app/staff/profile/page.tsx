@@ -26,6 +26,9 @@ export default function StaffProfilePage() {
     const [err, setErr] =
         useState("");
 
+    const [responseMsg, setResponseMsg] =
+        useState("");
+
     useEffect(() => {
 
         const getProfile = async () => {
@@ -115,6 +118,93 @@ export default function StaffProfilePage() {
 
     }
 
+    const onSubmitHandle = (
+        e: React.FormEvent<HTMLFormElement>
+    ) => {
+
+        e.preventDefault();
+
+        const updateProfile = async () => {
+
+            const token =
+                localStorage.getItem(
+                    "access_token"
+                );
+
+            try {
+
+                await axios.patch(
+                    "http://localhost:3000/users/me",
+                    {
+                        fullName:
+                            formData.fullName,
+
+                        phone:
+                            formData.phone
+                    },
+                    {
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`
+                        }
+                    }
+                );
+
+                setResponseMsg(
+                    "Profile updated successfully"
+                );
+
+                setErr("");
+
+            }
+
+            catch (error) {
+
+                if (
+                    axios.isAxiosError(error) &&
+                    error.response?.data?.message
+                ) {
+
+                    if (
+                        Array.isArray(
+                            error.response.data.message
+                        )
+                    ) {
+
+                        setErr(
+                            error.response.data.message.join(
+                                ", "
+                            )
+                        );
+
+                    }
+
+                    else {
+
+                        setErr(
+                            error.response.data.message
+                        );
+
+                    }
+
+                }
+
+                else {
+
+                    setErr(
+                        "Could not update profile"
+                    );
+
+                }
+
+            }
+
+        }
+
+        updateProfile();
+
+    }
+
     return (
         <div className="max-w-3xl mx-auto py-8">
 
@@ -125,6 +215,18 @@ export default function StaffProfilePage() {
             <p className="mb-6">
                 View your profile
             </p>
+
+            {
+                responseMsg &&
+
+                <div className="alert alert-success mb-4">
+
+                    <span>
+                        {responseMsg}
+                    </span>
+
+                </div>
+            }
 
             {
                 err &&
@@ -142,7 +244,7 @@ export default function StaffProfilePage() {
 
                 <div className="card-body">
 
-                    <form>
+                    <form onSubmit={onSubmitHandle}>
 
                         <label className="label">
                             Full Name
@@ -189,6 +291,13 @@ export default function StaffProfilePage() {
                             value={formData.role}
                             disabled
                         />
+
+                        <button
+                            type="submit"
+                            className="btn btn-primary w-full mt-6"
+                        >
+                            Update Profile
+                        </button>
 
                     </form>
 
