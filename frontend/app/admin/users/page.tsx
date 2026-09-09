@@ -178,10 +178,15 @@ export default function AdminUsersPage() {
                             <button
                                 className="btn btn-primary"
                                 onClick={
-                                    () =>
+                                    () => {
+
+                                        setPage(1);
+
                                         setSearch(
                                             searchInput
-                                        )
+                                        );
+
+                                    }
                                 }
                             >
                                 Search
@@ -190,11 +195,17 @@ export default function AdminUsersPage() {
                                 className="select select-bordered"
                                 value={role}
                                 onChange={
-                                    (e) =>
+                                    (e) => {
+
                                         setRole(
                                             e.target.value
-                                        )
+                                        );
+
+                                        setPage(1);
+
+                                    }
                                 }
+
                             >
 
                                 <option value="">
@@ -219,10 +230,15 @@ export default function AdminUsersPage() {
                                 className="select select-bordered"
                                 value={sort}
                                 onChange={
-                                    (e) =>
+                                    (e) => {
+
                                         setSort(
                                             e.target.value
-                                        )
+                                        );
+
+                                        setPage(1);
+
+                                    }
                                 }
                             >
 
