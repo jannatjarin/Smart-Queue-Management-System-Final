@@ -344,6 +344,80 @@ export default function StaffQueuePage() {
 
         }
 
+        const updateQueueStatus = (
+            queueId: number,
+            status: string
+        ) => {
+
+            const updateData = async () => {
+
+                const token =
+                    localStorage.getItem(
+                        "access_token"
+                    );
+
+                try {
+
+                    await axios.patch(
+                        `http://localhost:3000/queues/${queueId}/status`,
+                        {
+                            status:
+                                status
+                        },
+                        {
+                            headers: {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
+                        }
+                    );
+
+                    setResponseMsg(
+                        "Queue status updated successfully"
+                    );
+
+                    setErr("");
+
+                    const queuesResponse =
+                        await axios.get<Queue[]>(
+                            "http://localhost:3000/queues"
+                        );
+
+                    setQueues(
+                        queuesResponse.data
+                    );
+
+                }
+
+                catch (error) {
+
+                    if (
+                        axios.isAxiosError(error) &&
+                        error.response?.data?.message
+                    ) {
+
+                        setErr(
+                            error.response.data.message
+                        );
+
+                    }
+
+                    else {
+
+                        setErr(
+                            "Could not update queue status"
+                        );
+
+                    }
+
+                }
+
+            }
+
+            updateData();
+
+        }
+
     return (
         <div className="max-w-7xl mx-auto py-8">
 
@@ -486,6 +560,36 @@ export default function StaffQueuePage() {
                                 Call Next
                             </button>
 
+                            <div className="mt-4">
+
+                                <label className="label">
+                                    Queue Status
+                                </label>
+
+                                <select
+                                    className="select select-bordered"
+                                    value={selectedQueue.status}
+                                    onChange={
+                                        (e) =>
+                                            updateQueueStatus(
+                                                selectedQueue.id,
+                                                e.target.value
+                                            )
+                                    }
+                                >
+
+                                    <option value="open">
+                                        Open
+                                    </option>
+
+                                    <option value="closed">
+                                        Closed
+                                    </option>
+
+                                </select>
+
+                            </div>
+
                             {
                                 calledTicket &&
 
@@ -502,6 +606,7 @@ export default function StaffQueuePage() {
                                         calledTicket.ticketNumber
                                     }
                                 </button>
+
                             }
 
                         </div>
