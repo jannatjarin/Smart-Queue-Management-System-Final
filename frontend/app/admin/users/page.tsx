@@ -23,9 +23,6 @@ export default function AdminUsersPage() {
     const [users, setUsers] =
         useState<User[]>([]);
 
-    const [err, setErr] =
-        useState("");
-
     const [searchInput, setSearchInput] =
         useState("");
 
@@ -44,8 +41,16 @@ export default function AdminUsersPage() {
     const [total, setTotal] =
         useState(0);
 
-    const limit = 10;
+    const [refresh, setRefresh] =
+        useState(0);
 
+    const [responseMsg, setResponseMsg] =
+        useState("");
+
+    const [err, setErr] =
+        useState("");
+
+    const limit = 10;
 
     useEffect(() => {
 
@@ -91,9 +96,11 @@ export default function AdminUsersPage() {
                 setUsers(
                     response.data.data
                 );
+
                 setTotal(
                     response.data.total
                 );
+
                 setErr("");
 
             }
@@ -125,7 +132,81 @@ export default function AdminUsersPage() {
 
         getUsers();
 
-    }, [search, role, sort, page]);
+    }, [
+        search,
+        role,
+        sort,
+        page,
+        refresh
+    ]);
+
+    const updateRole = (
+        id: number,
+        newRole: string
+    ) => {
+
+        const updateData = async () => {
+
+            const token =
+                localStorage.getItem(
+                    "access_token"
+                );
+
+            try {
+
+                await axios.patch(
+                    `http://localhost:3000/users/${id}/role`,
+                    {
+                        role: newRole
+                    },
+                    {
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`
+                        }
+                    }
+                );
+
+                setResponseMsg(
+                    "User role updated successfully"
+                );
+
+                setErr("");
+
+                setRefresh(
+                    refresh + 1
+                );
+
+            }
+
+            catch (error) {
+
+                if (
+                    axios.isAxiosError(error) &&
+                    error.response?.data?.message
+                ) {
+
+                    setErr(
+                        error.response.data.message
+                    );
+
+                }
+
+                else {
+
+                    setErr(
+                        "Could not update user role"
+                    );
+
+                }
+
+            }
+
+        }
+
+        updateData();
+
+    }
 
     const totalPages =
         Math.ceil(
@@ -140,8 +221,19 @@ export default function AdminUsersPage() {
             </h1>
 
             <p className="mb-6">
-                View registered users
+                Search users and manage roles
             </p>
+
+            {
+                responseMsg &&
+                <div className="alert alert-success mb-4">
+
+                    <span>
+                        {responseMsg}
+                    </span>
+
+                </div>
+            }
 
             {
                 err &&
@@ -154,108 +246,109 @@ export default function AdminUsersPage() {
                 </div>
             }
 
-            <div className="overflow-x-auto">
+            <div className="card bg-base-100 shadow border mb-6">
 
-                <div className="card bg-base-100 shadow border mb-6">
+                <div className="card-body">
 
-                    <div className="card-body">
+                    <div className="grid md:grid-cols-4 gap-4">
 
-                        <div className="flex gap-3">
+                        <input
+                            type="text"
+                            className="input input-bordered w-full"
+                            placeholder="Search name or email"
+                            value={searchInput}
+                            onChange={
+                                (e) =>
+                                    setSearchInput(
+                                        e.target.value
+                                    )
+                            }
+                        />
 
-                            <input
-                                type="text"
-                                className="input input-bordered w-full"
-                                placeholder="Search name or email"
-                                value={searchInput}
-                                onChange={
-                                    (e) =>
-                                        setSearchInput(
-                                            e.target.value
-                                        )
+                        <select
+                            className="select select-bordered w-full"
+                            value={role}
+                            onChange={
+                                (e) => {
+
+                                    setRole(
+                                        e.target.value
+                                    );
+
+                                    setPage(1);
+
                                 }
-                            />
+                            }
+                        >
 
-                            <button
-                                className="btn btn-primary"
-                                onClick={
-                                    () => {
+                            <option value="">
+                                All Roles
+                            </option>
 
-                                        setPage(1);
+                            <option value="admin">
+                                Admin
+                            </option>
 
-                                        setSearch(
-                                            searchInput
-                                        );
+                            <option value="staff">
+                                Staff
+                            </option>
 
-                                    }
+                            <option value="customer">
+                                Customer
+                            </option>
+
+                        </select>
+
+                        <select
+                            className="select select-bordered w-full"
+                            value={sort}
+                            onChange={
+                                (e) => {
+
+                                    setSort(
+                                        e.target.value
+                                    );
+
+                                    setPage(1);
+
                                 }
-                            >
-                                Search
-                            </button>
-                            <select
-                                className="select select-bordered"
-                                value={role}
-                                onChange={
-                                    (e) => {
+                            }
+                        >
 
-                                        setRole(
-                                            e.target.value
-                                        );
+                            <option value="DESC">
+                                Newest First
+                            </option>
 
-                                        setPage(1);
+                            <option value="ASC">
+                                Oldest First
+                            </option>
 
-                                    }
+                        </select>
+
+                        <button
+                            className="btn btn-primary"
+                            onClick={
+                                () => {
+
+                                    setPage(1);
+
+                                    setSearch(
+                                        searchInput
+                                    );
+
                                 }
-
-                            >
-
-                                <option value="">
-                                    All Roles
-                                </option>
-
-                                <option value="admin">
-                                    Admin
-                                </option>
-
-                                <option value="staff">
-                                    Staff
-                                </option>
-
-                                <option value="customer">
-                                    Customer
-                                </option>
-
-                            </select>
-
-                            <select
-                                className="select select-bordered"
-                                value={sort}
-                                onChange={
-                                    (e) => {
-
-                                        setSort(
-                                            e.target.value
-                                        );
-
-                                        setPage(1);
-
-                                    }
-                                }
-                            >
-
-                                <option value="DESC">
-                                    Newest First
-                                </option>
-
-                                <option value="ASC">
-                                    Oldest First
-                                </option>
-
-                            </select>
-                        </div>
+                            }
+                        >
+                            Search
+                        </button>
 
                     </div>
 
                 </div>
+
+            </div>
+
+            <div className="overflow-x-auto">
 
                 <table className="table table-zebra">
 
@@ -297,7 +390,33 @@ export default function AdminUsersPage() {
                                         </td>
 
                                         <td>
-                                            {user.role}
+
+                                            <select
+                                                className="select select-bordered select-sm"
+                                                value={user.role}
+                                                onChange={
+                                                    (e) =>
+                                                        updateRole(
+                                                            user.id,
+                                                            e.target.value
+                                                        )
+                                                }
+                                            >
+
+                                                <option value="admin">
+                                                    Admin
+                                                </option>
+
+                                                <option value="staff">
+                                                    Staff
+                                                </option>
+
+                                                <option value="customer">
+                                                    Customer
+                                                </option>
+
+                                            </select>
+
                                         </td>
 
                                     </tr>
@@ -310,42 +429,50 @@ export default function AdminUsersPage() {
 
                 </table>
 
-                <div className="flex justify-between items-center mt-6">
+            </div>
 
-                    <button
-                        className="btn btn-outline"
-                        disabled={page <= 1}
-                        onClick={
-                            () =>
-                                setPage(
-                                    page - 1
-                                )
-                        }
-                    >
-                        Previous
-                    </button>
+            {
+                users.length == 0 &&
+                !err &&
 
-                    <span>
-                        Page {page} of {totalPages || 1}
-                    </span>
+                <p className="mt-4">
+                    No users found
+                </p>
+            }
 
-                    <button
-                        className="btn btn-outline"
-                        disabled={
-                            page >= totalPages
-                        }
-                        onClick={
-                            () =>
-                                setPage(
-                                    page + 1
-                                )
-                        }
-                    >
-                        Next
-                    </button>
+            <div className="flex justify-between items-center mt-6">
 
-                </div>
+                <button
+                    className="btn btn-outline"
+                    disabled={page <= 1}
+                    onClick={
+                        () =>
+                            setPage(
+                                page - 1
+                            )
+                    }
+                >
+                    Previous
+                </button>
 
+                <span>
+                    Page {page} of {totalPages || 1}
+                </span>
+
+                <button
+                    className="btn btn-outline"
+                    disabled={
+                        page >= totalPages
+                    }
+                    onClick={
+                        () =>
+                            setPage(
+                                page + 1
+                            )
+                    }
+                >
+                    Next
+                </button>
 
             </div>
 
