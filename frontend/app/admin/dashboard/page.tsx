@@ -1,7 +1,10 @@
+import Link from "next/link";
+
 "use client";
 
 import { useState, useEffect } from "react";
 import axios from "axios";
+import Link from "next/link";
 
 interface UsersResponse {
     data: [],
@@ -334,7 +337,127 @@ export default function AdminDashboard() {
                 </div>
 
             </div>
+            <h2 className="text-2xl font-bold mt-10 mb-4">
+                Management
+            </h2>
 
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                <Link
+                    href="/admin/users"
+                    className="card bg-base-100 shadow border"
+                >
+
+                    <div className="card-body">
+
+                        <h2 className="font-bold">
+                            Users
+                        </h2>
+
+                        <p>
+                            Manage users and roles
+                        </p>
+
+                    </div>
+
+                </Link>
+
+                <Link
+                    href="/admin/services"
+                    className="card bg-base-100 shadow border"
+                >
+
+                    <div className="card-body">
+
+                        <h2 className="font-bold">
+                            Services
+                        </h2>
+
+                        <p>
+                            Manage services
+                        </p>
+
+                    </div>
+
+                </Link>
+
+                <Link
+                    href="/admin/queues"
+                    className="card bg-base-100 shadow border"
+                >
+
+                    <div className="card-body">
+
+                        <h2 className="font-bold">
+                            Queues
+                        </h2>
+
+                        <p>
+                            Manage queues
+                        </p>
+
+                    </div>
+
+                </Link>
+
+                <Link
+                    href="/admin/counters"
+                    className="card bg-base-100 shadow border"
+                >
+
+                    <div className="card-body">
+
+                        <h2 className="font-bold">
+                            Counters
+                        </h2>
+
+                        <p>
+                            Manage counters
+                        </p>
+
+                    </div>
+
+                </Link>
+
+                <Link
+                    href="/admin/tickets"
+                    className="card bg-base-100 shadow border"
+                >
+
+                    <div className="card-body">
+
+                        <h2 className="font-bold">
+                            Tickets
+                        </h2>
+
+                        <p>
+                            Manage tickets
+                        </p>
+
+                    </div>
+
+                </Link>
+
+                <Link
+                    href="/admin/profile"
+                    className="card bg-base-100 shadow border"
+                >
+
+                    <div className="card-body">
+
+                        <h2 className="font-bold">
+                            Profile
+                        </h2>
+
+                        <p>
+                            View your profile
+                        </p>
+
+                    </div>
+
+                </Link>
+
+            </div>
         </div>
     )
 }
