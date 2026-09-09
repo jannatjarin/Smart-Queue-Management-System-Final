@@ -87,6 +87,27 @@ export default function AdminDashboard() {
                         }
                     );
 
+                const servicesResponse =
+                    await axios.get<Service[]>(
+                        "http://localhost:3000/services?includeInactive=true"
+                    );
+
+                const queuesResponse =
+                    await axios.get<Queue[]>(
+                        "http://localhost:3000/queues"
+                    );
+
+                const countersResponse =
+                    await axios.get<Counter[]>(
+                        "http://localhost:3000/counters",
+                        {
+                            headers:
+                            {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
+                        }
+                    );
 
                 setStats(
                     {
@@ -99,7 +120,16 @@ export default function AdminDashboard() {
                             customersResponse.data.total,
 
                         staff:
-                            staffResponse.data.total
+                            staffResponse.data.total,
+
+                        services:
+                            servicesResponse.data.length,
+
+                        queues:
+                            queuesResponse.data.length,
+
+                        counters:
+                            countersResponse.data.length
                     }
                 );
 
