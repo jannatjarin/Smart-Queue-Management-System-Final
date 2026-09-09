@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
+
+
 interface Ticket {
     id: number,
     ticketNumber: string,
@@ -42,6 +44,10 @@ export default function AdminTicketsPage() {
     const [err, setErr] =
         useState("");
 
+    const [status, setStatus] =
+    useState("");
+
+
     useEffect(() => {
 
         const getTickets = async () => {
@@ -53,18 +59,29 @@ export default function AdminTicketsPage() {
 
             try {
 
-                const response =
-                    await axios.get<Ticket[]>(
-                        "http://localhost:3000/tickets",
-                        {
-                            headers: {
-                                Authorization:
-                                    `Bearer ${token}`
+                let url =
+    "http://localhost:3000/tickets";
+
+if (status) {
+
+    url =
+        url +
+        `?status=${status}`;
+
+}
+
+const response =
+    await axios.get<Ticket[]>(
+        url,
+{
+     headers: {
+             Authorization:
+              `Bearer ${token}`
                             }
-                        }
+                 }
                     );
 
-                setTickets(
+            setTickets(
                     response.data
                 );
 
@@ -99,7 +116,7 @@ export default function AdminTicketsPage() {
 
         getTickets();
 
-    }, []);
+    }, [status]);
 
     return (
         <div className="max-w-7xl mx-auto py-8">
@@ -123,7 +140,53 @@ export default function AdminTicketsPage() {
                 </div>
             }
 
-            <div className="overflow-x-auto">
+            
+
+            <div className="card bg-base-100 shadow border mb-6">
+
+    <div className="card-body">
+
+        <label className="label">
+            Status
+        </label>
+
+        <select
+            className="select select-bordered max-w-sm"
+            value={status}
+            onChange={
+                (e) =>
+                    setStatus(
+                        e.target.value
+                    )
+            }
+        >
+
+            <option value="">
+                All Statuses
+            </option>
+
+            <option value="waiting">
+                Waiting
+            </option>
+
+            <option value="called">
+                Called
+            </option>
+
+            <option value="completed">
+                Completed
+            </option>
+
+            <option value="cancelled">
+                Cancelled
+            </option>
+
+        </select>
+
+    </div>
+
+</div>
+<div className="overflow-x-auto">
 
                 <table className="table table-zebra">
 
