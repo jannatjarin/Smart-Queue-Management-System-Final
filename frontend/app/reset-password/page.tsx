@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 
+
 export default function ResetPasswordPage() {
+    const [err, setErr] =
+    useState("");
+
 
     const [formData, setFormData] =
         useState(
@@ -30,6 +34,40 @@ export default function ResetPasswordPage() {
         );
 
     }
+    const onSubmitHandle = (
+    e: React.FormEvent<HTMLFormElement>
+) => {
+
+    e.preventDefault();
+
+    setErr("");
+
+    if (
+        formData.newPassword.length < 6
+    ) {
+
+        setErr(
+            "Password must be at least 6 characters"
+        );
+
+        return;
+
+    }
+
+    if (
+        formData.newPassword !=
+        formData.confirmPassword
+    ) {
+
+        setErr(
+            "Passwords do not match"
+        );
+
+        return;
+
+    }
+
+}
 
     return (
         <div className="max-w-md mx-auto py-10">
@@ -42,7 +80,18 @@ export default function ResetPasswordPage() {
                 Enter the reset token and your new password
             </p>
 
-            <form>
+            {
+    err &&
+    <div className="alert alert-error mb-4">
+
+        <span>
+            {err}
+        </span>
+
+    </div>
+}
+
+            <form onSubmit={onSubmitHandle}>
 
                 <label className="label">
                     Reset Token
