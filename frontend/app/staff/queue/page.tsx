@@ -15,6 +15,35 @@ interface Queue {
         name: string
     }
 }
+
+interface Ticket {
+    id: number,
+    ticketNumber: string,
+    status: string,
+    priority: string,
+    issuedAt: string,
+
+    user: {
+        id: number,
+        fullName: string
+    },
+
+    queue: {
+        id: number,
+        name: string
+    },
+
+    service: {
+        id: number,
+        name: string
+    },
+
+    counter: {
+        id: number,
+        name: string
+    } | null
+}
+
 interface Service {
     id: number,
     name: string
@@ -24,6 +53,12 @@ export default function StaffQueuePage() {
 
     const [queues, setQueues] =
         useState<Queue[]>([]);
+
+    const [tickets, setTickets] =
+        useState<Ticket[]>([]);
+
+    const [refresh, setRefresh] =
+        useState(0);
 
     const [err, setErr] =
         useState("");
@@ -75,6 +110,63 @@ export default function StaffQueuePage() {
             getQueues();
 
         }, []);
+
+        useEffect(() => {
+
+            const getTickets = async () => {
+
+                const token =
+                    localStorage.getItem(
+                        "access_token"
+                    );
+
+                try {
+
+                    const response =
+                        await axios.get<Ticket[]>(
+                            "http://localhost:3000/tickets",
+                            {
+                                headers: {
+                                    Authorization:
+                                        `Bearer ${token}`
+                                }
+                            }
+                        );
+
+                    setTickets(
+                        response.data
+                    );
+
+                }
+
+                catch (error) {
+
+                    if (
+                        axios.isAxiosError(error) &&
+                        error.response?.data?.message
+                    ) {
+
+                        setErr(
+                            error.response.data.message
+                        );
+
+                    }
+
+                    else {
+
+                        setErr(
+                            "Could not load tickets"
+                        );
+
+                    }
+
+                }
+
+            }
+
+            getTickets();
+
+        }, [refresh]);
 
     return (
         <div className="max-w-7xl mx-auto py-8">
@@ -153,6 +245,67 @@ export default function StaffQueuePage() {
                         )
                     )
                 }
+
+            </div>
+
+            <h2 className="text-2xl font-bold mt-8 mb-4">
+                Tickets
+            </h2>
+
+            <div className="overflow-x-auto">
+
+                <table className="table table-zebra">
+
+                    <thead>
+
+                        <tr>
+                            <th>Ticket</th>
+                            <th>Customer</th>
+                            <th>Queue</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {
+                            tickets &&
+                            tickets.map(
+                                (ticket: Ticket) => (
+
+                                    <tr key={ticket.id}>
+
+                                        <td>
+                                            {ticket.ticketNumber}
+                                        </td>
+
+                                        <td>
+                                            {ticket.user?.fullName}
+                                        </td>
+
+                                        <td>
+                                            {ticket.queue?.name}
+                                        </td>
+
+                                        <td>
+                                            {ticket.priority}
+                                        </td>
+
+                                        <td>
+                                            {ticket.status}
+                                        </td>
+
+                                    </tr>
+
+                                )
+                            )
+                        }
+
+                    </tbody>
+
+                </table>
 
             </div>
 
