@@ -302,6 +302,139 @@ export default function AdminQueuesPage() {
 
     }
 
+    const updateQueueStatus = (
+        id: number,
+        status: string
+    ) => {
+
+        const updateData = async () => {
+
+            const token =
+                localStorage.getItem(
+                    "access_token"
+                );
+
+            try {
+
+                await axios.patch(
+                    `http://localhost:3000/queues/${id}/status`,
+                    {
+                        status:
+                            status
+                    },
+                    {
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`
+                        }
+                    }
+                );
+
+                setResponseMsg(
+                    "Queue status updated successfully"
+                );
+
+                setErr("");
+
+                setRefresh(
+                    refresh + 1
+                );
+
+            }
+
+            catch (error) {
+
+                if (
+                    axios.isAxiosError(error) &&
+                    error.response?.data?.message
+                ) {
+
+                    setErr(
+                        error.response.data.message
+                    );
+
+                }
+
+                else {
+
+                    setErr(
+                        "Could not update queue status"
+                    );
+
+                }
+
+            }
+
+        }
+
+        updateData();
+
+    }
+
+    const deleteQueue = (
+        id: number
+    ) => {
+
+        const removeQueue = async () => {
+
+            const token =
+                localStorage.getItem(
+                    "access_token"
+                );
+
+            try {
+
+                await axios.delete(
+                    `http://localhost:3000/queues/${id}`,
+                    {
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`
+                        }
+                    }
+                );
+
+                setResponseMsg(
+                    "Queue deleted successfully"
+                );
+
+                setErr("");
+
+                setRefresh(
+                    refresh + 1
+                );
+
+            }
+
+            catch (error) {
+
+                if (
+                    axios.isAxiosError(error) &&
+                    error.response?.data?.message
+                ) {
+
+                    setErr(
+                        error.response.data.message
+                    );
+
+                }
+
+                else {
+
+                    setErr(
+                        "Could not delete queue"
+                    );
+
+                }
+
+            }
+
+        }
+
+        removeQueue();
+
+    }
+
     return (
         <div className="max-w-7xl mx-auto py-8">
 
@@ -510,22 +643,58 @@ export default function AdminQueuesPage() {
                                         </td>
 
                                         <td>
-                                            {queue.status}
+                                             <select
+                                                className="select select-bordered select-sm"
+                                                value={queue.status}
+                                                onChange={
+                                                    (e) =>
+                                                        updateQueueStatus(
+                                                            queue.id,
+                                                            e.target.value
+                                                        )
+                                                }
+                                            >
+
+                                                <option value="open">
+                                                    Open
+                                                </option>
+
+                                                <option value="closed">
+                                                    Closed
+                                                </option>
+
+                                            </select>
                                         </td>
 
                                         <td>
 
-                                            <button
-                                                className="btn btn-sm btn-outline"
-                                                onClick={
-                                                    () =>
-                                                        editQueue(
-                                                            queue
-                                                        )
-                                                }
-                                            >
-                                                Edit
-                                            </button>
+                                            <div className="flex gap-2">
+
+                                                <button
+                                                    className="btn btn-sm btn-outline"
+                                                    onClick={
+                                                        () =>
+                                                            editQueue(
+                                                                queue
+                                                            )
+                                                    }
+                                                >
+                                                    Edit
+                                                </button>
+
+                                                <button
+                                                    className="btn btn-sm btn-error"
+                                                    onClick={
+                                                        () =>
+                                                            deleteQueue(
+                                                                queue.id
+                                                            )
+                                                    }
+                                                >
+                                                    Delete
+                                                </button>
+
+                                            </div>
 
                                         </td>
 
