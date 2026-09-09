@@ -31,6 +31,11 @@ export default function AdminServicesPage() {
             }
         );
 
+    const [editId, setEditId] =
+        useState<number | null>(
+            null
+        );
+
     const [refresh, setRefresh] =
         useState(0);
 
@@ -109,6 +114,39 @@ export default function AdminServicesPage() {
 
     }
 
+    const editService = (
+        service: Service
+    ) => {
+
+        setEditId(
+            service.id
+        );
+
+        setFormData(
+            {
+                name:
+                    service.name,
+
+                description:
+                    service.description || "",
+
+                estimatedTime:
+                    String(
+                        service.estimatedTime
+                    ),
+
+                department:
+                    service.department
+            }
+        );
+
+
+        setResponseMsg("");
+
+        setErr("");
+
+    }
+
     const onSubmitHandle = (
         e: FormEvent<HTMLFormElement>
     ) => {
@@ -124,278 +162,345 @@ export default function AdminServicesPage() {
 
             try {
 
-                await axios.post(
-                    "http://localhost:3000/services",
-                    {
-                        name:
-                            formData.name,
+                if (editId == null) {
 
-                        description:
-                            formData.description,
+                    await axios.post(
+                        "http://localhost:3000/services",
+                        {
+                            name:
+                                formData.name,
 
-                        estimatedTime:
-                            Number(
-                                formData.estimatedTime
-                            ),
+                            description:
+                                formData.description,
 
-                        department:
-                            formData.department
-                    },
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`
+                            estimatedTime:
+                                Number(
+                                    formData.estimatedTime
+                                ),
+
+                            department:
+                                formData.department
+                        },
+                        {
+                            headers: {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
                         }
-                    }
-                );
+                    );
 
-                setResponseMsg(
-                    "Service created successfully"
-                );
-
-                setErr("");
-
-                setFormData(
-                    {
-                        name: "",
-                        description: "",
-                        estimatedTime: "",
-                        department: ""
-                    }
-                );
-
-                setRefresh(
-                    refresh + 1
-                );
-
-            }
-
-            catch (error) {
-
-                if (
-                    axios.isAxiosError(error) &&
-                    error.response?.data?.message
-                ) {
-
-                    if (
-                        Array.isArray(
-                            error.response.data.message
-                        )
-                    ) {
-
-                        setErr(
-                            error.response.data.message.join(
-                                ", "
-                            )
-                        );
-
-                    }
-
-                    else {
-
-                        setErr(
-                            error.response.data.message
-                        );
-
-                    }
+                    setResponseMsg(
+                        "Service created successfully"
+                    );
 
                 }
 
                 else {
 
-                    setErr(
-                        "Could not create service"
+                    await axios.patch(
+                        `http://localhost:3000/services/${editId}`,
+                        {
+                            name:
+                                formData.name,
+
+                            description:
+                                formData.description,
+
+                            estimatedTime:
+                                Number(
+                                    formData.estimatedTime
+                                ),
+
+                            department:
+                                formData.department
+                        },
+                        {
+                            headers: {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
+                        }
+                    );
+
+                    setResponseMsg(
+                        "Service updated successfully"
                     );
 
                 }
 
-            }
+                setErr("");
+
+                setEditId(null);
+
+    setFormData(
+        {
+            name: "",
+            description: "",
+            estimatedTime: "",
+            department: ""
+        }
+    );
+
+    setRefresh(
+        refresh + 1
+    );
+
+}
+
+            catch (error) {
+
+    if (
+        axios.isAxiosError(error) &&
+        error.response?.data?.message
+    ) {
+
+        if (
+            Array.isArray(
+                error.response.data.message
+            )
+        ) {
+
+            setErr(
+                error.response.data.message.join(
+                    ", "
+                )
+            );
 
         }
 
-        createService();
+        else {
+
+            setErr(
+                error.response.data.message
+            );
+
+        }
 
     }
 
-    return (
-        <div className="max-w-7xl mx-auto py-8">
+    else {
 
-            <h1 className="text-3xl font-bold mb-2">
-                Service Management
-            </h1>
+        setErr(
+            "Could not create service"
+        );
 
-            <p className="mb-6">
-                Create and manage services
-            </p>
+    }
 
-            {
-                responseMsg &&
-                <div className="alert alert-success mb-4">
-                    {responseMsg}
-                </div>
-            }
+}
 
-            {
-                err &&
-                <div className="alert alert-error mb-4">
-                    {err}
-                </div>
-            }
+        }
 
-            <div className="card bg-base-100 shadow border mb-8">
+createService();
 
-                <div className="card-body">
+    }
 
-                    <h2 className="card-title">
-                        Create Service
-                    </h2>
+return (
+    <div className="max-w-7xl mx-auto py-8">
 
-                    <form onSubmit={onSubmitHandle}>
+        <h1 className="text-3xl font-bold mb-2">
+            Service Management
+        </h1>
 
-                        <div className="grid md:grid-cols-2 gap-4">
+        <p className="mb-6">
+            Create and manage services
+        </p>
 
-                            <div>
+        {
+            responseMsg &&
+            <div className="alert alert-success mb-4">
+                {responseMsg}
+            </div>
+        }
 
-                                <label className="label">
-                                    Name
-                                </label>
+        {
+            err &&
+            <div className="alert alert-error mb-4">
+                {err}
+            </div>
+        }
 
-                                <input
-                                    type="text"
-                                    name="name"
-                                    className="input input-bordered w-full"
-                                    value={formData.name}
-                                    onChange={onChangeHandle}
-                                    required
-                                />
+        <div className="card bg-base-100 shadow border mb-8">
 
-                            </div>
+            <div className="card-body">
 
-                            <div>
+                <h2 className="card-title">
 
-                                <label className="label">
-                                    Department
-                                </label>
+                    {
+                        editId == null
+                            ? "Create Service"
+                            : "Edit Service"
+                    }
 
-                                <input
-                                    type="text"
-                                    name="department"
-                                    className="input input-bordered w-full"
-                                    value={formData.department}
-                                    onChange={onChangeHandle}
-                                    required
-                                />
+                </h2>
 
-                            </div>
+                <form onSubmit={onSubmitHandle}>
 
-                            <div>
+                    <div className="grid md:grid-cols-2 gap-4">
 
-                                <label className="label">
-                                    Estimated Time
-                                </label>
+                        <div>
 
-                                <input
-                                    type="number"
-                                    name="estimatedTime"
-                                    className="input input-bordered w-full"
-                                    value={formData.estimatedTime}
-                                    onChange={onChangeHandle}
-                                    min="1"
-                                    required
-                                />
+                            <label className="label">
+                                Name
+                            </label>
 
-                            </div>
-
-                            <div>
-
-                                <label className="label">
-                                    Description
-                                </label>
-
-                                <textarea
-                                    name="description"
-                                    className="textarea textarea-bordered w-full"
-                                    value={formData.description}
-                                    onChange={onChangeHandle}
-                                />
-
-                            </div>
+                            <input
+                                type="text"
+                                name="name"
+                                className="input input-bordered w-full"
+                                value={formData.name}
+                                onChange={onChangeHandle}
+                                required
+                            />
 
                         </div>
 
-                        <input
-                            type="submit"
-                            value="Create Service"
-                            className="btn btn-primary mt-6"
-                        />
+                        <div>
 
-                    </form>
+                            <label className="label">
+                                Department
+                            </label>
 
-                </div>
+                            <input
+                                type="text"
+                                name="department"
+                                className="input input-bordered w-full"
+                                value={formData.department}
+                                onChange={onChangeHandle}
+                                required
+                            />
 
-            </div>
+                        </div>
 
-            <div className="overflow-x-auto">
+                        <div>
 
-                <table className="table table-zebra">
+                            <label className="label">
+                                Estimated Time
+                            </label>
 
-                    <thead>
+                            <input
+                                type="number"
+                                name="estimatedTime"
+                                className="input input-bordered w-full"
+                                value={formData.estimatedTime}
+                                onChange={onChangeHandle}
+                                min="1"
+                                required
+                            />
 
-                        <tr>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th>Department</th>
-                            <th>Estimated Time</th>
-                            <th>Status</th>
-                        </tr>
+                        </div>
 
-                    </thead>
+                        <div>
 
-                    <tbody>
+                            <label className="label">
+                                Description
+                            </label>
 
-                        {
-                            services &&
-                            services.map(
-                                (service: Service) => (
+                            <textarea
+                                name="description"
+                                className="textarea textarea-bordered w-full"
+                                value={formData.description}
+                                onChange={onChangeHandle}
+                            />
 
-                                    <tr key={service.id}>
+                        </div>
 
-                                        <td>
-                                            {service.name}
-                                        </td>
+                    </div>
 
-                                        <td>
-                                            {service.description}
-                                        </td>
-
-                                        <td>
-                                            {service.department}
-                                        </td>
-
-                                        <td>
-                                            {service.estimatedTime} minutes
-                                        </td>
-
-                                        <td>
-                                            {
-                                                service.isActive
-                                                    ? "Active"
-                                                    : "Inactive"
-                                            }
-                                        </td>
-
-                                    </tr>
-
-                                )
-                            )
+                    <input
+                        type="submit"
+                        value={
+                            editId == null
+                                ? "Create Service"
+                                : "Update Service"
                         }
+                        className="btn btn-primary mt-6"
+                    />
 
-                    </tbody>
-
-                </table>
+                </form>
 
             </div>
 
         </div>
-    )
+
+        <div className="overflow-x-auto">
+
+            <table className="table table-zebra">
+
+                <thead>
+
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Department</th>
+                        <th>Estimated Time</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {
+                        services &&
+                        services.map(
+                            (service: Service) => (
+
+                                <tr key={service.id}>
+
+                                    <td>
+                                        {service.name}
+                                    </td>
+
+                                    <td>
+                                        {service.description}
+                                    </td>
+
+                                    <td>
+                                        {service.department}
+                                    </td>
+
+                                    <td>
+                                        {service.estimatedTime} minutes
+                                    </td>
+
+                                    <td>
+                                        {
+                                            service.isActive
+                                                ? "Active"
+                                                : "Inactive"
+                                        }
+                                    </td>
+
+                                    <td>
+
+                                        <button
+                                            className="btn btn-sm btn-outline"
+                                            onClick={
+                                                () =>
+                                                    editService(
+                                                        service
+                                                    )
+                                            }
+                                        >
+                                            Edit
+                                        </button>
+
+                                    </td>
+
+
+                                </tr>
+
+                            )
+                        )
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+)
 }
