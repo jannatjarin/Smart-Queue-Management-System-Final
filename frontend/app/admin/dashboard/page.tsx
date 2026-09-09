@@ -1,10 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
+
+interface UsersResponse {
+    data: [],
+    total: number,
+    page: number,
+    limit: number
+}
 
 export default function AdminDashboard() {
 
-    const [stats] = useState(
+    const [stats, setStats] = useState(
         {
             users: 0,
             customers: 0,
@@ -17,6 +25,101 @@ export default function AdminDashboard() {
         }
     );
 
+    const [err, setErr] =
+        useState("");
+
+    useEffect(() => {
+
+        const getDashboardData = async () => {
+
+            const token =
+                localStorage.getItem(
+                    "access_token"
+                );
+
+            try {
+
+                const usersResponse =
+                    await axios.get<UsersResponse>(
+                        "http://localhost:3000/users?limit=1",
+                        {
+                            headers: {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
+                        }
+                    );
+
+                const customersResponse =
+                    await axios.get<UsersResponse>(
+                        "http://localhost:3000/users?role=customer&limit=1",
+                        {
+                            headers: {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
+                        }
+                    );
+
+                const staffResponse =
+                    await axios.get<UsersResponse>(
+                        "http://localhost:3000/users?role=staff&limit=1",
+                        {
+                            headers: {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
+                        }
+                    );
+
+                setStats(
+                    {
+                        ...stats,
+
+                        users:
+                            usersResponse.data.total,
+
+                        customers:
+                            customersResponse.data.total,
+
+                        staff:
+                            staffResponse.data.total
+                    }
+                );
+
+                setErr("");
+
+            }
+
+            catch (error) {
+
+                if (
+                    axios.isAxiosError(error) &&
+                    error.response?.data?.message
+                ) {
+
+                    setErr(
+                        error.response.data.message
+                    );
+
+                }
+
+                else {
+
+                    setErr(
+                        "Could not load dashboard data"
+                    );
+
+                }
+
+            }
+
+        }
+
+        getDashboardData();
+
+    }, []);
+
     return (
         <div className="max-w-7xl mx-auto py-8">
 
@@ -27,6 +130,17 @@ export default function AdminDashboard() {
             <p className="mb-8">
                 Smart Queue Management System overview
             </p>
+
+            {
+                err &&
+                <div className="alert alert-error mb-5">
+
+                    <span>
+                        {err}
+                    </span>
+
+                </div>
+            }
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
 
