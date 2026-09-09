@@ -63,6 +63,9 @@ export default function StaffQueuePage() {
     const [selectedQueueId, setSelectedQueueId] =
         useState("");
 
+    const [responseMsg, setResponseMsg] =
+        useState("");
+
     const [err, setErr] =
         useState("");
 
@@ -203,6 +206,79 @@ export default function StaffQueuePage() {
                     ticket.status == "called"
             );
 
+        const callNext = () => {
+
+            if (!selectedQueueId) {
+
+                setErr(
+                    "Please select a queue"
+                );
+
+                return;
+
+            }
+
+            const callNextTicket = async () => {
+
+                const token =
+                    localStorage.getItem(
+                        "access_token"
+                    );
+
+                try {
+
+                    await axios.patch(
+                        `http://localhost:3000/tickets/queue/${selectedQueueId}/next`,
+                        {},
+                        {
+                            headers: {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
+                        }
+                    );
+
+                    setResponseMsg(
+                        "Next ticket called successfully"
+                    );
+
+                    setErr("");
+
+                    setRefresh(
+                        refresh + 1
+                    );
+
+                }
+
+                catch (error) {
+
+                    if (
+                        axios.isAxiosError(error) &&
+                        error.response?.data?.message
+                    ) {
+
+                        setErr(
+                            error.response.data.message
+                        );
+
+                    }
+
+                    else {
+
+                        setErr(
+                            "Could not call next ticket"
+                        );
+
+                    }
+
+                }
+
+            }
+
+            callNextTicket();
+
+        }
+
     return (
         <div className="max-w-7xl mx-auto py-8">
 
@@ -213,6 +289,18 @@ export default function StaffQueuePage() {
             <p className="mb-6">
                 Manage queue operations
             </p>
+
+            {
+                responseMsg &&
+
+                <div className="alert alert-success mb-4">
+
+                    <span>
+                        {responseMsg}
+                    </span>
+
+                </div>
+            }
 
             {
                 err &&
@@ -322,6 +410,16 @@ export default function StaffQueuePage() {
                                         : "None"
                                 }
                             </p>
+
+                            <button
+                                className="btn btn-primary mt-4"
+                                onClick={callNext}
+                                disabled={
+                                    waitingTickets.length == 0
+                                }
+                            >
+                                Call Next
+                            </button>
 
                         </div>
 
