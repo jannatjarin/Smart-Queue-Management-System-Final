@@ -51,6 +51,12 @@ export class Users {
   })
   role: Role;
 
+  @Column({
+  type: 'int',
+  default: 0,
+})
+resetTokenVersion: number;
+
   @CreateDateColumn()
   createDate: Date;
 
