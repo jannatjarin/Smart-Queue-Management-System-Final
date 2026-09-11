@@ -1,140 +1,371 @@
 import {
+  BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
-  BadRequestException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Queues } from './queues.entity';
-import { Services } from '../services/services.entity';
-import { Tickets } from '../tickets/tickets.entity';
-import { QueueStatus } from '../common/enums/queue-status.enum';
-import { TicketStatus } from '../common/enums/ticket-status.enum';
-import { CreateQueueDto } from './dto/create-queue.dto';
-import { UpdateQueueDto } from './dto/update-queue.dto';
+
+import {
+  InjectRepository,
+} from '@nestjs/typeorm';
+
+import {
+  Repository,
+} from 'typeorm';
+
+import {
+  Queues,
+} from './queues.entity';
+
+import {
+  Services,
+} from '../services/services.entity';
+
+import {
+  Tickets,
+} from '../tickets/tickets.entity';
+
+import {
+  Counters,
+} from '../counters/counters.entity';
+
+import {
+  QueueStatus,
+} from '../common/enums/queue-status.enum';
+
+import {
+  Role,
+} from '../common/enums/role.enum';
+
+import {
+  CurrentUserPayload,
+} from '../common/current-user.interface';
+
+import {
+  CreateQueueDto,
+} from './dto/create-queue.dto';
+
+import {
+  UpdateQueueDto,
+} from './dto/update-queue.dto';
 
 @Injectable()
 export class QueuesService {
+
   constructor(
     @InjectRepository(Queues)
-    private readonly queuesRepository: Repository<Queues>,
+    private readonly queuesRepository:
+      Repository<Queues>,
 
     @InjectRepository(Services)
-    private readonly servicesRepository: Repository<Services>,
+    private readonly servicesRepository:
+      Repository<Services>,
 
     @InjectRepository(Tickets)
-    private readonly ticketsRepository: Repository<Tickets>,
-  ) {}
+    private readonly ticketsRepository:
+      Repository<Tickets>,
 
-  async create(dto: CreateQueueDto): Promise<Queues> {
-    const service = await this.servicesRepository.findOne({
-      where: { id: dto.serviceId },
-    });
+    @InjectRepository(Counters)
+    private readonly countersRepository:
+      Repository<Counters>,
+  ) { }
+
+  async create(
+    dto: CreateQueueDto,
+  ): Promise<Queues> {
+
+    const service =
+      await this.servicesRepository
+        .findOne(
+          {
+            where: {
+              id:
+                dto.serviceId,
+
+              isActive:
+                true,
+            },
+          },
+        );
 
     if (!service) {
+
       throw new NotFoundException(
-        `Service with id ${dto.serviceId} not found`,
+        `Active service with id ${dto.serviceId} not found`,
       );
+
     }
 
-    const existingQueue = await this.queuesRepository.findOne({
-      where: {
-        name: dto.name,
-        service: { id: dto.serviceId },
-      },
-    });
+    // Queue entity currently has a global UNIQUE name.
+    // So service validation must match the database.
+    const existingQueue =
+      await this.queuesRepository
+        .findOne(
+          {
+            where: {
+              name:
+                dto.name,
+            },
+          },
+        );
 
     if (existingQueue) {
+
       throw new ConflictException(
-        'A queue with this name already exists for this service.',
+        'A queue with this name already exists.',
       );
+
     }
 
-    const queue = this.queuesRepository.create({
-      name: dto.name,
-      location: dto.location,
-      service,
-    });
+    const queue =
+      this.queuesRepository
+        .create(
+          {
+            name:
+              dto.name,
 
-    return this.queuesRepository.save(queue);
+            location:
+              dto.location,
+
+            service,
+          },
+        );
+
+    return this.queuesRepository
+      .save(
+        queue,
+      );
   }
 
   async findAll(
     serviceId?: number,
     status?: QueueStatus,
   ): Promise<Queues[]> {
-    const where: Record<string, unknown> = {};
 
-    if (serviceId) where.service = { id: serviceId };
-    if (status) where.status = status;
+    const where:
+      Record<string, unknown> =
+      {};
 
-    return this.queuesRepository.find({
-      where,
-      relations: ['service'],
-    });
+    if (serviceId) {
+
+      where.service = {
+        id:
+          serviceId,
+      };
+
+    }
+
+    if (status) {
+
+      where.status =
+        status;
+
+    }
+
+    return this.queuesRepository
+      .find(
+        {
+          where,
+
+          relations: [
+            'service',
+          ],
+        },
+      );
   }
 
-  async findOne(id: number): Promise<Queues> {
-    const queue = await this.queuesRepository.findOne({
-      where: { id },
-      relations: ['service', 'tickets'],
-    });
+  async findOne(
+    id: number,
+  ): Promise<Queues> {
+
+    const queue =
+      await this.queuesRepository
+        .findOne(
+          {
+            where: {
+              id,
+            },
+
+            relations: [
+              'service',
+              'tickets',
+            ],
+          },
+        );
 
     if (!queue) {
-      throw new NotFoundException(`Queue with id ${id} not found`);
+
+      throw new NotFoundException(
+        `Queue with id ${id} not found`,
+      );
+
     }
 
     return queue;
   }
 
-  async update(id: number, dto: UpdateQueueDto): Promise<Queues> {
-    const queue = await this.findOne(id);
+  async update(
+    id: number,
+    dto: UpdateQueueDto,
+  ): Promise<Queues> {
 
-    if (dto.name !== undefined) {
-      queue.name = dto.name;
+    const queue =
+      await this.findOne(
+        id,
+      );
+
+    if (
+      dto.name !== undefined &&
+      dto.name != queue.name
+    ) {
+
+      const existingQueue =
+        await this.queuesRepository
+          .findOne(
+            {
+              where: {
+                name:
+                  dto.name,
+              },
+            },
+          );
+
+      if (
+        existingQueue &&
+        existingQueue.id != id
+      ) {
+
+        throw new ConflictException(
+          'A queue with this name already exists.',
+        );
+
+      }
+
+      queue.name =
+        dto.name;
     }
 
-    if (dto.location !== undefined) {
-      queue.location = dto.location;
+    if (
+      dto.location !== undefined
+    ) {
+
+      queue.location =
+        dto.location;
+
     }
 
-    return this.queuesRepository.save(queue);
+    return this.queuesRepository
+      .save(
+        queue,
+      );
   }
 
   async updateStatus(
     id: number,
     status: QueueStatus,
+    currentUser:
+      CurrentUserPayload,
   ): Promise<Queues> {
-    const queue = await this.findOne(id);
 
-    queue.status = status;
-
-    return this.queuesRepository.save(queue);
-  }
-
-  async remove(id: number): Promise<void> {
-    const queue = await this.findOne(id);
-
-    const activeTickets = await this.ticketsRepository.count({
-      where: [
-        {
-          queue: { id },
-          status: TicketStatus.WAITING,
-        },
-        {
-          queue: { id },
-          status: TicketStatus.CALLED,
-        },
-      ],
-    });
-
-    if (activeTickets > 0) {
-      throw new BadRequestException(
-        'Cannot delete a queue that has active tickets.',
+    const queue =
+      await this.findOne(
+        id,
       );
+
+    if (
+      currentUser.role ==
+      Role.STAFF
+    ) {
+
+      const counter =
+        await this.countersRepository
+          .findOne(
+            {
+              where: {
+                staff: {
+                  id:
+                    currentUser.id,
+                },
+              },
+
+              relations: [
+                'staff',
+                'services',
+              ],
+            },
+          );
+
+      if (!counter) {
+
+        throw new BadRequestException(
+          'You are not currently assigned to a counter',
+        );
+
+      }
+
+      const supportsService =
+        counter.services.some(
+          (
+            service,
+          ) =>
+            service.id ==
+            queue.service.id,
+        );
+
+      if (!supportsService) {
+
+        throw new ForbiddenException(
+          'You cannot change the status of this queue',
+        );
+
+      }
     }
 
-    await this.queuesRepository.remove(queue);
+    queue.status =
+      status;
+
+    return this.queuesRepository
+      .save(
+        queue,
+      );
+  }
+
+  async remove(
+    id: number,
+  ): Promise<void> {
+
+    const queue =
+      await this.findOne(
+        id,
+      );
+
+    const ticketCount =
+      await this.ticketsRepository
+        .count(
+          {
+            where: {
+              queue: {
+                id,
+              },
+            },
+          },
+        );
+
+    if (
+      ticketCount >
+      0
+    ) {
+
+      throw new BadRequestException(
+        'Cannot delete a queue that already has ticket history. Close it instead.',
+      );
+
+    }
+
+    await this.queuesRepository
+      .remove(
+        queue,
+      );
   }
 }
