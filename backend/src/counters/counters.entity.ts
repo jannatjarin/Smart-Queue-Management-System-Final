@@ -36,7 +36,7 @@ export class Counters {
   // one counter <-> one staff user (owning side, holds the FK)
   @OneToOne(() => Users, (user) => user.counter, { nullable: true })
   @JoinColumn()
-  staff: Users;
+  staff: Users | null;
 
   // many counters <-> many services (owning side, creates join table)
   @ManyToMany(() => Services)
