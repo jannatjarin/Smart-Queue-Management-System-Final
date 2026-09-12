@@ -1049,6 +1049,18 @@ export class TicketsService {
 
     if (
       currentUser.role ==
+      Role.STAFF
+    ) {
+
+        throw new ForbiddenException(
+          'Staff can not cancel tickets',
+        );
+
+      }
+
+
+    if (
+      currentUser.role ==
       Role.CUSTOMER
     ) {
 

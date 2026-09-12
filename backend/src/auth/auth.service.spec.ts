@@ -1,394 +1,574 @@
 import {
   BadRequestException,
-  Injectable,
 } from '@nestjs/common';
 
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
+import {
+  JwtService,
+} from '@nestjs/jwt';
+
+import {
+  ConfigService,
+} from '@nestjs/config';
 
 import * as bcrypt from 'bcryptjs';
 
-import { UsersService } from 'src/users/users.service';
-import { MailService } from 'src/mail/mail.service';
+import {
+  AuthService,
+} from './auth.service';
 
-import { NotificationsService } from
-  'src/notifications/notifications.service';
+import {
+  UsersService,
+} from '../users/users.service';
 
-import { NotificationType } from
-  'src/common/enums/notification-type.enum';
+import {
+  MailService,
+} from '../mail/mail.service';
 
-import { Role } from
-  'src/common/enums/role.enum';
+import {
+  NotificationsService,
+} from '../notifications/notifications.service';
 
-import { RegisterUserDto } from
-  './register-user.dto';
+import {
+  Role,
+} from '../common/enums/role.enum';
 
-import { LoginDto } from
-  './login.dto';
+import {
+  NotificationType,
+} from '../common/enums/notification-type.enum';
 
-interface ResetTokenPayload {
-  id: number;
-  purpose: string;
-  version: number;
-}
+describe('AuthService', () => {
 
-@Injectable()
-export class AuthService {
+  let service:
+    AuthService;
 
-  constructor(
-    private readonly usersService:
-      UsersService,
+  let usersService: {
+    getUserByEmail:
+      jest.Mock;
 
-    private readonly jwtService:
-      JwtService,
+    createUser:
+      jest.Mock;
 
-    private readonly configService:
-      ConfigService,
+    getUserById:
+      jest.Mock;
 
-    private readonly mailService:
-      MailService,
+    updatePassword:
+      jest.Mock;
 
-    private readonly notificationsService:
-      NotificationsService,
-  ) { }
+    updateResetTokenVersion:
+      jest.Mock;
+  };
 
-  async register(
-    dto: RegisterUserDto,
-  ) {
+  let jwtService: {
+    sign:
+      jest.Mock;
 
-    const existingUser =
-      await this.usersService
-        .getUserByEmail(
-          dto.email,
+    verifyAsync:
+      jest.Mock;
+  };
+
+  let configService: {
+    getOrThrow:
+      jest.Mock;
+  };
+
+  let mailService: {
+    sendWelcomeEmail:
+      jest.Mock;
+
+    sendPasswordResetEmail:
+      jest.Mock;
+  };
+
+  let notificationsService: {
+    create:
+      jest.Mock;
+  };
+
+  beforeEach(() => {
+
+    usersService = {
+      getUserByEmail:
+        jest.fn(),
+
+      createUser:
+        jest.fn(),
+
+      getUserById:
+        jest.fn(),
+
+      updatePassword:
+        jest.fn(),
+
+      updateResetTokenVersion:
+        jest.fn(),
+    };
+
+    jwtService = {
+      sign:
+        jest.fn(),
+
+      verifyAsync:
+        jest.fn(),
+    };
+
+    configService = {
+      getOrThrow:
+        jest.fn(
+          (
+            key: string,
+          ) => {
+
+            if (
+              key ==
+              'JWT_REFRESH_SECRET'
+            ) {
+
+              return 'refresh-secret';
+
+            }
+
+            if (
+              key ==
+              'JWT_REFRESH_EXPIRES_IN'
+            ) {
+
+              return '7d';
+
+            }
+
+            return 'test-value';
+
+          },
+        ),
+    };
+
+    mailService = {
+      sendWelcomeEmail:
+        jest.fn(),
+
+      sendPasswordResetEmail:
+        jest.fn(),
+    };
+
+    notificationsService = {
+      create:
+        jest.fn(),
+    };
+
+    service =
+      new AuthService(
+        usersService as unknown as UsersService,
+        jwtService as unknown as JwtService,
+        configService as unknown as ConfigService,
+        mailService as unknown as MailService,
+        notificationsService as unknown as NotificationsService,
+      );
+
+  });
+
+  afterEach(() => {
+
+    jest.clearAllMocks();
+
+  });
+
+  it(
+    'should be defined',
+    () => {
+
+      expect(
+        service,
+      ).toBeDefined();
+
+    },
+  );
+
+  it(
+    'always registers public users as CUSTOMER',
+    async () => {
+
+      usersService
+        .getUserByEmail
+        .mockResolvedValue(
+          null,
         );
 
-    if (existingUser) {
-
-      throw new BadRequestException(
-        'Email already exists',
-      );
-
-    }
-
-    const hashPass =
-      await bcrypt.hash(
-        dto.password,
-        10,
-      );
-
-    const createdUser =
-      await this.usersService
-        .createUser(
+      usersService
+        .createUser
+        .mockResolvedValue(
           {
+            id: 1,
             fullName:
-              dto.fullName,
-
+              'Test User',
             email:
-              dto.email,
-
-            password:
-              hashPass,
-
-            phone:
-              dto.phone,
-
+              'test@test.com',
             role:
               Role.CUSTOMER,
           },
         );
 
-    await this.mailService
-      .sendWelcomeEmail(
-        createdUser.email,
-        createdUser.fullName,
-      );
-
-    await this.notificationsService
-      .create(
-        createdUser.id,
-
-        NotificationType.REGISTRATION,
-
-        'Welcome to the Smart Queue Management System.',
-      );
-
-    return this.usersService
-      .getUserById(
-        createdUser.id,
-      );
-  }
-
-  async login(
-    dto: LoginDto,
-  ) {
-
-    const user =
-      await this.usersService
-        .getUserByEmail(
-          dto.email,
-        );
-
-    if (!user) {
-
-      throw new BadRequestException(
-        'Invalid credentials',
-      );
-
-    }
-
-    const isMatch =
-      await bcrypt.compare(
-        dto.password,
-        user.password,
-      );
-
-    if (!isMatch) {
-
-      throw new BadRequestException(
-        'Invalid credentials',
-      );
-
-    }
-
-    const payload = {
-      id:
-        user.id,
-
-      email:
-        user.email,
-
-      role:
-        user.role,
-    };
-
-    const access_token =
-      this.jwtService.sign(
-        payload,
-      );
-
-    const refresh_token =
-      this.jwtService.sign(
-        payload,
-        {
-          secret:
-            this.configService
-              .getOrThrow<string>(
-                'JWT_REFRESH_SECRET',
-              ),
-
-          expiresIn:
-            this.configService
-              .getOrThrow<string>(
-                'JWT_REFRESH_EXPIRES_IN',
-              ) as any,
-        },
-      );
-
-    return {
-      access_token,
-      refresh_token,
-    };
-  }
-
-  async refresh(
-    token: string,
-  ) {
-
-    try {
-
-      const payload =
-        await this.jwtService
-          .verifyAsync<{
-            id: number
-          }>(
-            token,
-            {
-              secret:
-                this.configService
-                  .getOrThrow<string>(
-                    'JWT_REFRESH_SECRET',
-                  ),
-            },
-          );
-
-      const user =
-        await this.usersService
-          .getUserById(
-            payload.id,
-          );
-
-      const access_token =
-        this.jwtService.sign(
+      usersService
+        .getUserById
+        .mockResolvedValue(
           {
-            id:
-              user.id,
-
+            id: 1,
+            fullName:
+              'Test User',
             email:
-              user.email,
-
+              'test@test.com',
             role:
-              user.role,
+              Role.CUSTOMER,
           },
         );
 
-      return {
-        access_token,
-      };
+      await service.register(
+        {
+          fullName:
+            'Test User',
 
-    }
+          email:
+            'test@test.com',
 
-    catch {
-
-      throw new BadRequestException(
-        'Invalid or expired refresh token',
+          password:
+            'password123',
+        },
       );
 
-    }
-  }
+      expect(
+        usersService.createUser,
+      ).toHaveBeenCalledWith(
+        expect.objectContaining(
+          {
+            role:
+              Role.CUSTOMER,
+          },
+        ),
+      );
 
-  async forgotPassword(
-    email: string,
-  ) {
+      expect(
+        mailService.sendWelcomeEmail,
+      ).toHaveBeenCalled();
 
-    const user =
-      await this.usersService
-        .getUserByEmail(
-          email,
+      expect(
+        notificationsService.create,
+      ).toHaveBeenCalledWith(
+        1,
+        NotificationType.REGISTRATION,
+        expect.any(
+          String,
+        ),
+      );
+
+    },
+  );
+
+  it(
+    'rejects duplicate email registration',
+    async () => {
+
+      usersService
+        .getUserByEmail
+        .mockResolvedValue(
+          {
+            id: 1,
+          },
         );
 
-    if (!user) {
+      await expect(
+        service.register(
+          {
+            fullName:
+              'Test User',
 
-      return {
-        message:
-          'If that email exists, a reset link has been sent',
-      };
+            email:
+              'test@test.com',
 
-    }
-
-    const nextVersion =
-      user.resetTokenVersion + 1;
-
-    await this.usersService
-      .updateResetTokenVersion(
-        user.id,
-        nextVersion,
+            password:
+              'password123',
+          },
+        ),
+      ).rejects.toThrow(
+        BadRequestException,
       );
 
-    const resetToken =
-      this.jwtService.sign(
+    },
+  );
+
+  it(
+    'returns access and refresh tokens after login',
+    async () => {
+
+      const hashed =
+        await bcrypt.hash(
+          'password123',
+          4,
+        );
+
+      usersService
+        .getUserByEmail
+        .mockResolvedValue(
+          {
+            id: 1,
+            email:
+              'test@test.com',
+            password:
+              hashed,
+            role:
+              Role.CUSTOMER,
+          },
+        );
+
+      jwtService.sign
+        .mockReturnValueOnce(
+          'access-token',
+        )
+        .mockReturnValueOnce(
+          'refresh-token',
+        );
+
+      const result =
+        await service.login(
+          {
+            email:
+              'test@test.com',
+
+            password:
+              'password123',
+          },
+        );
+
+      expect(
+        result,
+      ).toEqual(
         {
-          id:
-            user.id,
+          access_token:
+            'access-token',
 
-          purpose:
-            'reset',
-
-          version:
-            nextVersion,
+          refresh_token:
+            'refresh-token',
         },
+      );
 
+    },
+  );
+
+  it(
+    'refresh uses the current database role',
+    async () => {
+
+      jwtService
+        .verifyAsync
+        .mockResolvedValue(
+          {
+            id: 5,
+          },
+        );
+
+      usersService
+        .getUserById
+        .mockResolvedValue(
+          {
+            id: 5,
+            email:
+              'staff@test.com',
+            role:
+              Role.STAFF,
+          },
+        );
+
+      jwtService.sign
+        .mockReturnValue(
+          'new-access-token',
+        );
+
+      const result =
+        await service.refresh(
+          'refresh-token',
+        );
+
+      expect(
+        jwtService.sign,
+      ).toHaveBeenCalledWith(
         {
-          expiresIn:
-            '15m',
+          id: 5,
+          email:
+            'staff@test.com',
+          role:
+            Role.STAFF,
         },
       );
 
-    await this.mailService
-      .sendPasswordResetEmail(
-        user.email,
-        resetToken,
+      expect(
+        result.access_token,
+      ).toBe(
+        'new-access-token',
       );
 
-    await this.notificationsService
-      .create(
-        user.id,
+    },
+  );
 
-        NotificationType.PASSWORD_RESET,
+  it(
+    'forgot password does not reveal unknown email',
+    async () => {
 
-        'A password reset was requested for your account.',
-      );
+      usersService
+        .getUserByEmail
+        .mockResolvedValue(
+          null,
+        );
 
-    return {
-      message:
+      const result =
+        await service.forgotPassword(
+          'unknown@test.com',
+        );
+
+      expect(
+        result.message,
+      ).toBe(
         'If that email exists, a reset link has been sent',
-    };
-  }
-
-  async resetPassword(
-    token: string,
-    newPassword: string,
-  ) {
-
-    let payload:
-      ResetTokenPayload;
-
-    try {
-
-      payload =
-        await this.jwtService
-          .verifyAsync<ResetTokenPayload>(
-            token,
-          );
-
-    }
-
-    catch {
-
-      throw new BadRequestException(
-        'Invalid or expired reset token',
       );
 
-    }
+      expect(
+        mailService.sendPasswordResetEmail,
+      ).not.toHaveBeenCalled();
 
-    if (
-      payload.purpose !=
-      'reset'
-    ) {
+    },
+  );
 
-      throw new BadRequestException(
-        'Invalid token',
-      );
+  it(
+    'creates a new reset token version',
+    async () => {
 
-    }
-
-    const user =
-      await this.usersService
-        .getUserById(
-          payload.id,
+      usersService
+        .getUserByEmail
+        .mockResolvedValue(
+          {
+            id: 4,
+            email:
+              'user@test.com',
+            resetTokenVersion:
+              2,
+          },
         );
 
-    if (
-      payload.version !=
-      user.resetTokenVersion
-    ) {
+      jwtService.sign
+        .mockReturnValue(
+          'reset-token',
+        );
 
-      throw new BadRequestException(
-        'Reset token has already been used',
+      await service.forgotPassword(
+        'user@test.com',
       );
 
-    }
-
-    const hashed =
-      await bcrypt.hash(
-        newPassword,
-        10,
+      expect(
+        usersService.updateResetTokenVersion,
+      ).toHaveBeenCalledWith(
+        4,
+        3,
       );
 
-    await this.usersService
-      .updatePassword(
-        user.id,
-        hashed,
+      expect(
+        mailService.sendPasswordResetEmail,
+      ).toHaveBeenCalledWith(
+        'user@test.com',
+        'reset-token',
       );
 
-    await this.usersService
-      .updateResetTokenVersion(
-        user.id,
-        user.resetTokenVersion + 1,
+    },
+  );
+
+  it(
+    'rejects an already used reset token',
+    async () => {
+
+      jwtService
+        .verifyAsync
+        .mockResolvedValue(
+          {
+            id: 2,
+            purpose:
+              'reset',
+            version:
+              1,
+          },
+        );
+
+      usersService
+        .getUserById
+        .mockResolvedValue(
+          {
+            id: 2,
+            resetTokenVersion:
+              2,
+          },
+        );
+
+      await expect(
+        service.resetPassword(
+          'old-token',
+          'newpassword',
+        ),
+      ).rejects.toThrow(
+        BadRequestException,
       );
 
-    return {
-      message:
+    },
+  );
+
+  it(
+    'resets password and invalidates token',
+    async () => {
+
+      jwtService
+        .verifyAsync
+        .mockResolvedValue(
+          {
+            id: 2,
+            purpose:
+              'reset',
+            version:
+              3,
+          },
+        );
+
+      usersService
+        .getUserById
+        .mockResolvedValue(
+          {
+            id: 2,
+            resetTokenVersion:
+              3,
+          },
+        );
+
+      const result =
+        await service.resetPassword(
+          'valid-token',
+          'newpassword',
+        );
+
+      expect(
+        usersService.updatePassword,
+      ).toHaveBeenCalledWith(
+        2,
+        expect.any(
+          String,
+        ),
+      );
+
+      expect(
+        usersService.updateResetTokenVersion,
+      ).toHaveBeenCalledWith(
+        2,
+        4,
+      );
+
+      expect(
+        result.message,
+      ).toBe(
         'Password reset successfully',
-    };
-  }
-}
+      );
+
+    },
+  );
+});

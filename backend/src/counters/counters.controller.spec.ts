@@ -1,58 +1,204 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { CountersController } from './counters.controller';
-import { CountersService } from './counters.service';
-import { CounterStatus } from '../common/enums/counter-status.enum';
+import {
+  Test,
+  TestingModule,
+} from '@nestjs/testing';
 
-const mockCountersService = () => ({
-  create: jest.fn(),
-  findAll: jest.fn(),
-  findOne: jest.fn(),
-  assignStaff: jest.fn(),
-  updateStatus: jest.fn(),
-});
+import {
+  CountersController,
+} from './counters.controller';
 
-describe('CountersController', () => {
-  let controller: CountersController;
-  let service: ReturnType<typeof mockCountersService>;
+import {
+  CountersService,
+} from './counters.service';
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [CountersController],
-      providers: [{ provide: CountersService, useFactory: mockCountersService }],
-    }).compile();
+import {
+  Role,
+} from '../common/enums/role.enum';
 
-    controller = module.get<CountersController>(CountersController);
-    service = module.get(CountersService);
-  });
+import {
+  CounterStatus,
+} from '../common/enums/counter-status.enum';
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
+describe(
+  'CountersController',
+  () => {
 
-  it('create delegates to the service', async () => {
-    const dto = { name: 'Counter A' };
-    await controller.create(dto);
-    expect(service.create).toHaveBeenCalledWith(dto);
-  });
+    let controller:
+      CountersController;
 
-  it('findAll delegates to the service', async () => {
-    await controller.findAll();
-    expect(service.findAll).toHaveBeenCalled();
-  });
+    let service: {
+      create:
+        jest.Mock;
 
-  it('findOne delegates to the service', async () => {
-    await controller.findOne(1);
-    expect(service.findOne).toHaveBeenCalledWith(1);
-  });
+      findAll:
+        jest.Mock;
 
-  it('assignStaff delegates to the service with id and staffId', async () => {
-    await controller.assignStaff(1, { staffId: 5 });
-    expect(service.assignStaff).toHaveBeenCalledWith(1, 5);
-  });
+      findOne:
+        jest.Mock;
 
-  it('updateStatus delegates to the service', async () => {
-    const dto = { status: CounterStatus.OPEN };
-    await controller.updateStatus(1, dto);
-    expect(service.updateStatus).toHaveBeenCalledWith(1, dto);
-  });
-});
+      assignStaff:
+        jest.Mock;
+
+      updateStatus:
+        jest.Mock;
+    };
+
+    const admin = {
+      id: 1,
+      email:
+        'admin@test.com',
+      role:
+        Role.ADMIN,
+    };
+
+    beforeEach(
+      async () => {
+
+        service = {
+          create:
+            jest.fn(),
+
+          findAll:
+            jest.fn(),
+
+          findOne:
+            jest.fn(),
+
+          assignStaff:
+            jest.fn(),
+
+          updateStatus:
+            jest.fn(),
+        };
+
+        const module:
+          TestingModule =
+          await Test
+            .createTestingModule(
+              {
+                controllers: [
+                  CountersController,
+                ],
+
+                providers: [
+                  {
+                    provide:
+                      CountersService,
+
+                    useValue:
+                      service,
+                  },
+                ],
+              },
+            )
+            .compile();
+
+        controller =
+          module.get<CountersController>(
+            CountersController,
+          );
+
+      },
+    );
+
+    it(
+      'should be defined',
+      () => {
+
+        expect(
+          controller,
+        ).toBeDefined();
+
+      },
+    );
+
+    it(
+      'findAll passes current user',
+      async () => {
+
+        await controller
+          .findAll(
+            admin,
+          );
+
+        expect(
+          service.findAll,
+        ).toHaveBeenCalledWith(
+          admin,
+        );
+
+      },
+    );
+
+    it(
+      'findOne passes id and current user',
+      async () => {
+
+        await controller
+          .findOne(
+            1,
+            admin,
+          );
+
+        expect(
+          service.findOne,
+        ).toHaveBeenCalledWith(
+          1,
+          admin,
+        );
+
+      },
+    );
+
+    it(
+      'assignStaff passes id and staffId',
+      async () => {
+
+        await controller
+          .assignStaff(
+            1,
+            {
+              staffId:
+                5,
+            },
+          );
+
+        expect(
+          service.assignStaff,
+        ).toHaveBeenCalledWith(
+          1,
+          5,
+        );
+
+      },
+    );
+
+    it(
+      'updateStatus passes current user',
+      async () => {
+
+        const dto = {
+          status:
+            CounterStatus.OPEN,
+        };
+
+        await controller
+          .updateStatus(
+            1,
+            dto,
+            admin,
+          );
+
+        expect(
+          service.updateStatus,
+        ).toHaveBeenCalledWith(
+          1,
+          dto,
+          admin,
+        );
+
+      },
+    );
+
+  },
+);

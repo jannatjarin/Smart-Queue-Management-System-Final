@@ -35,7 +35,7 @@ import {
   CurrentUser,
 } from '../common/current-user.decorator';
 
-import {
+import type {
   CurrentUserPayload,
 } from '../common/current-user.interface';
 

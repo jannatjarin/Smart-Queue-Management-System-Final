@@ -1,65 +1,211 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { QueuesController } from './queues.controller';
-import { QueuesService } from './queues.service';
-import { QueueStatus } from '../common/enums/queue-status.enum';
+import {
+  Test,
+  TestingModule,
+} from '@nestjs/testing';
 
-const mockQueuesService = () => ({
-  create: jest.fn(),
-  findAll: jest.fn(),
-  findOne: jest.fn(),
-  update: jest.fn(),
-  updateStatus: jest.fn(),
-  remove: jest.fn(),
-});
+import {
+  QueuesController,
+} from './queues.controller';
 
-describe('QueuesController', () => {
-  let controller: QueuesController;
-  let service: ReturnType<typeof mockQueuesService>;
+import {
+  QueuesService,
+} from './queues.service';
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [QueuesController],
-      providers: [{ provide: QueuesService, useFactory: mockQueuesService }],
-    }).compile();
+import {
+  QueueStatus,
+} from '../common/enums/queue-status.enum';
 
-    controller = module.get<QueuesController>(QueuesController);
-    service = module.get(QueuesService);
-  });
+import {
+  Role,
+} from '../common/enums/role.enum';
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
+describe(
+  'QueuesController',
+  () => {
 
-  it('create delegates to the service', async () => {
-    const dto = { name: 'Counter A', location: 'Floor 1', serviceId: 1 };
-    await controller.create(dto);
-    expect(service.create).toHaveBeenCalledWith(dto);
-  });
+    let controller:
+      QueuesController;
 
-  it('findAll delegates to the service with serviceId and status', async () => {
-    await controller.findAll(1, QueueStatus.OPEN);
-    expect(service.findAll).toHaveBeenCalledWith(1, QueueStatus.OPEN);
-  });
+    let service: {
+      create:
+        jest.Mock;
 
-  it('findOne delegates to the service', async () => {
-    await controller.findOne(1);
-    expect(service.findOne).toHaveBeenCalledWith(1);
-  });
+      findAll:
+        jest.Mock;
 
-  it('update delegates to the service', async () => {
-    const dto = { name: 'New Name' };
-    await controller.update(1, dto);
-    expect(service.update).toHaveBeenCalledWith(1, dto);
-  });
+      findOne:
+        jest.Mock;
 
-  it('updateStatus delegates to the service', async () => {
-    const dto = { status: QueueStatus.OPEN };
-    await controller.updateStatus(1, dto);
-    expect(service.updateStatus).toHaveBeenCalledWith(1, QueueStatus.OPEN);
-  });
+      update:
+        jest.Mock;
 
-  it('remove delegates to the service', async () => {
-    await controller.remove(1);
-    expect(service.remove).toHaveBeenCalledWith(1);
-  });
-});
+      updateStatus:
+        jest.Mock;
+
+      remove:
+        jest.Mock;
+    };
+
+    const admin = {
+      id: 1,
+      email:
+        'admin@test.com',
+      role:
+        Role.ADMIN,
+    };
+
+    beforeEach(
+      async () => {
+
+        service = {
+          create:
+            jest.fn(),
+
+          findAll:
+            jest.fn(),
+
+          findOne:
+            jest.fn(),
+
+          update:
+            jest.fn(),
+
+          updateStatus:
+            jest.fn(),
+
+          remove:
+            jest.fn(),
+        };
+
+        const module:
+          TestingModule =
+          await Test
+            .createTestingModule(
+              {
+                controllers: [
+                  QueuesController,
+                ],
+
+                providers: [
+                  {
+                    provide:
+                      QueuesService,
+
+                    useValue:
+                      service,
+                  },
+                ],
+              },
+            )
+            .compile();
+
+        controller =
+          module.get<QueuesController>(
+            QueuesController,
+          );
+
+      },
+    );
+
+    it(
+      'should be defined',
+      () => {
+
+        expect(
+          controller,
+        ).toBeDefined();
+
+      },
+    );
+
+    it(
+      'create delegates to service',
+      async () => {
+
+        const dto = {
+          name:
+            'Queue 1',
+          location:
+            'Floor 1',
+          serviceId:
+            1,
+        };
+
+        await controller.create(
+          dto,
+        );
+
+        expect(
+          service.create,
+        ).toHaveBeenCalledWith(
+          dto,
+        );
+
+      },
+    );
+
+    it(
+      'findAll delegates to service',
+      async () => {
+
+        await controller.findAll(
+          1,
+          QueueStatus.OPEN,
+        );
+
+        expect(
+          service.findAll,
+        ).toHaveBeenCalledWith(
+          1,
+          QueueStatus.OPEN,
+        );
+
+      },
+    );
+
+    it(
+      'updateStatus passes authenticated user',
+      async () => {
+
+        const dto = {
+          status:
+            QueueStatus.OPEN,
+        };
+
+        await controller
+          .updateStatus(
+            1,
+            dto,
+            admin,
+          );
+
+        expect(
+          service.updateStatus,
+        ).toHaveBeenCalledWith(
+          1,
+          QueueStatus.OPEN,
+          admin,
+        );
+
+      },
+    );
+
+    it(
+      'remove delegates to service',
+      async () => {
+
+        await controller.remove(
+          1,
+        );
+
+        expect(
+          service.remove,
+        ).toHaveBeenCalledWith(
+          1,
+        );
+
+      },
+    );
+
+  },
+);

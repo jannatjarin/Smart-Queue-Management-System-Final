@@ -1,90 +1,89 @@
-import {
-  Body,
-  Controller,
-  Post,
-} from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
 
-import { AuthService } from
-  './auth.service';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
 
-import { RegisterUserDto } from
-  './register-user.dto';
+describe('AuthController', () => {
+  let controller: AuthController;
 
-import { LoginDto } from
-  './login.dto';
+  const authService = {
+    register: jest.fn(),
+    login: jest.fn(),
+    refresh: jest.fn(),
+    forgotPassword: jest.fn(),
+    resetPassword: jest.fn(),
+  };
 
-import { ForgotPasswordDto } from
-  './forgot-password.dto';
+  beforeEach(async () => {
+    const module: TestingModule =
+      await Test.createTestingModule({
+        controllers: [
+          AuthController,
+        ],
 
-import { ResetPasswordDto } from
-  './reset-password.dto';
+        providers: [
+          {
+            provide:
+              AuthService,
 
-@Controller('auth')
-export class AuthController {
+            useValue:
+              authService,
+          },
+        ],
+      }).compile();
 
-  constructor(
-    private readonly authService:
-      AuthService,
-  ) { }
-
-  @Post('register')
-  register(
-    @Body()
-    dto: RegisterUserDto,
-  ) {
-
-    return this.authService
-      .register(
-        dto,
+    controller =
+      module.get<AuthController>(
+        AuthController,
       );
-  }
+  });
 
-  @Post('login')
-  login(
-    @Body()
-    dto: LoginDto,
-  ) {
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
+  });
 
-    return this.authService
-      .login(
-        dto,
-      );
-  }
+  it('register delegates to authService.register', async () => {
+    const dto = {
+      fullName: 'Test User',
+      email: 'test@example.com',
+      password: 'password123',
+      phone: '01700000000',
+    };
 
-  @Post('refresh')
-  refresh(
-    @Body('refresh_token')
-    token: string,
-  ) {
+    authService.register.mockResolvedValue(
+      {
+        id: 1,
+      },
+    );
 
-    return this.authService
-      .refresh(
-        token,
-      );
-  }
+    await controller.register(dto);
 
-  @Post('forgot-password')
-  forgotPassword(
-    @Body()
-    dto: ForgotPasswordDto,
-  ) {
+    expect(
+      authService.register,
+    ).toHaveBeenCalledWith(
+      dto,
+    );
+  });
 
-    return this.authService
-      .forgotPassword(
-        dto.email,
-      );
-  }
+  it('login delegates to authService.login', async () => {
+    const dto = {
+      email: 'test@example.com',
+      password: 'password123',
+    };
 
-  @Post('reset-password')
-  resetPassword(
-    @Body()
-    dto: ResetPasswordDto,
-  ) {
+    authService.login.mockResolvedValue(
+      {
+        access_token: 'access',
+        refresh_token: 'refresh',
+      },
+    );
 
-    return this.authService
-      .resetPassword(
-        dto.token,
-        dto.newPassword,
-      );
-  }
-}
+    await controller.login(dto);
+
+    expect(
+      authService.login,
+    ).toHaveBeenCalledWith(
+      dto,
+    );
+  });
+});
