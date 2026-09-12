@@ -43,6 +43,14 @@ import {
   CurrentUserPayload,
 } from '../common/current-user.interface';
 
+import {
+  CounterStatus,
+} from '../common/enums/counter-status.enum';
+
+import {
+  TicketStatus,
+} from '../common/enums/ticket-status.enum';
+
 @Injectable()
 export class CountersService {
 
@@ -268,6 +276,39 @@ export class CountersService {
 
       throw new BadRequestException(
         'Assigned user must have the staff role',
+      );
+
+    }
+      const changingStaff =
+    counter.staff?.id !=
+    staffId;
+
+    if (
+      changingStaff &&
+      counter.status !=
+      CounterStatus.CLOSED
+    ) {
+
+      throw new BadRequestException(
+        'Close the counter before changing the assigned staff member',
+      );
+
+    }
+
+    const hasCalledTicket =
+      counter.tickets?.some(
+        (ticket) =>
+          ticket.status ==
+          TicketStatus.CALLED,
+      );
+
+    if (
+      changingStaff &&
+      hasCalledTicket
+    ) {
+
+      throw new BadRequestException(
+        'Complete the currently called ticket before changing the assigned staff member',
       );
 
     }
