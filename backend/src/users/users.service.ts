@@ -24,6 +24,14 @@ import {
   Role,
 } from 'src/common/enums/role.enum';
 
+import {
+  CounterStatus,
+} from '../common/enums/counter-status.enum';
+
+import {
+  TicketStatus,
+} from '../common/enums/ticket-status.enum';
+
 @Injectable()
 export class UsersService {
 
@@ -185,11 +193,30 @@ export class UsersService {
 
               relations: [
                 'staff',
+                'tickets',
               ],
             },
           );
 
       if (counter) {
+
+        const hasCalledTicket =
+          counter.tickets?.some(
+            (ticket) =>
+              ticket.status ==
+              TicketStatus.CALLED,
+          );
+
+        if (hasCalledTicket) {
+
+          throw new BadRequestException(
+            'Complete the currently called ticket before changing this staff role',
+          );
+
+        }
+
+        counter.status =
+          CounterStatus.CLOSED;
 
         counter.staff =
           null;
