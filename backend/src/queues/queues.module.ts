@@ -1,20 +1,53 @@
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { QueuesController } from './queues.controller';
-import { QueuesService } from './queues.service';
-import { Queues } from './queues.entity';
-import { Services } from '../services/services.entity';
-import { Tickets } from '../tickets/tickets.entity';
+import {
+  Module,
+} from '@nestjs/common';
+
+import {
+  TypeOrmModule,
+} from '@nestjs/typeorm';
+
+import {
+  QueuesController,
+} from './queues.controller';
+
+import {
+  QueuesService,
+} from './queues.service';
+
+import {
+  Queues,
+} from './queues.entity';
+
+import {
+  Services,
+} from '../services/services.entity';
+
+import {
+  Tickets,
+} from '../tickets/tickets.entity';
+
+import {
+  Counters,
+} from '../counters/counters.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Queues,
-      Services,
-      Tickets,
-    ]),
+    TypeOrmModule.forFeature(
+      [
+        Queues,
+        Services,
+        Tickets,
+        Counters,
+      ],
+    ),
   ],
-  controllers: [QueuesController],
-  providers: [QueuesService],
+
+  controllers: [
+    QueuesController,
+  ],
+
+  providers: [
+    QueuesService,
+  ],
 })
-export class QueuesModule {}
+export class QueuesModule { }

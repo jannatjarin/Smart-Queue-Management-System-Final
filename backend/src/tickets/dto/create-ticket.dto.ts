@@ -1,6 +1,12 @@
-import { IsInt, IsOptional, IsPositive, IsString, MaxLength } from 'class-validator';
+import {
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsPositive,
+} from 'class-validator';
 
 export class CreateTicketDto {
+
   @IsInt()
   @IsPositive()
   serviceId: number;
@@ -10,7 +16,11 @@ export class CreateTicketDto {
   queueId: number;
 
   @IsOptional()
-  @IsString()
-  @MaxLength(20)
-  priority?: string; // e.g. 'normal' | 'urgent' — defaults to 'normal' in the entity
+  @IsIn([
+    'normal',
+    'urgent',
+  ])
+  priority?:
+    'normal' |
+    'urgent';
 }

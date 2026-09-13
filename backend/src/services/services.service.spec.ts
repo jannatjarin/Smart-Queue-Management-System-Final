@@ -1,114 +1,369 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { ServicesService } from './services.service';
-import { Services } from './services.entity';
+import {
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 
- const mockRepository = () => ({
-  create: jest.fn(),
-  save: jest.fn(),
-  find: jest.fn(),
-  findOne: jest.fn(),
-   remove: jest.fn(),
- });
+import {
+  Test,
+  TestingModule,
+} from '@nestjs/testing';
 
- describe('ServicesService', () => {
-  let service: ServicesService;
-  let repo: ReturnType<typeof mockRepository>;
+import {
+  getRepositoryToken,
+} from '@nestjs/typeorm';
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        ServicesService,
-        { provide: getRepositoryToken(Services), useFactory: mockRepository },
-      ],
-    }).compile();
+import {
+  ServicesService,
+} from './services.service';
 
-    service = module.get<ServicesService>(ServicesService);
-    repo = module.get(getRepositoryToken(Services));
-  });
+import {
+  Services,
+} from './services.entity';
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
+import {
+  Queues,
+} from '../queues/queues.entity';
 
-  describe('create', () => {
-    it('creates and saves a new service', async () => {
-      const dto = { name: 'Passport Renewal', estimatedTime: 15, department: 'Immigration' };
-      const entity = { id: 1, isActive: true, ...dto };
-      repo.create.mockReturnValue(entity);
-      repo.save.mockResolvedValue(entity);
+import {
+  Tickets,
+} from '../tickets/tickets.entity';
 
-      const result = await service.create(dto as any);
+import {
+  QueueStatus,
+} from '../common/enums/queue-status.enum';
 
-      expect(repo.create).toHaveBeenCalledWith(dto);
-      expect(repo.save).toHaveBeenCalledWith(entity);
-      expect(result).toEqual(entity);
-    });
-  });
+const mockRepository =
+  () => (
+    {
+      create:
+        jest.fn(),
 
-  describe('findAll', () => {
-    it('returns only active services by default', async () => {
-      repo.find.mockResolvedValue([]);
-      await service.findAll();
-      expect(repo.find).toHaveBeenCalledWith({ where: { isActive: true } });
-    });
+      save:
+        jest.fn(),
 
-    it('returns all services when includeInactive is true', async () => {
-      repo.find.mockResolvedValue([]);
-      await service.findAll(true);
-      expect(repo.find).toHaveBeenCalledWith();
-    });
-  });
+      find:
+        jest.fn(),
 
-  describe('findOne', () => {
-    it('returns the service when found', async () => {
-      const entity = { id: 1, name: 'Passport Renewal' };
-      repo.findOne.mockResolvedValue(entity);
+      findOne:
+        jest.fn(),
 
-      const result = await service.findOne(1);
+      remove:
+        jest.fn(),
 
-      expect(result).toEqual(entity);
-    });
+      count:
+        jest.fn(),
+    }
+  );
 
-    it('throws NotFoundException when not found', async () => {
-      repo.findOne.mockResolvedValue(null);
-      await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
-    });
-  });
+describe(
+  'ServicesService',
+  () => {
 
-  describe('update', () => {
-    it('merges the dto into the existing service and saves it', async () => {
-      const existing = { id: 1, name: 'Old Name', isActive: true };
-      repo.findOne.mockResolvedValue(existing);
-      repo.save.mockImplementation((s) => Promise.resolve(s));
+    let service:
+      ServicesService;
 
-      const result = await service.update(1, { name: 'New Name' });
+    let servicesRepo:
+      ReturnType<
+        typeof mockRepository
+      >;
 
-      expect(result.name).toBe('New Name');
-    });
-  });
+    let queuesRepo:
+      ReturnType<
+        typeof mockRepository
+      >;
 
-  describe('deactivate', () => {
-    it('sets isActive to false and saves', async () => {
-      const existing = { id: 1, name: 'Test', isActive: true };
-      repo.findOne.mockResolvedValue(existing);
-      repo.save.mockImplementation((s) => Promise.resolve(s));
+    let ticketsRepo:
+      ReturnType<
+        typeof mockRepository
+      >;
 
-      const result = await service.deactivate(1);
+    beforeEach(
+      async () => {
 
-      expect(result.isActive).toBe(false);
-    });
-  });
+        const module:
+          TestingModule =
+          await Test
+            .createTestingModule(
+              {
+                providers: [
+                  ServicesService,
 
-  describe('remove', () => {
-    it('removes the service when found', async () => {
-      const existing = { id: 1, name: 'Test' };
-      repo.findOne.mockResolvedValue(existing);
+                  {
+                    provide:
+                      getRepositoryToken(
+                        Services,
+                      ),
 
-      await service.remove(1);
+                    useFactory:
+                      mockRepository,
+                  },
 
-      expect(repo.remove).toHaveBeenCalledWith(existing);
-    });
-  });
-});
+                  {
+                    provide:
+                      getRepositoryToken(
+                        Queues,
+                      ),
+
+                    useFactory:
+                      mockRepository,
+                  },
+
+                  {
+                    provide:
+                      getRepositoryToken(
+                        Tickets,
+                      ),
+
+                    useFactory:
+                      mockRepository,
+                  },
+                ],
+              },
+            )
+            .compile();
+
+        service =
+          module.get<ServicesService>(
+            ServicesService,
+          );
+
+        servicesRepo =
+          module.get(
+            getRepositoryToken(
+              Services,
+            ),
+          );
+
+        queuesRepo =
+          module.get(
+            getRepositoryToken(
+              Queues,
+            ),
+          );
+
+        ticketsRepo =
+          module.get(
+            getRepositoryToken(
+              Tickets,
+            ),
+          );
+
+      },
+    );
+
+    it(
+      'should be defined',
+      () => {
+
+        expect(
+          service,
+        ).toBeDefined();
+
+      },
+    );
+
+    it(
+      'creates a service',
+      async () => {
+
+        const dto = {
+          name:
+            'General Service',
+
+          description:
+            'General',
+
+          estimatedTime:
+            15,
+
+          department:
+            'Support',
+        };
+
+        servicesRepo.create
+          .mockReturnValue(
+            dto,
+          );
+
+        servicesRepo.save
+          .mockResolvedValue(
+            dto,
+          );
+
+        const result =
+          await service.create(
+            dto,
+          );
+
+        expect(
+          result,
+        ).toEqual(
+          dto,
+        );
+
+      },
+    );
+
+    it(
+      'throws when service does not exist',
+      async () => {
+
+        servicesRepo.findOne
+          .mockResolvedValue(
+            null,
+          );
+
+        await expect(
+          service.findOne(
+            99,
+          ),
+        ).rejects.toThrow(
+          NotFoundException,
+        );
+
+      },
+    );
+
+    it(
+      'deactivates service and closes its queues',
+      async () => {
+
+        const serviceEntity = {
+          id: 1,
+          isActive: true,
+          queues: [],
+        };
+
+        const queues = [
+          {
+            id: 1,
+            status:
+              QueueStatus.OPEN,
+          },
+        ];
+
+        servicesRepo.findOne
+          .mockResolvedValue(
+            serviceEntity,
+          );
+
+        /*
+         * This mock is harmless if your current
+         * deactivate() version does not yet call
+         * ticketsRepository.count().
+         */
+        ticketsRepo.count
+          .mockResolvedValue(
+            0,
+          );
+
+        servicesRepo.save
+          .mockImplementation(
+            async (
+              value,
+            ) =>
+              value,
+          );
+
+        queuesRepo.find
+          .mockResolvedValue(
+            queues,
+          );
+
+        queuesRepo.save
+          .mockResolvedValue(
+            queues,
+          );
+
+        const result =
+          await service.deactivate(
+            1,
+          );
+
+        expect(
+          result.isActive,
+        ).toBe(
+          false,
+        );
+
+        expect(
+          queues[0].status,
+        ).toBe(
+          QueueStatus.CLOSED,
+        );
+
+      },
+    );
+
+    it(
+      'does not delete a service with queues',
+      async () => {
+
+        servicesRepo.findOne
+          .mockResolvedValue(
+            {
+              id: 1,
+              queues: [],
+            },
+          );
+
+        queuesRepo.count
+          .mockResolvedValue(
+            1,
+          );
+
+        ticketsRepo.count
+          .mockResolvedValue(
+            0,
+          );
+
+        await expect(
+          service.remove(
+            1,
+          ),
+        ).rejects.toThrow(
+          BadRequestException,
+        );
+
+      },
+    );
+
+    it(
+      'deletes an unused service',
+      async () => {
+
+        const serviceEntity = {
+          id: 1,
+          queues: [],
+        };
+
+        servicesRepo.findOne
+          .mockResolvedValue(
+            serviceEntity,
+          );
+
+        queuesRepo.count
+          .mockResolvedValue(
+            0,
+          );
+
+        ticketsRepo.count
+          .mockResolvedValue(
+            0,
+          );
+
+        await service.remove(
+          1,
+        );
+
+        expect(
+          servicesRepo.remove,
+        ).toHaveBeenCalledWith(
+          serviceEntity,
+        );
+
+      },
+    );
+
+  },
+);

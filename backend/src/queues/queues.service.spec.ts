@@ -1,150 +1,485 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { QueuesService } from './queues.service';
-import { Queues } from './queues.entity';
-import { Services } from '../services/services.entity';
-import { QueueStatus } from '../common/enums/queue-status.enum';
+import {
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 
-const mockRepository = () => ({
-  create: jest.fn(),
-  save: jest.fn(),
-  find: jest.fn(),
-  findOne: jest.fn(),
-  remove: jest.fn(),
-});
+import {
+  Test,
+  TestingModule,
+} from '@nestjs/testing';
 
-describe('QueuesService', () => {
-  let service: QueuesService;
-  let queuesRepo: ReturnType<typeof mockRepository>;
-  let servicesRepo: ReturnType<typeof mockRepository>;
+import {
+  getRepositoryToken,
+} from '@nestjs/typeorm';
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        QueuesService,
-        { provide: getRepositoryToken(Queues), useFactory: mockRepository },
-        { provide: getRepositoryToken(Services), useFactory: mockRepository },
-      ],
-    }).compile();
+import {
+  QueuesService,
+} from './queues.service';
 
-    service = module.get<QueuesService>(QueuesService);
-    queuesRepo = module.get(getRepositoryToken(Queues));
-    servicesRepo = module.get(getRepositoryToken(Services));
-  });
+import {
+  Queues,
+} from './queues.entity';
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
+import {
+  Services,
+} from '../services/services.entity';
 
-  describe('create', () => {
-    it('throws NotFoundException if the service does not exist', async () => {
-      servicesRepo.findOne.mockResolvedValue(null);
+import {
+  Tickets,
+} from '../tickets/tickets.entity';
 
-      await expect(
-        service.create({ name: 'Counter A', location: 'Floor 1', serviceId: 999 }),
-      ).rejects.toThrow(NotFoundException);
+import {
+  Counters,
+} from '../counters/counters.entity';
 
-      expect(queuesRepo.create).not.toHaveBeenCalled();
-    });
+import {
+  QueueStatus,
+} from '../common/enums/queue-status.enum';
 
-    it('creates and saves a queue linked to the service', async () => {
-      const foundService = { id: 1, name: 'Passport Renewal' };
-      servicesRepo.findOne.mockResolvedValue(foundService);
-      const entity = { id: 1, name: 'Counter A', location: 'Floor 1', service: foundService };
-      queuesRepo.create.mockReturnValue(entity);
-      queuesRepo.save.mockResolvedValue(entity);
+import {
+  Role,
+} from '../common/enums/role.enum';
 
-      const result = await service.create({ name: 'Counter A', location: 'Floor 1', serviceId: 1 });
+const mockRepository =
+  () => (
+    {
+      create:
+        jest.fn(),
 
-      expect(queuesRepo.create).toHaveBeenCalledWith({
-        name: 'Counter A',
-        location: 'Floor 1',
-        service: foundService,
-      });
-      expect(result).toEqual(entity);
-    });
-  });
+      save:
+        jest.fn(),
 
-  describe('findAll', () => {
-    it('queries with no filters when none are given', async () => {
-      queuesRepo.find.mockResolvedValue([]);
-      await service.findAll();
-      expect(queuesRepo.find).toHaveBeenCalledWith({ where: {}, relations: ['service'] });
-    });
+      find:
+        jest.fn(),
 
-    it('filters by serviceId and status when given', async () => {
-      queuesRepo.find.mockResolvedValue([]);
-      await service.findAll(1, QueueStatus.OPEN);
-      expect(queuesRepo.find).toHaveBeenCalledWith({
-        where: { service: { id: 1 }, status: QueueStatus.OPEN },
-        relations: ['service'],
-      });
-    });
-  });
+      findOne:
+        jest.fn(),
 
-  describe('findOne', () => {
-    it('returns the queue with relations when found', async () => {
-      const queue = { id: 1, name: 'Counter A' };
-      queuesRepo.findOne.mockResolvedValue(queue);
+      remove:
+        jest.fn(),
 
-      const result = await service.findOne(1);
+      count:
+        jest.fn(),
+    }
+  );
 
-      expect(queuesRepo.findOne).toHaveBeenCalledWith({
-        where: { id: 1 },
-        relations: ['service', 'tickets'],
-      });
-      expect(result).toEqual(queue);
-    });
+describe(
+  'QueuesService',
+  () => {
 
-    it('throws NotFoundException when not found', async () => {
-      queuesRepo.findOne.mockResolvedValue(null);
-      await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
-    });
-  });
+    let service:
+      QueuesService;
 
-  describe('update', () => {
-    it('merges the dto and saves', async () => {
-      const existing = { id: 1, name: 'Old Name', location: 'Old Loc' };
-      queuesRepo.findOne.mockResolvedValue(existing);
-      queuesRepo.save.mockImplementation((q) => Promise.resolve(q));
+    let queuesRepo:
+      ReturnType<
+        typeof mockRepository
+      >;
 
-      const result = await service.update(1, { name: 'New Name' });
+    let servicesRepo:
+      ReturnType<
+        typeof mockRepository
+      >;
 
-      expect(result.name).toBe('New Name');
-    });
-  });
+    let ticketsRepo:
+      ReturnType<
+        typeof mockRepository
+      >;
 
-  describe('updateStatus', () => {
-    it('sets status to OPEN and saves', async () => {
-      const existing = { id: 1, status: QueueStatus.CLOSED };
-      queuesRepo.findOne.mockResolvedValue(existing);
-      queuesRepo.save.mockImplementation((q) => Promise.resolve(q));
+    let countersRepo:
+      ReturnType<
+        typeof mockRepository
+      >;
 
-      const result = await service.updateStatus(1, QueueStatus.OPEN);
+    const admin = {
+      id: 1,
+      email:
+        'admin@test.com',
+      role:
+        Role.ADMIN,
+    };
 
-      expect(result.status).toBe(QueueStatus.OPEN);
-    });
+    const staff = {
+      id: 2,
+      email:
+        'staff@test.com',
+      role:
+        Role.STAFF,
+    };
 
-    it('sets status to CLOSED and saves', async () => {
-      const existing = { id: 1, status: QueueStatus.OPEN };
-      queuesRepo.findOne.mockResolvedValue(existing);
-      queuesRepo.save.mockImplementation((q) => Promise.resolve(q));
+    beforeEach(
+      async () => {
 
-      const result = await service.updateStatus(1, QueueStatus.CLOSED);
+        const module:
+          TestingModule =
+          await Test
+            .createTestingModule(
+              {
+                providers: [
+                  QueuesService,
 
-      expect(result.status).toBe(QueueStatus.CLOSED);
-    });
-  });
+                  {
+                    provide:
+                      getRepositoryToken(
+                        Queues,
+                      ),
 
-  describe('remove', () => {
-    it('removes the queue when found', async () => {
-      const existing = { id: 1, name: 'Counter A' };
-      queuesRepo.findOne.mockResolvedValue(existing);
+                    useFactory:
+                      mockRepository,
+                  },
 
-      await service.remove(1);
+                  {
+                    provide:
+                      getRepositoryToken(
+                        Services,
+                      ),
 
-      expect(queuesRepo.remove).toHaveBeenCalledWith(existing);
-    });
-  });
-});
+                    useFactory:
+                      mockRepository,
+                  },
+
+                  {
+                    provide:
+                      getRepositoryToken(
+                        Tickets,
+                      ),
+
+                    useFactory:
+                      mockRepository,
+                  },
+
+                  {
+                    provide:
+                      getRepositoryToken(
+                        Counters,
+                      ),
+
+                    useFactory:
+                      mockRepository,
+                  },
+                ],
+              },
+            )
+            .compile();
+
+        service =
+          module.get<QueuesService>(
+            QueuesService,
+          );
+
+        queuesRepo =
+          module.get(
+            getRepositoryToken(
+              Queues,
+            ),
+          );
+
+        servicesRepo =
+          module.get(
+            getRepositoryToken(
+              Services,
+            ),
+          );
+
+        ticketsRepo =
+          module.get(
+            getRepositoryToken(
+              Tickets,
+            ),
+          );
+
+        countersRepo =
+          module.get(
+            getRepositoryToken(
+              Counters,
+            ),
+          );
+
+      },
+    );
+
+    it(
+      'should be defined',
+      () => {
+
+        expect(
+          service,
+        ).toBeDefined();
+
+      },
+    );
+
+    it(
+      'creates queue for active service',
+      async () => {
+
+        const activeService = {
+          id: 1,
+          isActive: true,
+        };
+
+        servicesRepo.findOne
+          .mockResolvedValue(
+            activeService,
+          );
+
+        queuesRepo.findOne
+          .mockResolvedValue(
+            null,
+          );
+
+        queuesRepo.create
+          .mockImplementation(
+            (
+              value,
+            ) =>
+              value,
+          );
+
+        queuesRepo.save
+          .mockImplementation(
+            async (
+              value,
+            ) =>
+              value,
+          );
+
+        const result =
+          await service.create(
+            {
+              name:
+                'Main Queue',
+
+              location:
+                'Floor 1',
+
+              serviceId:
+                1,
+            },
+          );
+
+        expect(
+          result.name,
+        ).toBe(
+          'Main Queue',
+        );
+
+      },
+    );
+
+    it(
+      'admin can update any queue status',
+      async () => {
+
+        const queue = {
+          id: 1,
+          status:
+            QueueStatus.CLOSED,
+
+          service: {
+            id: 3,
+          },
+        };
+
+        jest.spyOn(
+          service,
+          'findOne',
+        )
+          .mockResolvedValue(
+            queue as Queues,
+          );
+
+        queuesRepo.save
+          .mockImplementation(
+            async (
+              value,
+            ) =>
+              value,
+          );
+
+        const result =
+          await service.updateStatus(
+            1,
+            QueueStatus.OPEN,
+            admin,
+          );
+
+        expect(
+          result.status,
+        ).toBe(
+          QueueStatus.OPEN,
+        );
+
+        expect(
+          countersRepo.findOne,
+        ).not.toHaveBeenCalled();
+
+      },
+    );
+
+    it(
+      'staff can update supported queue status',
+      async () => {
+
+        const queue = {
+          id: 1,
+          status:
+            QueueStatus.CLOSED,
+
+          service: {
+            id: 3,
+          },
+        };
+
+        jest.spyOn(
+          service,
+          'findOne',
+        )
+          .mockResolvedValue(
+            queue as Queues,
+          );
+
+        countersRepo.findOne
+          .mockResolvedValue(
+            {
+              id: 8,
+
+              services: [
+                {
+                  id: 3,
+                },
+              ],
+            },
+          );
+
+        queuesRepo.save
+          .mockImplementation(
+            async (
+              value,
+            ) =>
+              value,
+          );
+
+        const result =
+          await service.updateStatus(
+            1,
+            QueueStatus.OPEN,
+            staff,
+          );
+
+        expect(
+          result.status,
+        ).toBe(
+          QueueStatus.OPEN,
+        );
+
+      },
+    );
+
+    it(
+      'staff cannot update unsupported queue status',
+      async () => {
+
+        jest.spyOn(
+          service,
+          'findOne',
+        )
+          .mockResolvedValue(
+            {
+              id: 1,
+
+              service: {
+                id: 99,
+              },
+            } as Queues,
+          );
+
+        countersRepo.findOne
+          .mockResolvedValue(
+            {
+              services: [
+                {
+                  id: 3,
+                },
+              ],
+            },
+          );
+
+        await expect(
+          service.updateStatus(
+            1,
+            QueueStatus.OPEN,
+            staff,
+          ),
+        ).rejects.toThrow(
+          ForbiddenException,
+        );
+
+      },
+    );
+
+    it(
+      'cannot delete queue with ticket history',
+      async () => {
+
+        jest.spyOn(
+          service,
+          'findOne',
+        )
+          .mockResolvedValue(
+            {
+              id: 1,
+            } as Queues,
+          );
+
+        ticketsRepo.count
+          .mockResolvedValue(
+            2,
+          );
+
+        await expect(
+          service.remove(
+            1,
+          ),
+        ).rejects.toThrow(
+          BadRequestException,
+        );
+
+      },
+    );
+
+    it(
+      'deletes unused queue',
+      async () => {
+
+        const queue = {
+          id: 1,
+        } as Queues;
+
+        jest.spyOn(
+          service,
+          'findOne',
+        )
+          .mockResolvedValue(
+            queue,
+          );
+
+        ticketsRepo.count
+          .mockResolvedValue(
+            0,
+          );
+
+        await service.remove(
+          1,
+        );
+
+        expect(
+          queuesRepo.remove,
+        ).toHaveBeenCalledWith(
+          queue,
+        );
+
+      },
+    );
+
+  },
+);

@@ -1,5 +1,4 @@
 import {
-  IsBoolean,
   IsInt,
   IsOptional,
   IsPositive,
@@ -28,7 +27,4 @@ export class UpdateServiceDto {
   @MaxLength(100)
   department?: string;
 
-  @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
 }

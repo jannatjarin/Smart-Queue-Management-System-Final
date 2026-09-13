@@ -1,291 +1,713 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { TicketsService } from './tickets.service';
-import { Tickets } from './tickets.entity';
-import { Services } from '../services/services.entity';
-import { Queues } from '../queues/queues.entity';
-import { Counters } from '../counters/counters.entity';
-import { MailService } from '../mail/mail.service';
-import { Role } from '../common/enums/role.enum';
-import { TicketStatus } from '../common/enums/ticket-status.enum';
-import { QueueStatus } from '../common/enums/queue-status.enum';
+import {
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 
-const mockRepository = () => ({
-  create: jest.fn(),
-  save: jest.fn(),
-  find: jest.fn(),
-  findOne: jest.fn(),
-});
+import {
+  Test,
+  TestingModule,
+} from '@nestjs/testing';
 
-const customer = { id: 1, email: 'cust@test.com', role: Role.CUSTOMER };
-const staff = { id: 2, email: 'staff@test.com', role: Role.STAFF };
-const admin = { id: 3, email: 'admin@test.com', role: Role.ADMIN };
+import {
+  getRepositoryToken,
+} from '@nestjs/typeorm';
 
-describe('TicketsService', () => {
-  let service: TicketsService;
-  let ticketsRepo: ReturnType<typeof mockRepository>;
-  let servicesRepo: ReturnType<typeof mockRepository>;
-  let queuesRepo: ReturnType<typeof mockRepository>;
-  let countersRepo: ReturnType<typeof mockRepository>;
-  let mailService: { sendTicketReadyEmail: jest.Mock };
+import {
+  DataSource,
+} from 'typeorm';
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        TicketsService,
-        { provide: getRepositoryToken(Tickets), useFactory: mockRepository },
-        { provide: getRepositoryToken(Services), useFactory: mockRepository },
-        { provide: getRepositoryToken(Queues), useFactory: mockRepository },
-        { provide: getRepositoryToken(Counters), useFactory: mockRepository },
-        { provide: MailService, useValue: { sendTicketReadyEmail: jest.fn() } },
-      ],
-    }).compile();
+import {
+  TicketsService,
+} from './tickets.service';
 
-    service = module.get<TicketsService>(TicketsService);
-    ticketsRepo = module.get(getRepositoryToken(Tickets));
-    servicesRepo = module.get(getRepositoryToken(Services));
-    queuesRepo = module.get(getRepositoryToken(Queues));
-    countersRepo = module.get(getRepositoryToken(Counters));
-    mailService = module.get(MailService);
-  });
+import {
+  Tickets,
+} from './tickets.entity';
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
+import {
+  Services,
+} from '../services/services.entity';
 
-  describe('create', () => {
-    it('throws NotFoundException if the service does not exist or is inactive', async () => {
-      servicesRepo.findOne.mockResolvedValue(null);
-      await expect(
-        service.create({ serviceId: 999, queueId: 1 }, customer),
-      ).rejects.toThrow(NotFoundException);
-    });
+import {
+  Queues,
+} from '../queues/queues.entity';
 
-    it('throws NotFoundException if the queue does not exist', async () => {
-      servicesRepo.findOne.mockResolvedValue({ id: 1 });
-      queuesRepo.findOne.mockResolvedValue(null);
-      await expect(
-        service.create({ serviceId: 1, queueId: 999 }, customer),
-      ).rejects.toThrow(NotFoundException);
-    });
+import {
+  Counters,
+} from '../counters/counters.entity';
 
-    it('throws BadRequestException if the queue does not belong to the given service', async () => {
-      servicesRepo.findOne.mockResolvedValue({ id: 1 });
-      queuesRepo.findOne.mockResolvedValue({
-        id: 7,
-        status: QueueStatus.OPEN,
-        service: { id: 2 }, // different service
-      });
-      await expect(
-        service.create({ serviceId: 1, queueId: 7 }, customer),
-      ).rejects.toThrow(BadRequestException);
-    });
+import {
+  MailService,
+} from '../mail/mail.service';
 
-    it('throws BadRequestException if the queue is not open', async () => {
-      servicesRepo.findOne.mockResolvedValue({ id: 1 });
-      queuesRepo.findOne.mockResolvedValue({
-        id: 7,
-        status: QueueStatus.CLOSED,
-        service: { id: 1 },
-      });
-      await expect(
-        service.create({ serviceId: 1, queueId: 7 }, customer),
-      ).rejects.toThrow(BadRequestException);
-    });
+import {
+  NotificationsService,
+} from '../notifications/notifications.service';
 
-    it('increments the queue counter and creates a ticket with a generated number', async () => {
-      servicesRepo.findOne.mockResolvedValue({ id: 1, name: 'Passport Renewal' });
-      const queue = { id: 7, name: 'Counter Q7', currentTicketNumber: 4, status: QueueStatus.OPEN, service: { id: 1 } };
-      queuesRepo.findOne.mockResolvedValue(queue);
-      queuesRepo.save.mockResolvedValue({ ...queue, currentTicketNumber: 5 });
+import {
+  Role,
+} from '../common/enums/role.enum';
 
-      const entity = { id: 1, ticketNumber: 'Q7-005' };
-      ticketsRepo.create.mockReturnValue(entity);
-      ticketsRepo.save.mockResolvedValue(entity);
+import {
+  TicketStatus,
+} from '../common/enums/ticket-status.enum';
 
-      const result = await service.create({ serviceId: 1, queueId: 7 }, customer);
+import {
+  QueueStatus,
+} from '../common/enums/queue-status.enum';
 
-      expect(queuesRepo.save).toHaveBeenCalledWith(expect.objectContaining({ currentTicketNumber: 5 }));
-      expect(ticketsRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ ticketNumber: 'Q7-005', priority: 'normal' }),
-      );
-      expect(result).toEqual(entity);
-    });
-  });
+import {
+  CounterStatus,
+} from '../common/enums/counter-status.enum';
 
-  describe('findAll', () => {
-    it('filters by own user id for customers', async () => {
-      ticketsRepo.find.mockResolvedValue([]);
-      await service.findAll(customer);
-      expect(ticketsRepo.find).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { user: { id: 1 } } }),
-      );
-    });
+const mockRepository =
+  () => (
+    {
+      create:
+        jest.fn(),
 
-    it('does not filter by user for staff/admin', async () => {
-      ticketsRepo.find.mockResolvedValue([]);
-      await service.findAll(staff);
-      expect(ticketsRepo.find).toHaveBeenCalledWith(expect.objectContaining({ where: {} }));
-    });
+      save:
+        jest.fn(),
 
-    it('defaults sort to DESC', async () => {
-      ticketsRepo.find.mockResolvedValue([]);
-      await service.findAll(staff);
-      expect(ticketsRepo.find).toHaveBeenCalledWith(
-        expect.objectContaining({ order: { issuedAt: 'DESC' } }),
-      );
-    });
+      find:
+        jest.fn(),
 
-    it('respects ASC sort when given', async () => {
-      ticketsRepo.find.mockResolvedValue([]);
-      await service.findAll(staff, undefined, undefined, 'ASC');
-      expect(ticketsRepo.find).toHaveBeenCalledWith(
-        expect.objectContaining({ order: { issuedAt: 'ASC' } }),
-      );
-    });
-  });
+      findOne:
+        jest.fn(),
 
-  describe('findMyTickets', () => {
-    it('returns tickets for the given user only', async () => {
-      ticketsRepo.find.mockResolvedValue([]);
-      await service.findMyTickets(1);
-      expect(ticketsRepo.find).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { user: { id: 1 } } }),
-      );
-    });
-  });
+      count:
+        jest.fn(),
 
-  describe('findOne', () => {
-    it('throws NotFoundException when not found', async () => {
-      ticketsRepo.findOne.mockResolvedValue(null);
-      await expect(service.findOne(999, customer)).rejects.toThrow(NotFoundException);
-    });
+      createQueryBuilder:
+        jest.fn(),
+    }
+  );
 
-    it("throws ForbiddenException if a customer requests someone else's ticket", async () => {
-      ticketsRepo.findOne.mockResolvedValue({ id: 1, user: { id: 999 } });
-      await expect(service.findOne(1, customer)).rejects.toThrow(ForbiddenException);
-    });
+describe(
+  'TicketsService',
+  () => {
 
-    it('allows a customer to view their own ticket', async () => {
-      const ticket = { id: 1, user: { id: 1 } };
-      ticketsRepo.findOne.mockResolvedValue(ticket);
-      const result = await service.findOne(1, customer);
-      expect(result).toEqual(ticket);
-    });
+    let service:
+      TicketsService;
 
-    it('allows staff to view any ticket', async () => {
-      const ticket = { id: 1, user: { id: 999 } };
-      ticketsRepo.findOne.mockResolvedValue(ticket);
-      const result = await service.findOne(1, staff);
-      expect(result).toEqual(ticket);
-    });
-  });
+    let ticketsRepo:
+      ReturnType<
+        typeof mockRepository
+      >;
 
-  describe('callNext', () => {
-    it('throws NotFoundException if the queue does not exist', async () => {
-      queuesRepo.findOne.mockResolvedValue(null);
-      await expect(service.callNext(999, staff)).rejects.toThrow(NotFoundException);
-    });
+    let queuesRepo:
+      ReturnType<
+        typeof mockRepository
+      >;
 
-    it('throws BadRequestException if the staff member has no assigned counter', async () => {
-      queuesRepo.findOne.mockResolvedValue({ id: 7 });
-      countersRepo.findOne.mockResolvedValue(null);
-      await expect(service.callNext(7, staff)).rejects.toThrow(BadRequestException);
-    });
+    let countersRepo:
+      ReturnType<
+        typeof mockRepository
+      >;
 
-    it('throws NotFoundException if there are no waiting tickets in the queue', async () => {
-      queuesRepo.findOne.mockResolvedValue({ id: 7 });
-      countersRepo.findOne.mockResolvedValue({ id: 5 });
-      ticketsRepo.findOne.mockResolvedValue(null);
-      await expect(service.callNext(7, staff)).rejects.toThrow(NotFoundException);
-    });
+    let mailService: {
+      sendTicketReadyEmail:
+        jest.Mock;
+    };
 
-    it('calls the oldest waiting ticket, assigns the counter, and sends the ready email', async () => {
-      queuesRepo.findOne.mockResolvedValue({ id: 7 });
-      const counter = { id: 5, name: 'Counter A' };
-      countersRepo.findOne.mockResolvedValue(counter);
+    let notificationsService: {
+      create:
+        jest.Mock;
+    };
 
-      const nextTicket = {
-        id: 1,
-        status: TicketStatus.WAITING,
-        user: { email: 'cust@test.com' },
-        queue: { name: 'Counter Q7' },
-        ticketNumber: 'Q7-005',
-      };
-      ticketsRepo.findOne.mockResolvedValue(nextTicket);
-      ticketsRepo.save.mockImplementation((t) => Promise.resolve(t));
+    const customer = {
+      id: 1,
+      email:
+        'customer@test.com',
+      role:
+        Role.CUSTOMER,
+    };
 
-      const result = await service.callNext(7, staff);
+    const staff = {
+      id: 2,
+      email:
+        'staff@test.com',
+      role:
+        Role.STAFF,
+    };
 
-      expect(ticketsRepo.findOne).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { queue: { id: 7 }, status: TicketStatus.WAITING },
-          order: { issuedAt: 'ASC' },
-        }),
-      );
-      expect(result.status).toBe(TicketStatus.CALLED);
-      expect(result.counter).toEqual(counter);
-      expect(mailService.sendTicketReadyEmail).toHaveBeenCalledWith(
-        'cust@test.com',
-        'Q7-005',
-        'Counter Q7',
-      );
-    });
-  });
+    const admin = {
+      id: 3,
+      email:
+        'admin@test.com',
+      role:
+        Role.ADMIN,
+    };
 
-  describe('complete', () => {
-    it('throws BadRequestException if the ticket is not CALLED', async () => {
-      ticketsRepo.findOne.mockResolvedValue({ id: 1, status: TicketStatus.WAITING });
-      await expect(service.complete(1)).rejects.toThrow(BadRequestException);
-    });
+    beforeEach(
+      async () => {
 
-    it('marks the ticket completed', async () => {
-      const ticket = { id: 1, status: TicketStatus.CALLED };
-      ticketsRepo.findOne.mockResolvedValue(ticket);
-      ticketsRepo.save.mockImplementation((t) => Promise.resolve(t));
+        const dataSource = {
+          transaction:
+            jest.fn(),
+        };
 
-      const result = await service.complete(1);
+        const module:
+          TestingModule =
+          await Test
+            .createTestingModule(
+              {
+                providers: [
+                  TicketsService,
 
-      expect(result.status).toBe(TicketStatus.COMPLETED);
-      expect(result.completedAt).toBeInstanceOf(Date);
-    });
-  });
+                  {
+                    provide:
+                      getRepositoryToken(
+                        Tickets,
+                      ),
 
-  describe('cancel', () => {
-    it("throws ForbiddenException if a customer cancels someone else's ticket", async () => {
-      ticketsRepo.findOne.mockResolvedValue({ id: 1, user: { id: 999 }, status: TicketStatus.WAITING });
-      await expect(service.cancel(1, customer)).rejects.toThrow(ForbiddenException);
-    });
+                    useFactory:
+                      mockRepository,
+                  },
 
-    it('throws BadRequestException if a customer cancels a non-waiting ticket', async () => {
-      ticketsRepo.findOne.mockResolvedValue({ id: 1, user: { id: 1 }, status: TicketStatus.CALLED });
-      await expect(service.cancel(1, customer)).rejects.toThrow(BadRequestException);
-    });
+                  {
+                    provide:
+                      getRepositoryToken(
+                        Services,
+                      ),
 
-    it('allows a customer to cancel their own waiting ticket', async () => {
-      const ticket = { id: 1, user: { id: 1 }, status: TicketStatus.WAITING };
-      ticketsRepo.findOne.mockResolvedValue(ticket);
-      ticketsRepo.save.mockImplementation((t) => Promise.resolve(t));
+                    useFactory:
+                      mockRepository,
+                  },
 
-      const result = await service.cancel(1, customer);
+                  {
+                    provide:
+                      getRepositoryToken(
+                        Queues,
+                      ),
 
-      expect(result.status).toBe(TicketStatus.CANCELLED);
-    });
+                    useFactory:
+                      mockRepository,
+                  },
 
-    it('throws BadRequestException if staff cancels an already-finalized ticket', async () => {
-      ticketsRepo.findOne.mockResolvedValue({ id: 1, user: { id: 1 }, status: TicketStatus.COMPLETED });
-      await expect(service.cancel(1, admin)).rejects.toThrow(BadRequestException);
-    });
+                  {
+                    provide:
+                      getRepositoryToken(
+                        Counters,
+                      ),
 
-    it('allows staff to cancel any active ticket', async () => {
-      const ticket = { id: 1, user: { id: 1 }, status: TicketStatus.CALLED };
-      ticketsRepo.findOne.mockResolvedValue(ticket);
-      ticketsRepo.save.mockImplementation((t) => Promise.resolve(t));
+                    useFactory:
+                      mockRepository,
+                  },
 
-      const result = await service.cancel(1, admin);
+                  {
+                    provide:
+                      MailService,
 
-      expect(result.status).toBe(TicketStatus.CANCELLED);
-    });
-  });
-});
+                    useValue:
+                      {
+                        sendTicketReadyEmail:
+                          jest.fn(),
+                      },
+                  },
+
+                  {
+                    provide:
+                      NotificationsService,
+
+                    useValue:
+                      {
+                        create:
+                          jest.fn(),
+                      },
+                  },
+
+                  {
+                    provide:
+                      DataSource,
+
+                    useValue:
+                      dataSource,
+                  },
+                ],
+              },
+            )
+            .compile();
+
+        service =
+          module.get<TicketsService>(
+            TicketsService,
+          );
+
+        ticketsRepo =
+          module.get(
+            getRepositoryToken(
+              Tickets,
+            ),
+          );
+
+        queuesRepo =
+          module.get(
+            getRepositoryToken(
+              Queues,
+            ),
+          );
+
+        countersRepo =
+          module.get(
+            getRepositoryToken(
+              Counters,
+            ),
+          );
+
+        mailService =
+          module.get(
+            MailService,
+          );
+
+        notificationsService =
+          module.get(
+            NotificationsService,
+          );
+
+      },
+    );
+
+    it(
+      'should be defined',
+      () => {
+
+        expect(
+          service,
+        ).toBeDefined();
+
+      },
+    );
+
+    it(
+      'admin can list tickets',
+      async () => {
+
+        const qb = {
+          leftJoinAndSelect:
+            jest.fn()
+              .mockReturnThis(),
+
+          andWhere:
+            jest.fn()
+              .mockReturnThis(),
+
+          orderBy:
+            jest.fn()
+              .mockReturnThis(),
+
+          getMany:
+            jest.fn()
+              .mockResolvedValue(
+                [
+                  {
+                    id: 1,
+                  },
+                ],
+              ),
+        };
+
+        ticketsRepo
+          .createQueryBuilder
+          .mockReturnValue(
+            qb,
+          );
+
+        const result =
+          await service.findAll(
+            admin,
+          );
+
+        expect(
+          result,
+        ).toHaveLength(
+          1,
+        );
+
+      },
+    );
+
+    it(
+      'returns customer ticket history',
+      async () => {
+
+        ticketsRepo.find
+          .mockResolvedValue(
+            [
+              {
+                id: 1,
+                status:
+                  TicketStatus.COMPLETED,
+
+                service: {
+                  id: 1,
+                  estimatedTime: 15,
+                },
+
+                queue: {
+                  id: 1,
+                },
+
+                counter: {
+                  id: 1,
+                },
+              },
+            ],
+          );
+
+        const result =
+          await service
+            .findMyTickets(
+              1,
+            );
+
+        expect(
+          result[0]
+            .estimatedWaitMinutes,
+        ).toBe(
+          0,
+        );
+
+      },
+    );
+
+    it(
+      'staff can call next ticket only from supported open queue',
+      async () => {
+
+        queuesRepo.findOne
+          .mockResolvedValue(
+            {
+              id: 1,
+              name:
+                'Queue 1',
+              status:
+                QueueStatus.OPEN,
+
+              service: {
+                id: 5,
+              },
+            },
+          );
+
+        countersRepo.findOne
+          .mockResolvedValue(
+            {
+              id: 4,
+              name:
+                'Counter 1',
+              status:
+                CounterStatus.OPEN,
+
+              staff: {
+                id: 2,
+              },
+
+              services: [
+                {
+                  id: 5,
+                },
+              ],
+            },
+          );
+
+        ticketsRepo.count
+          .mockResolvedValue(
+            0,
+          );
+
+        const nextTicket = {
+          id: 10,
+          ticketNumber:
+            'Q1-001',
+
+          status:
+            TicketStatus.WAITING,
+
+          user: {
+            id: 1,
+            email:
+              'customer@test.com',
+          },
+
+          queue: {
+            id: 1,
+            name:
+              'Queue 1',
+          },
+
+          service: {
+            id: 5,
+          },
+
+          counter: null,
+        };
+
+        ticketsRepo.findOne
+          .mockResolvedValue(
+            nextTicket,
+          );
+
+        ticketsRepo.save
+          .mockImplementation(
+            async (
+              value,
+            ) =>
+              value,
+          );
+
+        const result =
+          await service.callNext(
+            1,
+            staff,
+          );
+
+        expect(
+          result.status,
+        ).toBe(
+          TicketStatus.CALLED,
+        );
+
+        expect(
+          result.counter?.id,
+        ).toBe(
+          4,
+        );
+
+        expect(
+          mailService.sendTicketReadyEmail,
+        ).toHaveBeenCalled();
+
+        expect(
+          notificationsService.create,
+        ).toHaveBeenCalled();
+
+      },
+    );
+
+    it(
+      'staff cannot complete another counter ticket',
+      async () => {
+
+        ticketsRepo.findOne
+          .mockResolvedValue(
+            {
+              id: 1,
+              status:
+                TicketStatus.CALLED,
+
+              user: {
+                id: 1,
+              },
+
+              counter: {
+                id: 9,
+
+                staff: {
+                  id: 99,
+                },
+              },
+            },
+          );
+
+        await expect(
+          service.complete(
+            1,
+            staff,
+          ),
+        ).rejects.toThrow(
+          ForbiddenException,
+        );
+
+      },
+    );
+
+    it(
+      'admin can complete a called ticket',
+      async () => {
+
+        const ticket = {
+          id: 1,
+          ticketNumber:
+            'Q1-001',
+
+          status:
+            TicketStatus.CALLED,
+
+          user: {
+            id: 5,
+          },
+
+          counter: null,
+        };
+
+        ticketsRepo.findOne
+          .mockResolvedValue(
+            ticket,
+          );
+
+        ticketsRepo.save
+          .mockImplementation(
+            async (
+              value,
+            ) =>
+              value,
+          );
+
+        const result =
+          await service.complete(
+            1,
+            admin,
+          );
+
+        expect(
+          result.status,
+        ).toBe(
+          TicketStatus.COMPLETED,
+        );
+
+        expect(
+          notificationsService.create,
+        ).toHaveBeenCalled();
+
+      },
+    );
+
+    it(
+      'customer can cancel own waiting ticket',
+      async () => {
+
+        const ticket = {
+          id: 1,
+          ticketNumber:
+            'Q1-001',
+
+          status:
+            TicketStatus.WAITING,
+
+          user: {
+            id: 1,
+          },
+        };
+
+        ticketsRepo.findOne
+          .mockResolvedValue(
+            ticket,
+          );
+
+        ticketsRepo.save
+          .mockImplementation(
+            async (
+              value,
+            ) =>
+              value,
+          );
+
+        const result =
+          await service.cancel(
+            1,
+            customer,
+          );
+
+        expect(
+          result.status,
+        ).toBe(
+          TicketStatus.CANCELLED,
+        );
+
+        expect(
+          notificationsService.create,
+        ).toHaveBeenCalled();
+
+      },
+    );
+
+    it(
+      'customer cannot cancel someone else ticket',
+      async () => {
+
+        ticketsRepo.findOne
+          .mockResolvedValue(
+            {
+              id: 1,
+              status:
+                TicketStatus.WAITING,
+
+              user: {
+                id: 999,
+              },
+            },
+          );
+
+        await expect(
+          service.cancel(
+            1,
+            customer,
+          ),
+        ).rejects.toThrow(
+          ForbiddenException,
+        );
+
+      },
+    );
+
+    it(
+      'staff cannot cancel tickets',
+      async () => {
+
+        ticketsRepo.findOne
+          .mockResolvedValue(
+            {
+              id: 1,
+              status:
+                TicketStatus.WAITING,
+
+              user: {
+                id: 1,
+              },
+            },
+          );
+
+        await expect(
+          service.cancel(
+            1,
+            staff,
+          ),
+        ).rejects.toThrow(
+          ForbiddenException,
+        );
+
+      },
+    );
+
+    it(
+      'admin cannot cancel completed ticket',
+      async () => {
+
+        ticketsRepo.findOne
+          .mockResolvedValue(
+            {
+              id: 1,
+              status:
+                TicketStatus.COMPLETED,
+
+              user: {
+                id: 1,
+              },
+            },
+          );
+
+        await expect(
+          service.cancel(
+            1,
+            admin,
+          ),
+        ).rejects.toThrow(
+          BadRequestException,
+        );
+
+      },
+    );
+
+  },
+);

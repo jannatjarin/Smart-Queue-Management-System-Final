@@ -1,199 +1,602 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { UsersService } from './users.service';
-import { Users } from './users.entity';
-import { Role } from 'src/common/enums/role.enum';
- 
-const mockRepository = () => ({
-  create: jest.fn(),
-  save: jest.fn(),
-  findOne: jest.fn(),
-  update: jest.fn(),
-  createQueryBuilder: jest.fn(),
-});
- 
-describe('UsersService', () => {
-  let service: UsersService;
-  let repo: ReturnType<typeof mockRepository>;
- 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        UsersService,
-        { provide: getRepositoryToken(Users), useFactory: mockRepository },
-      ],
-    }).compile();
- 
-    service = module.get<UsersService>(UsersService);
-    repo = module.get(getRepositoryToken(Users));
-  });
- 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
- 
-  describe('createUser', () => {
-    it('creates and saves a user', async () => {
-      const data = { email: 'a@test.com', password: 'hashed', fullName: 'Test' };
-      const entity = { id: 1, ...data };
-      repo.create.mockReturnValue(entity);
-      repo.save.mockResolvedValue(entity);
- 
-      const result = await service.createUser(data);
- 
-      expect(repo.create).toHaveBeenCalledWith(data);
-      expect(repo.save).toHaveBeenCalledWith(entity);
-      expect(result).toEqual(entity);
-    });
-  });
- 
-  describe('getUserByEmail', () => {
-    it('returns the user when found', async () => {
-      const user = { id: 1, email: 'a@test.com' };
-      repo.findOne.mockResolvedValue(user);
- 
-      const result = await service.getUserByEmail('a@test.com');
- 
-      expect(repo.findOne).toHaveBeenCalledWith({ where: { email: 'a@test.com' } });
-      expect(result).toEqual(user);
-    });
- 
-    it('returns null when not found (used by Auth to check duplicates)', async () => {
-      repo.findOne.mockResolvedValue(null);
-      const result = await service.getUserByEmail('nope@test.com');
-      expect(result).toBeNull();
-    });
-  });
- 
-  describe('getUserById', () => {
-    it('returns the user when found', async () => {
-      const user = { id: 1, email: 'a@test.com' };
-      repo.findOne.mockResolvedValue(user);
- 
-      const result = await service.getUserById(1);
- 
-      expect(result).toEqual(user);
-    });
- 
-    it('throws NotFoundException when not found', async () => {
-      repo.findOne.mockResolvedValue(null);
-      await expect(service.getUserById(999)).rejects.toThrow(NotFoundException);
-    });
-  });
- 
-  describe('updateProfile', () => {
-    it('updates and returns the fresh user', async () => {
-      const user = { id: 1, fullName: 'Old Name' };
-      const updatedUser = { id: 1, fullName: 'New Name' };
-      repo.findOne
-        .mockResolvedValueOnce(user)         // getUserById check before update
-        .mockResolvedValueOnce(updatedUser);  // getUserById after update
-      repo.update.mockResolvedValue(undefined);
- 
-      const result = await service.updateProfile(1, { fullName: 'New Name' });
- 
-      expect(repo.update).toHaveBeenCalledWith(1, { fullName: 'New Name' });
-      expect(result).toEqual(updatedUser);
-    });
- 
-    it('throws NotFoundException if the user does not exist', async () => {
-      repo.findOne.mockResolvedValue(null);
-      await expect(service.updateProfile(999, { fullName: 'X' })).rejects.toThrow(NotFoundException);
-    });
-  });
- 
-  describe('updatePassword', () => {
-    it('updates the password field', async () => {
-      repo.update.mockResolvedValue(undefined);
-      await service.updatePassword(1, 'newHashedPassword');
-      expect(repo.update).toHaveBeenCalledWith(1, { password: 'newHashedPassword' });
-    });
-  });
- 
-  describe('updateRole', () => {
-    it('updates the role and returns the fresh user', async () => {
-      const user = { id: 1, role: Role.CUSTOMER };
-      const updatedUser = { id: 1, role: Role.STAFF };
-      repo.findOne
-        .mockResolvedValueOnce(user)
-        .mockResolvedValueOnce(updatedUser);
-      repo.update.mockResolvedValue(undefined);
- 
-      const result = await service.updateRole(1, Role.STAFF);
- 
-      expect(repo.update).toHaveBeenCalledWith(1, { role: Role.STAFF });
-      expect(result).toEqual(updatedUser);
-    });
- 
-    it('throws NotFoundException if the user does not exist', async () => {
-      repo.findOne.mockResolvedValue(null);
-      await expect(service.updateRole(999, Role.STAFF)).rejects.toThrow(NotFoundException);
-    });
-  });
- 
-  describe('findAll', () => {
-    const makeQb = (total = 0) => ({
-      andWhere: jest.fn().mockReturnThis(),
-      orderBy: jest.fn().mockReturnThis(),
-      skip: jest.fn().mockReturnThis(),
-      take: jest.fn().mockReturnThis(),
-      getManyAndCount: jest.fn().mockResolvedValue([[], total]),
-    });
+import {
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 
-    it('builds a query with search, role filter, and sort', async () => {
-      const qb = makeQb();
-      repo.createQueryBuilder.mockReturnValue(qb);
+import {
+  Test,
+  TestingModule,
+} from '@nestjs/testing';
 
-      await service.findAll('john', Role.STAFF, 'ASC');
+import {
+  getRepositoryToken,
+} from '@nestjs/typeorm';
 
-      expect(qb.andWhere).toHaveBeenCalledWith(
-        '(user.fullName ILIKE :s OR user.email ILIKE :s)',
-        { s: '%john%' },
-      );
-      expect(qb.andWhere).toHaveBeenCalledWith('user.role = :role', { role: Role.STAFF });
-      expect(qb.orderBy).toHaveBeenCalledWith('user.createDate', 'ASC');
-    });
+import {
+  UsersService,
+} from './users.service';
 
-    it('defaults to DESC sort when no sort is given', async () => {
-      const qb = makeQb();
-      repo.createQueryBuilder.mockReturnValue(qb);
+import {
+  Users,
+} from './users.entity';
 
-      await service.findAll();
+import {
+  Counters,
+} from '../counters/counters.entity';
 
-      expect(qb.orderBy).toHaveBeenCalledWith('user.createDate', 'DESC');
-    });
+import {
+  Role,
+} from '../common/enums/role.enum';
 
-    it('defaults to page 1, limit 10 and applies skip/take', async () => {
-      const qb = makeQb();
-      repo.createQueryBuilder.mockReturnValue(qb);
+const mockUsersRepository =
+  () => (
+    {
+      create:
+        jest.fn(),
 
-      const result = await service.findAll();
+      save:
+        jest.fn(),
 
-      expect(qb.skip).toHaveBeenCalledWith(0);
-      expect(qb.take).toHaveBeenCalledWith(10);
-      expect(result).toEqual({ data: [], total: 0, page: 1, limit: 10 });
-    });
+      findOne:
+        jest.fn(),
 
-    it('applies the given page and limit', async () => {
-      const qb = makeQb(25);
-      repo.createQueryBuilder.mockReturnValue(qb);
+      update:
+        jest.fn(),
 
-      const result = await service.findAll(undefined, undefined, undefined, 3, 5);
+      createQueryBuilder:
+        jest.fn(),
+    }
+  );
 
-      expect(qb.skip).toHaveBeenCalledWith(10);
-      expect(qb.take).toHaveBeenCalledWith(5);
-      expect(result).toEqual({ data: [], total: 25, page: 3, limit: 5 });
-    });
+const mockCountersRepository =
+  () => (
+    {
+      findOne:
+        jest.fn(),
 
-    it('falls back to safe defaults for invalid page/limit', async () => {
-      const qb = makeQb();
-      repo.createQueryBuilder.mockReturnValue(qb);
+      save:
+        jest.fn(),
+    }
+  );
 
-      await service.findAll(undefined, undefined, undefined, 0, -5);
+describe(
+  'UsersService',
+  () => {
 
-      expect(qb.skip).toHaveBeenCalledWith(0);
-      expect(qb.take).toHaveBeenCalledWith(10);
-    });
-  });
-});
+    let service:
+      UsersService;
+
+    let usersRepo:
+      ReturnType<
+        typeof mockUsersRepository
+      >;
+
+    let countersRepo:
+      ReturnType<
+        typeof mockCountersRepository
+      >;
+
+    beforeEach(
+      async () => {
+
+        const module:
+          TestingModule =
+          await Test
+            .createTestingModule(
+              {
+                providers: [
+                  UsersService,
+
+                  {
+                    provide:
+                      getRepositoryToken(
+                        Users,
+                      ),
+
+                    useFactory:
+                      mockUsersRepository,
+                  },
+
+                  {
+                    provide:
+                      getRepositoryToken(
+                        Counters,
+                      ),
+
+                    useFactory:
+                      mockCountersRepository,
+                  },
+                ],
+              },
+            )
+            .compile();
+
+        service =
+          module.get<UsersService>(
+            UsersService,
+          );
+
+        usersRepo =
+          module.get(
+            getRepositoryToken(
+              Users,
+            ),
+          );
+
+        countersRepo =
+          module.get(
+            getRepositoryToken(
+              Counters,
+            ),
+          );
+
+      },
+    );
+
+    it(
+      'should be defined',
+      () => {
+
+        expect(
+          service,
+        ).toBeDefined();
+
+      },
+    );
+
+    it(
+      'creates and saves a user',
+      async () => {
+
+        const data = {
+          email:
+            'a@test.com',
+
+          password:
+            'hashed',
+
+          fullName:
+            'Test',
+        };
+
+        const entity = {
+          id: 1,
+          ...data,
+        };
+
+        usersRepo.create
+          .mockReturnValue(
+            entity,
+          );
+
+        usersRepo.save
+          .mockResolvedValue(
+            entity,
+          );
+
+        const result =
+          await service
+            .createUser(
+              data,
+            );
+
+        expect(
+          usersRepo.create,
+        ).toHaveBeenCalledWith(
+          data,
+        );
+
+        expect(
+          result,
+        ).toEqual(
+          entity,
+        );
+
+      },
+    );
+
+    it(
+      'gets user by email including password',
+      async () => {
+
+        const user = {
+          id: 1,
+          email:
+            'a@test.com',
+        };
+
+        const qb = {
+          addSelect:
+            jest.fn()
+              .mockReturnThis(),
+
+          where:
+            jest.fn()
+              .mockReturnThis(),
+
+          getOne:
+            jest.fn()
+              .mockResolvedValue(
+                user,
+              ),
+        };
+
+        usersRepo
+          .createQueryBuilder
+          .mockReturnValue(
+            qb,
+          );
+
+        const result =
+          await service
+            .getUserByEmail(
+              'a@test.com',
+            );
+
+        expect(
+          usersRepo
+            .createQueryBuilder,
+        ).toHaveBeenCalledWith(
+          'user',
+        );
+
+        expect(
+          qb.addSelect,
+        ).toHaveBeenCalledWith(
+          'user.password',
+        );
+
+        expect(
+          result,
+        ).toEqual(
+          user,
+        );
+
+      },
+    );
+
+    it(
+      'throws when user id does not exist',
+      async () => {
+
+        usersRepo.findOne
+          .mockResolvedValue(
+            null,
+          );
+
+        await expect(
+          service.getUserById(
+            999,
+          ),
+        ).rejects.toThrow(
+          NotFoundException,
+        );
+
+      },
+    );
+
+    it(
+      'updates profile and returns fresh user',
+      async () => {
+
+        const oldUser = {
+          id: 1,
+          fullName:
+            'Old',
+        };
+
+        const newUser = {
+          id: 1,
+          fullName:
+            'New',
+        };
+
+        usersRepo.findOne
+          .mockResolvedValueOnce(
+            oldUser,
+          )
+          .mockResolvedValueOnce(
+            newUser,
+          );
+
+        const result =
+          await service
+            .updateProfile(
+              1,
+              {
+                fullName:
+                  'New',
+              },
+            );
+
+        expect(
+          usersRepo.update,
+        ).toHaveBeenCalledWith(
+          1,
+          {
+            fullName:
+              'New',
+          },
+        );
+
+        expect(
+          result,
+        ).toEqual(
+          newUser,
+        );
+
+      },
+    );
+
+    it(
+      'updates password',
+      async () => {
+
+        await service
+          .updatePassword(
+            1,
+            'newHash',
+          );
+
+        expect(
+          usersRepo.update,
+        ).toHaveBeenCalledWith(
+          1,
+          {
+            password:
+              'newHash',
+          },
+        );
+
+      },
+    );
+
+    it(
+      'updates reset token version',
+      async () => {
+
+        await service
+          .updateResetTokenVersion(
+            1,
+            3,
+          );
+
+        expect(
+          usersRepo.update,
+        ).toHaveBeenCalledWith(
+          1,
+          {
+            resetTokenVersion:
+              3,
+          },
+        );
+
+      },
+    );
+
+    it(
+      'admin can promote customer to staff',
+      async () => {
+
+        usersRepo.findOne
+          .mockResolvedValueOnce(
+            {
+              id: 5,
+              role:
+                Role.CUSTOMER,
+            },
+          )
+          .mockResolvedValueOnce(
+            {
+              id: 5,
+              role:
+                Role.STAFF,
+            },
+          );
+
+        const result =
+          await service
+            .updateRole(
+              5,
+              Role.STAFF,
+              1,
+            );
+
+        expect(
+          usersRepo.update,
+        ).toHaveBeenCalledWith(
+          5,
+          {
+            role:
+              Role.STAFF,
+          },
+        );
+
+        expect(
+          result.role,
+        ).toBe(
+          Role.STAFF,
+        );
+
+      },
+    );
+
+    it(
+      'admin can promote another user to admin',
+      async () => {
+
+        usersRepo.findOne
+          .mockResolvedValueOnce(
+            {
+              id: 5,
+              role:
+                Role.CUSTOMER,
+            },
+          )
+          .mockResolvedValueOnce(
+            {
+              id: 5,
+              role:
+                Role.ADMIN,
+            },
+          );
+
+        countersRepo.findOne
+          .mockResolvedValue(
+            null,
+          );
+
+        const result =
+          await service
+            .updateRole(
+              5,
+              Role.ADMIN,
+              1,
+            );
+
+        expect(
+          usersRepo.update,
+        ).toHaveBeenCalledWith(
+          5,
+          {
+            role:
+              Role.ADMIN,
+          },
+        );
+
+        expect(
+          result.role,
+        ).toBe(
+          Role.ADMIN,
+        );
+
+      },
+    );
+
+    it(
+      'admin cannot demote themselves',
+      async () => {
+
+        usersRepo.findOne
+          .mockResolvedValue(
+            {
+              id: 1,
+              role:
+                Role.ADMIN,
+            },
+          );
+
+        await expect(
+          service.updateRole(
+            1,
+            Role.CUSTOMER,
+            1,
+          ),
+        ).rejects.toThrow(
+          BadRequestException,
+        );
+
+      },
+    );
+
+    it(
+      'builds user search role sorting and pagination query',
+      async () => {
+
+        const qb = {
+          andWhere:
+            jest.fn()
+              .mockReturnThis(),
+
+          orderBy:
+            jest.fn()
+              .mockReturnThis(),
+
+          skip:
+            jest.fn()
+              .mockReturnThis(),
+
+          take:
+            jest.fn()
+              .mockReturnThis(),
+
+          getManyAndCount:
+            jest.fn()
+              .mockResolvedValue(
+                [
+                  [],
+                  0,
+                ],
+              ),
+        };
+
+        usersRepo
+          .createQueryBuilder
+          .mockReturnValue(
+            qb,
+          );
+
+        const result =
+          await service.findAll(
+            'john',
+            Role.STAFF,
+            'ASC',
+            2,
+            5,
+          );
+
+        expect(
+          qb.andWhere,
+        ).toHaveBeenCalledWith(
+          '(user.fullName ILIKE :search OR user.email ILIKE :search)',
+          {
+            search:
+              '%john%',
+          },
+        );
+
+        expect(
+          qb.andWhere,
+        ).toHaveBeenCalledWith(
+          'user.role = :role',
+          {
+            role:
+              Role.STAFF,
+          },
+        );
+
+        expect(
+          qb.orderBy,
+        ).toHaveBeenCalledWith(
+          'user.createDate',
+          'ASC',
+        );
+
+        expect(
+          qb.skip,
+        ).toHaveBeenCalledWith(
+          5,
+        );
+
+        expect(
+          qb.take,
+        ).toHaveBeenCalledWith(
+          5,
+        );
+
+        expect(
+          result,
+        ).toEqual(
+          {
+            data: [],
+            total: 0,
+            page: 2,
+            limit: 5,
+          },
+        );
+
+      },
+    );
+
+  },
+);

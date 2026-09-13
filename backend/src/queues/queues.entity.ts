@@ -32,7 +32,7 @@ export class Queues {
   @Column({
     type: 'enum',
     enum: QueueStatus,
-    default: QueueStatus.OPEN,
+    default: QueueStatus.CLOSED,
   })
   status: QueueStatus;
 
