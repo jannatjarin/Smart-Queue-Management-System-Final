@@ -1,100 +1,119 @@
 "use client";
+
+import {
+    ChangeEvent,
+    FormEvent,
+    useState,
+} from "react";
+
 import axios from "axios";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+
+import {
+    useRouter,
+} from "next/navigation";
+
+import api from "@/lib/axios";
 
 
 export default function ResetPasswordPage() {
 
     const router =
-    useRouter();
-    
+        useRouter();
+
     const [err, setErr] =
-    useState("");
+        useState("");
 
-    const [responseMsg, setResponseMsg] =
-    useState("");
-
+    const [
+        responseMsg,
+        setResponseMsg
+    ] =
+        useState("");
 
     const [formData, setFormData] =
         useState(
             {
                 token: "",
                 newPassword: "",
-                confirmPassword: ""
+                confirmPassword: "",
             }
         );
 
+
     const onChangeHandle = (
-        e: React.ChangeEvent<HTMLInputElement>
+        e: ChangeEvent<HTMLInputElement>
     ) => {
 
         const {
             name,
-            value
+            value,
         } = e.target;
 
         setFormData(
             {
                 ...formData,
-                [name]: value
+                [name]: value,
             }
         );
 
     };
-    const onSubmitHandle = (
-    e: React.FormEvent<HTMLFormElement>
-) => {
 
-    e.preventDefault();
 
-    setErr("");
+    const onSubmitHandle = async (
+        e: FormEvent<HTMLFormElement>
+    ) => {
 
-    if (
-        formData.newPassword.length < 6
-    ) {
+        e.preventDefault();
 
-        setErr(
-            "Password must be at least 6 characters"
-        );
+        setErr("");
+        setResponseMsg("");
 
-        return;
 
-    }
+        if (
+            formData.newPassword.length < 6
+        ) {
 
-    if (
-        formData.newPassword !=
-        formData.confirmPassword
-    ) {
+            setErr(
+                "Password must be at least 6 characters"
+            );
 
-        setErr(
-            "Passwords do not match"
-        );
+            return;
 
-        return;
+        }
 
-    }
 
-    const resetPassword = async () => {
+        if (
+            formData.newPassword !=
+            formData.confirmPassword
+        ) {
+
+            setErr(
+                "Passwords do not match"
+            );
+
+            return;
+
+        }
+
 
         try {
 
-            await axios.post(
-                "http://localhost:3000/auth/reset-password",
-                {
-                    token:
-                        formData.token,
+            const response =
+                await api.post(
+                    "/auth/reset-password",
+                    {
+                        token:
+                            formData.token,
 
-                    newPassword:
-                        formData.newPassword
-                }
-            );
+                        newPassword:
+                            formData.newPassword,
+                    }
+                );
+
 
             setResponseMsg(
-                "Password reset successfully"
+                response.data.message
             );
 
-            setErr("");
 
             setTimeout(
                 () => {
@@ -134,9 +153,7 @@ export default function ResetPasswordPage() {
 
     };
 
-    resetPassword();
 
-};
     return (
         <div className="max-w-md mx-auto py-10">
 
@@ -148,30 +165,30 @@ export default function ResetPasswordPage() {
                 Enter the reset token and your new password
             </p>
 
-        {
-    responseMsg &&
-    <div className="alert alert-success mb-4">
 
-        <span>
-            {responseMsg}
-        </span>
+            {
+                responseMsg &&
+                <div className="alert alert-success mb-4">
 
-    </div>
-    }   
-           
-           
-    {
-    
-    
-    err &&
-    <div className="alert alert-error mb-4">
+                    <span>
+                        {responseMsg}
+                    </span>
 
-        <span>
-            {err}
-        </span>
+                </div>
+            }
 
-    </div>
-}
+
+            {
+                err &&
+                <div className="alert alert-error mb-4">
+
+                    <span>
+                        {err}
+                    </span>
+
+                </div>
+            }
+
 
             <form onSubmit={onSubmitHandle}>
 
@@ -188,6 +205,7 @@ export default function ResetPasswordPage() {
                     required
                 />
 
+
                 <label className="label mt-4">
                     New Password
                 </label>
@@ -200,6 +218,7 @@ export default function ResetPasswordPage() {
                     onChange={onChangeHandle}
                     required
                 />
+
 
                 <label className="label mt-4">
                     Confirm Password
@@ -214,6 +233,7 @@ export default function ResetPasswordPage() {
                     required
                 />
 
+
                 <button
                     type="submit"
                     className="btn btn-primary w-full mt-6"
@@ -224,5 +244,6 @@ export default function ResetPasswordPage() {
             </form>
 
         </div>
-    )
+    );
+
 }
