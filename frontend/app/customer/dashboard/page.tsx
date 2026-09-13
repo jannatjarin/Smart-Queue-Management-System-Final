@@ -1,134 +1,227 @@
 "use client";
 
-import { useState } from "react";
+import {
+    useEffect,
+    useState,
+} from "react";
+
 import axios from "axios";
 import Link from "next/link";
 
+import api from "@/lib/axios";
+
+
+interface UserData {
+
+    id: number;
+    fullName: string;
+    email: string;
+    phone: string | null;
+    role: string;
+
+}
+
+
+interface Ticket {
+
+    id: number;
+    status: string;
+
+}
+
+
 export default function CustomerDashboard() {
 
-    const [user, setUser] = useState(
-        {
-            id: 0,
-            fullName: "",
-            email: "",
-            phone: "",
-            role: ""
-        }
-    );
+    const [user, setUser] =
+        useState<UserData | null>(
+            null
+        );
+
+    const [tickets, setTickets] =
+        useState<Ticket[]>([]);
 
     const [err, setErr] =
         useState("");
 
-    const handleClick = async () => {
+    const [loading, setLoading] =
+        useState(true);
 
-        const token =
-            localStorage.getItem(
-                "access_token"
-            );
 
-        try {
+    useEffect(
+        () => {
 
-            const response =
-                await axios.get(
-                    "http://localhost:3000/users/me",
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`,
-                        }
+            const loadDashboard =
+                async () => {
+
+                    try {
+
+                        const userResponse =
+                            await api.get<UserData>(
+                                "/users/me"
+                            );
+
+                        setUser(
+                            userResponse.data
+                        );
+
+
+                        const ticketsResponse =
+                            await api.get<Ticket[]>(
+                                "/tickets/mytickets"
+                            );
+
+                        setTickets(
+                            ticketsResponse.data
+                        );
+
+                        setErr("");
+
                     }
-                )
 
-            setUser(
-                response.data
-            );
+                    catch (error) {
 
-        }
+                        if (
+                            axios.isAxiosError(
+                                error
+                            ) &&
+                            error.response
+                                ?.data
+                                ?.message
+                        ) {
 
-        catch (error: any) {
+                            setErr(
+                                error.response
+                                    .data
+                                    .message
+                            );
 
-            if (error.response?.data?.message) {
+                        }
 
-                setErr(
-                    error.response.data.message
-                );
+                        else {
 
-            }
+                            setErr(
+                                "Could not load dashboard information"
+                            );
 
-            else {
+                        }
 
-                setErr(
-                    "Could not load user information"
-                );
+                    }
 
-            }
+                    finally {
 
-        }
+                        setLoading(
+                            false
+                        );
+
+                    }
+
+                };
+
+
+            loadDashboard();
+
+        },
+        []
+    );
+
+
+    const waitingCount =
+        tickets.filter(
+            (ticket) =>
+                ticket.status ==
+                "waiting"
+        ).length;
+
+
+    const calledCount =
+        tickets.filter(
+            (ticket) =>
+                ticket.status ==
+                "called"
+        ).length;
+
+
+    const completedCount =
+        tickets.filter(
+            (ticket) =>
+                ticket.status ==
+                "completed"
+        ).length;
+
+
+    const activeCount =
+        waitingCount +
+        calledCount;
+
+
+    if (loading) {
+
+        return (
+            <div className="flex items-center justify-center p-10">
+
+                <span className="loading loading-spinner"></span>
+
+                <span className="ml-3">
+                    Loading dashboard...
+                </span>
+
+            </div>
+        );
 
     }
+
 
     return (
         <div className="max-w-6xl mx-auto py-8">
 
-            <div className="flex justify-between items-center mb-8">
+            <div className="mb-8">
 
-                <div>
+                <h1 className="text-3xl font-bold">
+                    Customer Dashboard
+                </h1>
 
-                    <h1 className="text-3xl font-bold">
-                        Customer Dashboard
-                    </h1>
-
-                    <p>
-                        Welcome to your SQMS account.
-                    </p>
-
-                </div>
-
-                <button
-                    onClick={handleClick}
-                    className="btn btn-primary"
-                >
-                    Load My Information
-                </button>
+                <p>
+                    Welcome to your SQMS account.
+                </p>
 
             </div>
+
 
             {
                 err &&
                 <div className="alert alert-error mb-5">
-                    {err}
+
+                    <span>
+                        {err}
+                    </span>
+
                 </div>
             }
 
-            {
-                user.id !== 0 &&
 
+            {
+                user &&
                 <div className="card bg-base-100 shadow-md border mb-8">
 
                     <div className="card-body">
 
                         <h2 className="card-title">
-                            My Information
+                            Welcome, {user.fullName}
                         </h2>
 
-                        <p>
-                            <b>Name:</b>{" "}
-                            {user.fullName}
-                        </p>
 
                         <p>
                             <b>Email:</b>{" "}
                             {user.email}
                         </p>
 
-                        <p>
-                            <b>Phone:</b>{" "}
-                            {user.phone}
-                        </p>
 
                         <p>
-                            <b>Role:</b>{" "}
-                            {user.role}
+                            <b>Phone:</b>{" "}
+                            {
+                                user.phone ||
+                                "Not provided"
+                            }
                         </p>
 
                     </div>
@@ -136,15 +229,78 @@ export default function CustomerDashboard() {
                 </div>
             }
 
+
+            <h2 className="text-xl font-bold mb-4">
+                Ticket Summary
+            </h2>
+
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+
+                <div className="stat bg-base-100 shadow border rounded-box">
+
+                    <div className="stat-title">
+                        Total Tickets
+                    </div>
+
+                    <div className="stat-value text-2xl">
+                        {tickets.length}
+                    </div>
+
+                </div>
+
+
+                <div className="stat bg-base-100 shadow border rounded-box">
+
+                    <div className="stat-title">
+                        Active
+                    </div>
+
+                    <div className="stat-value text-2xl">
+                        {activeCount}
+                    </div>
+
+                </div>
+
+
+                <div className="stat bg-base-100 shadow border rounded-box">
+
+                    <div className="stat-title">
+                        Waiting
+                    </div>
+
+                    <div className="stat-value text-2xl">
+                        {waitingCount}
+                    </div>
+
+                </div>
+
+
+                <div className="stat bg-base-100 shadow border rounded-box">
+
+                    <div className="stat-title">
+                        Completed
+                    </div>
+
+                    <div className="stat-value text-2xl">
+                        {completedCount}
+                    </div>
+
+                </div>
+
+            </div>
+
+
             <h2 className="text-xl font-bold mb-4">
                 Quick Actions
             </h2>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
 
                 <Link
                     href="/services"
-                    className="card bg-base-100 shadow border"
+                    className="card bg-base-100 shadow border hover:shadow-md"
                 >
 
                     <div className="card-body">
@@ -161,28 +317,70 @@ export default function CustomerDashboard() {
 
                 </Link>
 
+
                 <Link
                     href="/customer/queues"
-                    className="card bg-base-100 shadow border"
+                    className="card bg-base-100 shadow border hover:shadow-md"
                 >
 
                     <div className="card-body">
 
                         <h3 className="font-bold">
-                            Queues
+                            Get Ticket
                         </h3>
 
                         <p>
-                            View available queues
+                            Join an available queue
                         </p>
 
                     </div>
 
                 </Link>
 
+
+                <Link
+                    href="/customer/tickets"
+                    className="card bg-base-100 shadow border hover:shadow-md"
+                >
+
+                    <div className="card-body">
+
+                        <h3 className="font-bold">
+                            My Tickets
+                        </h3>
+
+                        <p>
+                            View and manage tickets
+                        </p>
+
+                    </div>
+
+                </Link>
+
+
+                <Link
+                    href="/customer/notifications"
+                    className="card bg-base-100 shadow border hover:shadow-md"
+                >
+
+                    <div className="card-body">
+
+                        <h3 className="font-bold">
+                            Notifications
+                        </h3>
+
+                        <p>
+                            View ticket updates
+                        </p>
+
+                    </div>
+
+                </Link>
+
+
                 <Link
                     href="/customer/profile"
-                    className="card bg-base-100 shadow border"
+                    className="card bg-base-100 shadow border hover:shadow-md"
                 >
 
                     <div className="card-body">
@@ -199,27 +397,9 @@ export default function CustomerDashboard() {
 
                 </Link>
 
-                <Link
-                    href="/customer/notifications"
-                    className="card bg-base-100 shadow border"
-                >
-
-                    <div className="card-body">
-
-                        <h3 className="font-bold">
-                            Notifications
-                        </h3>
-
-                        <p>
-                            View your notifications
-                        </p>
-
-                    </div>
-
-                </Link>
-
             </div>
 
         </div>
-    )
+    );
+
 }

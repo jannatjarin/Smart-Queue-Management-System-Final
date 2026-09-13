@@ -1,139 +1,225 @@
 "use client";
 
-import { useState } from "react";
+import {
+    useEffect,
+    useState,
+} from "react";
+
 import axios from "axios";
 
+import api from "@/lib/axios";
+
+
 interface Notification {
-    id: number,
-    type: string,
-    message: string,
-    status: string,
-    sentAt: string
+
+    id: number;
+    type: string;
+    message: string;
+    status: string;
+    sentAt: string;
+
 }
+
 
 export default function NotificationsPage() {
 
-    const [notifications, setNotifications] =
-        useState<Notification[]>([]);
+    const [
+        notifications,
+        setNotifications
+    ] =
+        useState<Notification[]>(
+            []
+        );
 
     const [err, setErr] =
         useState("");
 
-    const handleClick = async () => {
+    const [loading, setLoading] =
+        useState(true);
 
-        const token =
-            localStorage.getItem(
-                "access_token"
-            );
 
-        try {
+    useEffect(
+        () => {
 
-            const response =
-                await axios.get(
-                    "http://localhost:3000/notifications/me",
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`,
-                        }
+            const getNotifications =
+                async () => {
+
+                    try {
+
+                        const response =
+                            await api.get<
+                                Notification[]
+                            >(
+                                "/notifications/me"
+                            );
+
+                        setNotifications(
+                            response.data
+                        );
+
+                        setErr("");
+
                     }
-                )
 
-            setNotifications(
-                response.data
-            );
+                    catch (error) {
 
-        }
+                        if (
+                            axios.isAxiosError(
+                                error
+                            ) &&
+                            error.response
+                                ?.data
+                                ?.message
+                        ) {
 
-        catch (error: any) {
+                            setErr(
+                                error.response
+                                    .data
+                                    .message
+                            );
 
-            if (error.response?.data?.message) {
+                        }
 
-                setErr(
-                    error.response.data.message
-                );
+                        else {
 
-            }
+                            setErr(
+                                "Could not load notifications"
+                            );
 
-            else {
+                        }
 
-                setErr(
-                    "Could not load notifications"
-                );
+                    }
 
-            }
+                    finally {
 
-        }
+                        setLoading(
+                            false
+                        );
+
+                    }
+
+                };
+
+
+            getNotifications();
+
+        },
+        []
+    );
+
+
+    if (loading) {
+
+        return (
+            <div className="flex items-center justify-center p-10">
+
+                <span className="loading loading-spinner"></span>
+
+                <span className="ml-3">
+                    Loading notifications...
+                </span>
+
+            </div>
+        );
 
     }
+
 
     return (
         <div className="max-w-4xl mx-auto py-8">
 
-            <div className="flex justify-between items-center mb-6">
+            <div className="mb-6">
 
-                <div>
+                <h1 className="text-3xl font-bold">
+                    My Notifications
+                </h1>
 
-                    <h1 className="text-3xl font-bold">
-                        My Notifications
-                    </h1>
-
-                    <p>
-                        View updates related to your account and tickets.
-                    </p>
-
-                </div>
-
-                <button
-                    onClick={handleClick}
-                    className="btn btn-primary"
-                >
-                    Load Notifications
-                </button>
+                <p>
+                    View updates related to your account and tickets.
+                </p>
 
             </div>
+
 
             {
                 err &&
                 <div className="alert alert-error mb-4">
-                    {err}
+
+                    <span>
+                        {err}
+                    </span>
+
                 </div>
             }
+
+
+            {
+                notifications.length ==
+                    0 &&
+                !err &&
+                <div className="alert">
+
+                    <span>
+                        You have no notifications yet.
+                    </span>
+
+                </div>
+            }
+
 
             <div className="flex flex-col gap-4">
 
                 {
                     notifications.map(
                         (
-                            notification:
-                            Notification
+                            notification
                         ) => (
 
                             <div
-                                key={notification.id}
+                                key={
+                                    notification.id
+                                }
                                 className="card bg-base-100 shadow border"
                             >
 
                                 <div className="card-body">
 
-                                    <div className="flex justify-between">
+                                    <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
 
                                         <h2 className="font-bold">
-                                            {notification.type}
+                                            {
+                                                notification
+                                                    .type
+                                            }
                                         </h2>
 
-                                        <span className="badge">
-                                            {notification.status}
+
+                                        <span className="badge badge-outline">
+                                            {
+                                                notification
+                                                    .status
+                                            }
                                         </span>
 
                                     </div>
 
+
                                     <p>
-                                        {notification.message}
+                                        {
+                                            notification
+                                                .message
+                                        }
                                     </p>
 
-                                    <p className="text-sm">
-                                        {notification.sentAt}
+
+                                    <p className="text-sm opacity-70">
+                                        {
+                                            new Date(
+                                                notification
+                                                    .sentAt
+                                            )
+                                                .toLocaleString()
+                                        }
                                     </p>
 
                                 </div>
@@ -146,15 +232,7 @@ export default function NotificationsPage() {
 
             </div>
 
-            {
-                notifications.length === 0 &&
-                !err &&
-
-                <p className="mt-4">
-                    No notifications loaded.
-                </p>
-            }
-
         </div>
-    )
+    );
+
 }

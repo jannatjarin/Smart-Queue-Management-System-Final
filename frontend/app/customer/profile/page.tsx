@@ -1,7 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import {
+    ChangeEvent,
+    FormEvent,
+    useEffect,
+    useState,
+} from "react";
+
 import axios from "axios";
+
+import api from "@/lib/axios";
+
+
+interface UserData {
+
+    fullName: string;
+    email: string;
+    phone: string | null;
+    role: string;
+
+}
+
 
 export default function ProfilePage() {
 
@@ -11,107 +30,200 @@ export default function ProfilePage() {
                 fullName: "",
                 email: "",
                 phone: "",
-                role: ""
+                role: "",
             }
-        )
+        );
 
-    const [responseMsg, setResponseMsg] =
+    const [
+        responseMsg,
+        setResponseMsg
+    ] =
         useState("");
 
-    const getProfile = async () => {
+    const [err, setErr] =
+        useState("");
 
-        const token =
-            localStorage.getItem(
-                "access_token"
-            );
+    const [loading, setLoading] =
+        useState(true);
 
-        try {
+    const [saving, setSaving] =
+        useState(false);
 
-            const response =
-                await axios.get(
-                    "http://localhost:3000/users/me",
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`,
-                        }
+
+    useEffect(
+        () => {
+
+            const getProfile =
+                async () => {
+
+                    try {
+
+                        const response =
+                            await api.get<UserData>(
+                                "/users/me"
+                            );
+
+                        setFormData(
+                            {
+                                fullName:
+                                    response.data
+                                        .fullName,
+
+                                email:
+                                    response.data
+                                        .email,
+
+                                phone:
+                                    response.data
+                                        .phone ||
+                                    "",
+
+                                role:
+                                    response.data
+                                        .role,
+                            }
+                        );
+
+                        setErr("");
+
                     }
-                )
 
-            setFormData(
-                {
-                    fullName:
-                        response.data.fullName,
+                    catch (error) {
 
-                    email:
-                        response.data.email,
+                        if (
+                            axios.isAxiosError(
+                                error
+                            ) &&
+                            error.response
+                                ?.data
+                                ?.message
+                        ) {
 
-                    phone:
-                        response.data.phone || "",
+                            setErr(
+                                error.response
+                                    .data
+                                    .message
+                            );
 
-                    role:
-                        response.data.role
-                }
-            )
+                        }
 
-        }
+                        else {
 
-        catch (error: any) {
+                            setErr(
+                                "Could not load profile"
+                            );
 
-            if (error.response?.data?.message) {
+                        }
 
-                setResponseMsg(
-                    error.response.data.message
-                );
+                    }
 
-            }
+                    finally {
 
-        }
+                        setLoading(
+                            false
+                        );
 
-    }
+                    }
 
-    const onChangeHandle = (e: any) => {
+                };
 
-        const { name, value } =
-            e.target;
+
+            getProfile();
+
+        },
+        []
+    );
+
+
+    const onChangeHandle = (
+        e:
+            ChangeEvent<
+                HTMLInputElement
+            >
+    ) => {
+
+        const {
+            name,
+            value,
+        } = e.target;
 
         setFormData(
             {
                 ...formData,
                 [name]: value,
             }
-        )
+        );
 
-    }
+    };
 
-    const updateProfile = async () => {
 
-        const token =
-            localStorage.getItem(
-                "access_token"
+    const updateProfile = async (
+        e:
+            FormEvent<
+                HTMLFormElement
+            >
+    ) => {
+
+        e.preventDefault();
+
+        setResponseMsg("");
+        setErr("");
+
+
+        if (
+            !formData.fullName.trim()
+        ) {
+
+            setErr(
+                "Full name is required"
             );
+
+            return;
+
+        }
+
+
+        setSaving(
+            true
+        );
+
 
         try {
 
             const response =
-                await axios.patch(
-                    "http://localhost:3000/users/me",
-
+                await api.patch<UserData>(
+                    "/users/me",
                     {
                         fullName:
                             formData.fullName,
 
                         phone:
-                            formData.phone
-                    },
-
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`,
-                        }
+                            formData.phone,
                     }
-                )
+                );
+
+
+            setFormData(
+                {
+                    fullName:
+                        response.data
+                            .fullName,
+
+                    email:
+                        response.data
+                            .email,
+
+                    phone:
+                        response.data
+                            .phone ||
+                        "",
+
+                    role:
+                        response.data
+                            .role,
+                }
+            );
+
 
             setResponseMsg(
                 "Profile updated successfully"
@@ -119,43 +231,105 @@ export default function ProfilePage() {
 
         }
 
-        catch (error: any) {
+        catch (error) {
 
-            if (error.response?.data?.message) {
+            if (
+                axios.isAxiosError(
+                    error
+                ) &&
+                error.response
+                    ?.data
+                    ?.message
+            ) {
 
-                setResponseMsg(
-                    error.response.data.message
+                setErr(
+                    error.response
+                        .data
+                        .message
+                );
+
+            }
+
+            else {
+
+                setErr(
+                    "Could not update profile"
                 );
 
             }
 
         }
 
+        finally {
+
+            setSaving(
+                false
+            );
+
+        }
+
+    };
+
+
+    if (loading) {
+
+        return (
+            <div className="flex items-center justify-center p-10">
+
+                <span className="loading loading-spinner"></span>
+
+                <span className="ml-3">
+                    Loading profile...
+                </span>
+
+            </div>
+        );
+
     }
+
 
     return (
         <div className="max-w-xl mx-auto py-8">
 
-            <div className="card bg-base-100 shadow-xl">
+            <div className="card bg-base-100 shadow-xl border">
 
                 <div className="card-body">
 
-                    <div className="flex justify-between items-center">
+                    <h1 className="text-2xl font-bold">
+                        My Profile
+                    </h1>
 
-                        <h1 className="text-2xl font-bold">
-                            My Profile
-                        </h1>
 
-                        <button
-                            onClick={getProfile}
-                            className="btn btn-sm btn-outline"
-                        >
-                            Load Profile
-                        </button>
+                    {
+                        responseMsg &&
+                        <div className="alert alert-success mt-4">
 
-                    </div>
+                            <span>
+                                {responseMsg}
+                            </span>
 
-                    <div className="mt-4">
+                        </div>
+                    }
+
+
+                    {
+                        err &&
+                        <div className="alert alert-error mt-4">
+
+                            <span>
+                                {err}
+                            </span>
+
+                        </div>
+                    }
+
+
+                    <form
+                        onSubmit={
+                            updateProfile
+                        }
+                        className="mt-4"
+                    >
 
                         <label className="label">
                             Full Name
@@ -165,9 +339,15 @@ export default function ProfilePage() {
                             type="text"
                             name="fullName"
                             className="input input-bordered w-full"
-                            value={formData.fullName}
-                            onChange={onChangeHandle}
+                            value={
+                                formData.fullName
+                            }
+                            onChange={
+                                onChangeHandle
+                            }
+                            required
                         />
+
 
                         <label className="label mt-3">
                             Email
@@ -177,9 +357,12 @@ export default function ProfilePage() {
                             type="email"
                             name="email"
                             className="input input-bordered w-full"
-                            value={formData.email}
+                            value={
+                                formData.email
+                            }
                             disabled
                         />
+
 
                         <label className="label mt-3">
                             Phone
@@ -189,9 +372,14 @@ export default function ProfilePage() {
                             type="text"
                             name="phone"
                             className="input input-bordered w-full"
-                            value={formData.phone}
-                            onChange={onChangeHandle}
+                            value={
+                                formData.phone
+                            }
+                            onChange={
+                                onChangeHandle
+                            }
                         />
+
 
                         <label className="label mt-3">
                             Role
@@ -201,30 +389,36 @@ export default function ProfilePage() {
                             type="text"
                             name="role"
                             className="input input-bordered w-full"
-                            value={formData.role}
+                            value={
+                                formData.role
+                            }
                             disabled
                         />
 
+
                         <button
-                            onClick={updateProfile}
+                            type="submit"
                             className="btn btn-primary w-full mt-6"
+                            disabled={
+                                saving
+                            }
                         >
-                            Update Profile
+
+                            {
+                                saving
+                                    ? "Updating..."
+                                    : "Update Profile"
+                            }
+
                         </button>
 
-                    </div>
-
-                    {
-                        responseMsg &&
-                        <div className="alert mt-4">
-                            {responseMsg}
-                        </div>
-                    }
+                    </form>
 
                 </div>
 
             </div>
 
         </div>
-    )
+    );
+
 }
