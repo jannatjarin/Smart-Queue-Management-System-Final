@@ -27,8 +27,4 @@ export class UpdateServiceDto {
   @MaxLength(100)
   department?: string;
 
-  @IsOptional()
-   @IsString()
-  @MaxLength(100)
-  department?: string;
 }
