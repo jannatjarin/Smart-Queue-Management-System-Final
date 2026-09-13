@@ -25,7 +25,27 @@ interface UserData {
 interface Ticket {
 
     id: number;
+    ticketNumber: string;
     status: string;
+    priority: string;
+    issuedAt: string;
+    estimatedWaitMinutes:
+        number | null;
+
+    service: {
+        id: number;
+        name: string;
+    };
+
+    queue: {
+        id: number;
+        name: string;
+    };
+
+    counter: {
+        id: number;
+        name: string;
+    } | null;
 
 }
 
@@ -60,6 +80,7 @@ export default function CustomerDashboard() {
                                 "/users/me"
                             );
 
+
                         setUser(
                             userResponse.data
                         );
@@ -70,9 +91,11 @@ export default function CustomerDashboard() {
                                 "/tickets/mytickets"
                             );
 
+
                         setTickets(
                             ticketsResponse.data
                         );
+
 
                         setErr("");
 
@@ -89,10 +112,20 @@ export default function CustomerDashboard() {
                                 ?.message
                         ) {
 
-                            setErr(
+                            const message =
                                 error.response
                                     .data
-                                    .message
+                                    .message;
+
+
+                            setErr(
+                                Array.isArray(
+                                    message
+                                )
+                                    ? message.join(
+                                        ", "
+                                    )
+                                    : message
                             );
 
                         }
@@ -152,6 +185,27 @@ export default function CustomerDashboard() {
     const activeCount =
         waitingCount +
         calledCount;
+
+
+    const activeTicket =
+        tickets.find(
+            (ticket) =>
+                ticket.status ==
+                "called"
+        ) ||
+        tickets.find(
+            (ticket) =>
+                ticket.status ==
+                "waiting"
+        ) ||
+        null;
+
+
+    const recentActivity =
+        tickets.slice(
+            0,
+            5
+        );
 
 
     if (loading) {
@@ -285,6 +339,227 @@ export default function CustomerDashboard() {
                     <div className="stat-value text-2xl">
                         {completedCount}
                     </div>
+
+                </div>
+
+            </div>
+
+
+            <h2 className="text-xl font-bold mb-4">
+                Current Active Ticket
+            </h2>
+
+
+            {
+                activeTicket
+                    ? (
+                        <div className="card bg-base-100 shadow border mb-8">
+
+                            <div className="card-body">
+
+                                <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-3">
+
+                                    <div>
+
+                                        <h3 className="card-title text-2xl">
+                                            {
+                                                activeTicket
+                                                    .ticketNumber
+                                            }
+                                        </h3>
+
+
+                                        <p>
+                                            <b>Service:</b>{" "}
+                                            {
+                                                activeTicket
+                                                    .service
+                                                    .name
+                                            }
+                                        </p>
+
+
+                                        <p>
+                                            <b>Queue:</b>{" "}
+                                            {
+                                                activeTicket
+                                                    .queue
+                                                    .name
+                                            }
+                                        </p>
+
+
+                                        <p>
+                                            <b>Status:</b>{" "}
+                                            {
+                                                activeTicket
+                                                    .status
+                                            }
+                                        </p>
+
+
+                                        <p>
+                                            <b>Priority:</b>{" "}
+                                            {
+                                                activeTicket
+                                                    .priority
+                                            }
+                                        </p>
+
+
+                                        <p>
+                                            <b>Counter:</b>{" "}
+                                            {
+                                                activeTicket
+                                                    .counter
+                                                    ?.name ||
+                                                "Not assigned yet"
+                                            }
+                                        </p>
+
+
+                                        {
+                                            activeTicket.status ==
+                                                "waiting" &&
+                                            <p>
+                                                <b>
+                                                    Estimated Wait:
+                                                </b>{" "}
+
+                                                {
+                                                    activeTicket
+                                                        .estimatedWaitMinutes ==
+                                                        null
+                                                        ? "Not available"
+                                                        : `${activeTicket.estimatedWaitMinutes} minutes`
+                                                }
+
+                                            </p>
+                                        }
+
+                                    </div>
+
+
+                                    <Link
+                                        href="/customer/tickets"
+                                        className="btn btn-outline"
+                                    >
+                                        View Ticket Details
+                                    </Link>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+                    )
+                    : (
+                        <div className="alert mb-8">
+
+                            <span>
+                                You do not have an active ticket right now.
+                            </span>
+
+                        </div>
+                    )
+            }
+
+
+            <h2 className="text-xl font-bold mb-4">
+                Recent Activity
+            </h2>
+
+
+            <div className="card bg-base-100 shadow border mb-8">
+
+                <div className="card-body">
+
+                    {
+                        recentActivity.length ==
+                            0
+                            ? (
+                                <p>
+                                    No ticket activity yet.
+                                </p>
+                            )
+                            : (
+                                <div className="overflow-x-auto">
+
+                                    <table className="table table-zebra">
+
+                                        <thead>
+
+                                            <tr>
+                                                <th>Ticket</th>
+                                                <th>Queue</th>
+                                                <th>Status</th>
+                                                <th>Time</th>
+                                            </tr>
+
+                                        </thead>
+
+
+                                        <tbody>
+
+                                            {
+                                                recentActivity.map(
+                                                    (ticket) => (
+
+                                                        <tr
+                                                            key={
+                                                                ticket.id
+                                                            }
+                                                        >
+
+                                                            <td>
+                                                                {
+                                                                    ticket
+                                                                        .ticketNumber
+                                                                }
+                                                            </td>
+
+                                                            <td>
+                                                                {
+                                                                    ticket
+                                                                        .queue
+                                                                        .name
+                                                                }
+                                                            </td>
+
+                                                            <td>
+
+                                                                <span className="badge badge-outline">
+                                                                    {
+                                                                        ticket
+                                                                            .status
+                                                                    }
+                                                                </span>
+
+                                                            </td>
+
+                                                            <td>
+                                                                {
+                                                                    new Date(
+                                                                        ticket
+                                                                            .issuedAt
+                                                                    )
+                                                                        .toLocaleString()
+                                                                }
+                                                            </td>
+
+                                                        </tr>
+
+                                                    )
+                                                )
+                                            }
+
+                                        </tbody>
+
+                                    </table>
+
+                                </div>
+                            )
+                    }
 
                 </div>
 
