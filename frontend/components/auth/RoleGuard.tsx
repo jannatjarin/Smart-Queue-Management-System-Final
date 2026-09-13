@@ -1,126 +1,165 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { jwtDecode } from "jwt-decode";
-import { useRouter } from "next/navigation";
+import {
+    useEffect,
+    useState,
+} from "react";
 
-interface TokenData {
-    id: number,
-    email: string,
-    role: string
+import {
+    useRouter,
+} from "next/navigation";
+
+import api from "@/lib/axios";
+
+
+interface UserData {
+
+    id: number;
+    email: string;
+    role: string;
+
 }
+
 
 interface RoleGuardProps {
-    children: React.ReactNode,
-    allowedRole: string
+
+    children: React.ReactNode;
+    allowedRole: string;
+
 }
 
+
 export default function RoleGuard(
-    { children, allowedRole }: RoleGuardProps
+    {
+        children,
+        allowedRole,
+    }: RoleGuardProps
 ) {
 
-    const router = useRouter();
+    const router =
+        useRouter();
 
     const [allowed, setAllowed] =
         useState(false);
 
-    useEffect(() => {
 
-        const checkRole = async () => {
+    useEffect(
+        () => {
 
-            const token =
-                localStorage.getItem(
-                    "access_token"
-                );
+            const checkRole =
+                async () => {
 
-            if (!token) {
+                    const token =
+                        localStorage.getItem(
+                            "access_token"
+                        );
 
-                router.push(
-                    "/login"
-                );
+                    if (!token) {
 
-                return;
-            }
+                        router.replace(
+                            "/login"
+                        );
 
-            try {
+                        return;
 
-                const user =
-                    jwtDecode<TokenData>(
-                        token
-                    );
+                    }
 
-                if (
-                    user.role ==
-                    allowedRole
-                ) {
+                    try {
 
-                    await Promise.resolve();
+                        const response =
+                            await api.get<UserData>(
+                                "/users/me"
+                            );
 
-                    setAllowed(true);
+                        const role =
+                            response.data.role;
 
-                }
+                        if (
+                            role ==
+                            allowedRole
+                        ) {
 
-                else if (
-                    user.role == "admin"
-                ) {
+                            setAllowed(
+                                true
+                            );
 
-                    router.push(
-                        "/admin/dashboard"
-                    );
+                            return;
 
-                }
+                        }
 
-                else if (
-                    user.role == "staff"
-                ) {
+                        setAllowed(
+                            false
+                        );
 
-                    router.push(
-                        "/staff/dashboard"
-                    );
 
-                }
+                        if (
+                            role == "admin"
+                        ) {
 
-                else if (
-                    user.role == "customer"
-                ) {
+                            router.replace(
+                                "/admin/dashboard"
+                            );
 
-                    router.push(
-                        "/customer/dashboard"
-                    );
+                        }
 
-                }
+                        else if (
+                            role == "staff"
+                        ) {
 
-                else {
+                            router.replace(
+                                "/staff/dashboard"
+                            );
 
-                    router.push(
-                        "/login"
-                    );
+                        }
 
-                }
+                        else if (
+                            role == "customer"
+                        ) {
 
-            }
+                            router.replace(
+                                "/customer/dashboard"
+                            );
 
-            catch {
+                        }
 
-                localStorage.removeItem(
-                    "access_token"
-                );
+                        else {
 
-                localStorage.removeItem(
-                    "refresh_token"
-                );
+                            router.replace(
+                                "/login"
+                            );
 
-                router.push(
-                    "/login"
-                );
+                        }
 
-            }
+                    }
 
-        };
+                    catch {
 
-        checkRole();
+                        localStorage.removeItem(
+                            "access_token"
+                        );
 
-    }, [allowedRole, router]);
+                        localStorage.removeItem(
+                            "refresh_token"
+                        );
+
+                        router.replace(
+                            "/login"
+                        );
+
+                    }
+
+                };
+
+
+            checkRole();
+
+        },
+        [
+            allowedRole,
+            router,
+        ]
+    );
+
 
     if (!allowed) {
 
@@ -138,9 +177,11 @@ export default function RoleGuard(
 
     }
 
+
     return (
         <>
             {children}
         </>
     );
+
 }
