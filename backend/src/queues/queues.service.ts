@@ -189,7 +189,6 @@ export class QueuesService {
 
             relations: [
               'service',
-              'tickets',
             ],
           },
         );
