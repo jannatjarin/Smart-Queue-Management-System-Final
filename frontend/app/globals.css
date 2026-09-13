@@ -1,2 +1,308 @@
 @import "tailwindcss";
 @plugin "daisyui";
+
+:root {
+    color-scheme: light;
+    --sqms-ink: #353247;
+    --sqms-muted: #706d7f;
+    --sqms-border: #e8e2ef;
+    --sqms-primary: #756aa5;
+    --sqms-primary-dark: #5b518a;
+    --sqms-lavender: #ece7ff;
+    --sqms-mint: #e2f5ec;
+    --sqms-peach: #ffe8dc;
+    --sqms-sky: #e6f1ff;
+    --sqms-butter: #fff3cd;
+    --sqms-blush: #fce4ec;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    color: var(--sqms-ink);
+
+    background-color: #faf7fd;
+
+    background-image:
+        radial-gradient(
+            circle at 8% 7%,
+            rgba(219, 210, 255, 0.68) 0,
+            rgba(219, 210, 255, 0) 24rem
+        ),
+        radial-gradient(
+            circle at 92% 12%,
+            rgba(255, 222, 207, 0.58) 0,
+            rgba(255, 222, 207, 0) 25rem
+        ),
+        radial-gradient(
+            circle at 78% 76%,
+            rgba(214, 241, 229, 0.56) 0,
+            rgba(214, 241, 229, 0) 28rem
+        ),
+        linear-gradient(
+            180deg,
+            #fcf9ff 0%,
+            #faf8fd 48%,
+            #f7fbfa 100%
+        );
+
+    background-attachment: fixed;
+
+    font-family:
+        var(--font-geist-sans),
+        "Aptos",
+        "Segoe UI",
+        sans-serif;
+}
+
+h1,
+h2,
+h3 {
+    letter-spacing: -0.025em;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+    outline-offset: 3px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid rgba(117, 106, 165, 0.24);
+}
+
+::selection {
+    background: #ddd5ff;
+    color: #3f3968;
+}
+
+
+.sqms-glass {
+    border: 1px solid rgba(230, 223, 239, 0.92);
+
+    background: rgba(
+        255,
+        253,
+        255,
+        0.82
+    );
+
+    box-shadow:
+        0 20px 55px
+        rgba(98, 82, 125, 0.08);
+
+    backdrop-filter: blur(14px);
+}
+
+
+.sqms-card {
+    border: 1px solid
+        rgba(228, 220, 237, 0.95);
+
+    background:
+        rgba(
+            255,
+            253,
+            255,
+            0.86
+        );
+
+    box-shadow:
+        0 12px 35px
+        rgba(89, 72, 115, 0.075);
+}
+
+.sqms-card:hover {
+    box-shadow:
+        0 16px 42px
+        rgba(89, 72, 115, 0.1);
+}
+
+
+
+.sqms-title {
+    color: #353247;
+
+    font-weight: 800;
+
+    letter-spacing: -0.045em;
+}
+
+.sqms-eyebrow {
+    color: #756aa5;
+
+    font-size: 0.78rem;
+
+    font-weight: 800;
+
+    letter-spacing: 0.16em;
+
+    text-transform: uppercase;
+}
+
+.sqms-muted {
+    color: #706d7f;
+}
+
+
+
+.sqms-primary-button {
+    background: #756aa5;
+
+    color: white;
+
+    box-shadow:
+        0 8px 20px
+        rgba(117, 106, 165, 0.2);
+}
+
+.sqms-primary-button:hover {
+    background: #655a96;
+
+    transform: translateY(-1px);
+}
+
+.sqms-secondary-button {
+    border: 1px solid #ded6e8;
+
+    background:
+        rgba(
+            255,
+            253,
+            255,
+            0.88
+        );
+
+    color: #514b63;
+}
+
+.sqms-secondary-button:hover {
+    border-color: #b9acd0;
+
+    background: #f6f1ff;
+
+    color: #5b518a;
+}
+
+
+
+.sqms-input {
+    border-color: #ddd5e7 !important;
+
+    background:
+        rgba(
+            255,
+            253,
+            255,
+            0.9
+        ) !important;
+
+    color: #353247 !important;
+}
+
+.sqms-input:focus {
+    border-color:
+        #8d82ba !important;
+
+    box-shadow:
+        0 0 0 4px
+        rgba(141, 130, 186, 0.12);
+
+    outline: none !important;
+}
+
+
+
+.sqms-ticket-card {
+    position: relative;
+
+    overflow: hidden;
+
+    border: 1px solid
+        rgba(222, 211, 235, 0.95);
+
+    background:
+        radial-gradient(
+            circle at 95% 0%,
+            rgba(224, 214, 255, 0.55),
+            transparent 13rem
+        ),
+        linear-gradient(
+            135deg,
+            rgba(255, 253, 255, 0.94),
+            rgba(250, 246, 255, 0.93)
+        );
+
+    box-shadow:
+        0 16px 42px
+        rgba(92, 75, 119, 0.09);
+}
+
+.sqms-ticket-card::after {
+    content: "";
+
+    position: absolute;
+
+    right: -3rem;
+    bottom: -3rem;
+
+    width: 8rem;
+    height: 8rem;
+
+    border-radius: 999px;
+
+    background:
+        rgba(
+            226,
+            245,
+            236,
+            0.74
+        );
+
+    pointer-events: none;
+}
+
+
+
+.sqms-dots {
+    background-image:
+        radial-gradient(
+            rgba(117, 106, 165, 0.14)
+            1.2px,
+            transparent 1.2px
+        );
+
+    background-size:
+        14px 14px;
+}
+
+
+
+@media (
+    prefers-reduced-motion:
+    reduce
+) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior:
+            auto !important;
+
+        transition-duration:
+            0.01ms !important;
+
+        animation-duration:
+            0.01ms !important;
+
+        animation-iteration-count:
+            1 !important;
+    }
+}

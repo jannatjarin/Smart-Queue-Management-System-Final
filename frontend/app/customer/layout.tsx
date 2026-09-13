@@ -1,18 +1,43 @@
-import RoleGuard from "@/components/auth/RoleGuard";
+import RoleGuard from
+    "@/components/auth/RoleGuard";
+
+import CustomerNavigation from
+    "@/components/customer/CustomerNavigation";
+
 
 export default function CustomerLayout(
     {
-        children
+        children,
     }: {
-        children: React.ReactNode
+        children:
+            React.ReactNode;
     }
 ) {
 
     return (
-        <RoleGuard allowedRole="customer">
+        <RoleGuard
+            allowedRole="customer"
+        >
 
-            {children}
+            <div
+                className="
+                    -mx-5
+                    min-h-full
+                "
+            >
+
+                <CustomerNavigation />
+
+
+                <div className="px-5">
+
+                    {children}
+
+                </div>
+
+            </div>
 
         </RoleGuard>
     );
+
 }
