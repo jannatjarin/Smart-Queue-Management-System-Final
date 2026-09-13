@@ -9,6 +9,7 @@ import {
 } from '@nestjs/typeorm';
 
 import {
+  In,
   Repository,
 } from 'typeorm';
 
@@ -35,6 +36,10 @@ import {
 import {
   UpdateServiceDto,
 } from './dto/update-service.dto';
+
+import {
+  TicketStatus,
+} from '../common/enums/ticket-status.enum';
 
 @Injectable()
 export class ServicesService {
@@ -150,6 +155,37 @@ export class ServicesService {
       await this.findOne(
         id,
       );
+
+      const activeTicketCount =
+  await this.ticketsRepository
+    .count(
+      {
+        where: {
+          service: {
+            id,
+          },
+
+          status:
+            In(
+              [
+                TicketStatus.WAITING,
+                TicketStatus.CALLED,
+              ],
+            ),
+        },
+      },
+    );
+
+if (
+  activeTicketCount >
+  0
+) {
+
+  throw new BadRequestException(
+    'Cannot deactivate a service while it has waiting or called tickets',
+  );
+
+}
 
     service.isActive =
       false;
