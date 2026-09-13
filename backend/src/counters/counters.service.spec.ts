@@ -332,6 +332,8 @@ describe(
 
         const counter = {
           id: 1,
+          status:
+            CounterStatus.CLOSED,
           staff: null,
           services: [],
           tickets: [],
