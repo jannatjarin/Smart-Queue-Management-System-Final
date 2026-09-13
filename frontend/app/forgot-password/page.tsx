@@ -1,62 +1,79 @@
 "use client";
+
+import {
+    ChangeEvent,
+    FormEvent,
+    useState,
+} from "react";
+
 import axios from "axios";
-import { useState } from "react";
 
-const [responseMsg, setResponseMsg] =
-    useState("");
+import api from "@/lib/axios";
 
-const [err, setErr] =
-    useState("");
 
 export default function ForgotPasswordPage() {
 
     const [formData, setFormData] =
         useState(
             {
-                email: ""
+                email: "",
             }
         );
 
+    const [
+        responseMsg,
+        setResponseMsg
+    ] =
+        useState("");
+
+    const [err, setErr] =
+        useState("");
+
+
     const onChangeHandle = (
-        e: React.ChangeEvent<HTMLInputElement>
+        e: ChangeEvent<HTMLInputElement>
     ) => {
 
         const {
             name,
-            value
+            value,
         } = e.target;
 
         setFormData(
             {
                 ...formData,
-                [name]: value
+                [name]: value,
             }
         );
 
-    }
-    const onSubmitHandle = (
-    e: React.FormEvent<HTMLFormElement>
-) => {
+    };
 
-    e.preventDefault();
 
-    const sendRequest = async () => {
+    const onSubmitHandle = async (
+        e: FormEvent<HTMLFormElement>
+    ) => {
+
+        e.preventDefault();
+
+        setResponseMsg("");
+        setErr("");
+
 
         try {
 
-            await axios.post(
-                "http://localhost:3000/auth/forgot-password",
-                {
-                    email:
-                        formData.email
-                }
-            );
+            const response =
+                await api.post(
+                    "/auth/forgot-password",
+                    {
+                        email:
+                            formData.email,
+                    }
+                );
+
 
             setResponseMsg(
-                "Password reset token sent successfully"
+                response.data.message
             );
-
-            setErr("");
 
         }
 
@@ -83,11 +100,8 @@ export default function ForgotPasswordPage() {
 
         }
 
-    }
+    };
 
-    sendRequest();
-
-}
 
     return (
         <div className="max-w-md mx-auto py-10">
@@ -99,28 +113,31 @@ export default function ForgotPasswordPage() {
             <p className="mb-6">
                 Enter your account email
             </p>
-{
-    responseMsg &&
-    <div className="alert alert-success mb-4">
 
-        <span>
-            {responseMsg}
-        </span>
 
-    </div>
-}
+            {
+                responseMsg &&
+                <div className="alert alert-success mb-4">
 
-{
-    err &&
-    <div className="alert alert-error mb-4">
+                    <span>
+                        {responseMsg}
+                    </span>
 
-        <span>
-            {err}
-        </span>
+                </div>
+            }
 
-    </div>
-}
-            
+
+            {
+                err &&
+                <div className="alert alert-error mb-4">
+
+                    <span>
+                        {err}
+                    </span>
+
+                </div>
+            }
+
 
             <form onSubmit={onSubmitHandle}>
 
@@ -137,6 +154,7 @@ export default function ForgotPasswordPage() {
                     required
                 />
 
+
                 <button
                     type="submit"
                     className="btn btn-primary w-full mt-6"
@@ -147,5 +165,6 @@ export default function ForgotPasswordPage() {
             </form>
 
         </div>
-    )
+    );
+
 }
