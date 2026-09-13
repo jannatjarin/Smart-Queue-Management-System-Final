@@ -1,46 +1,46 @@
 interface ToastMessageProps {
 
-    message: string;
+ message: string;
 
-    type:
-        "success" |
-        "error";
+ type:
+ "success" |
+ "error";
 
 }
 
 
 export default function ToastMessage(
-    {
-        message,
-        type,
-    }: ToastMessageProps
+ {
+ message,
+ type,
+ }: ToastMessageProps
 ) {
 
-    if (!message) {
+ if (!message) {
 
-        return null;
+ return null;
 
-    }
+ }
 
 
-    return (
-        <div className="toast toast-top toast-end z-50">
+ return (
+ <div className="toast toast-top toast-end z-50">
 
-            <div
-                className={
-                    type == "success"
-                        ? "alert alert-success"
-                        : "alert alert-error"
-                }
-            >
+ <div
+ className={
+ type == "success"
+ ? "alert alert-success"
+ : "alert alert-error"
+ }
+ >
 
-                <span>
-                    {message}
-                </span>
+ <span>
+ {message}
+ </span>
 
-            </div>
+ </div>
 
-        </div>
-    );
+ </div>
+ );
 
 }

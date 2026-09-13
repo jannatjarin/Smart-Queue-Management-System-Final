@@ -1,108 +1,58 @@
-import {
-  ValidationPipe,
-} from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 
-import {
-  NestFactory,
-} from '@nestjs/core';
+import { NestFactory } from '@nestjs/core';
 
-import {
-  DocumentBuilder,
-  SwaggerModule,
-} from '@nestjs/swagger';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
-import {
-  AppModule,
-} from './app.module';
+import { AppModule } from './app.module';
 
-import {
-  HttpExceptionFilter,
-} from './common/http-exception.filter';
+import { HttpExceptionFilter } from './common/http-exception.filter';
 
 async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
 
-  const app =
-    await NestFactory.create(
-      AppModule,
-    );
-
-  app.enableCors(
-    {
-      origin:
-        'http://localhost:3001',
-    },
-  );
+  app.enableCors({
+    origin: 'http://localhost:3001',
+  });
 
   app.useGlobalPipes(
-    new ValidationPipe(
+    new ValidationPipe({
+      whitelist: true,
+
+      transform: true,
+
+      forbidNonWhitelisted: true,
+    }),
+  );
+
+  app.useGlobalFilters(new HttpExceptionFilter());
+
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Smart Queue Management System')
+    .setDescription('SQMS REST API')
+    .setVersion('1.0')
+    .addBearerAuth(
       {
-        whitelist:
-          true,
-
-        transform:
-          true,
-
-        forbidNonWhitelisted:
-          true,
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
       },
-    ),
-  );
+      'bearer',
+    )
+    .addSecurityRequirements('bearer')
+    .build();
 
-  app.useGlobalFilters(
-    new HttpExceptionFilter(),
-  );
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
 
-  const swaggerConfig =
-    new DocumentBuilder()
-      .setTitle(
-        'Smart Queue Management System',
-      )
-      .setDescription(
-        'SQMS REST API',
-      )
-      .setVersion(
-        '1.0',
-      )
-      .addBearerAuth(
-        {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-        },
-        'bearer',
-      )
-      .addSecurityRequirements(
-        'bearer',
-      )
-      .build();
+  SwaggerModule.setup('api', app, swaggerDocument);
 
-  const swaggerDocument =
-    SwaggerModule.createDocument(
-      app,
-      swaggerConfig,
-    );
+  const port = process.env.PORT ?? 3000;
 
-  SwaggerModule.setup(
-    'api',
-    app,
-    swaggerDocument,
-  );
+  await app.listen(port);
 
-  const port =
-    process.env.PORT ??
-    3000;
+  console.log(`Application running on http://localhost:${port}`);
 
-  await app.listen(
-    port,
-  );
-
-  console.log(
-    `Application running on http://localhost:${port}`,
-  );
-
-  console.log(
-    `Swagger running on http://localhost:${port}/api`,
-  );
+  console.log(`Swagger running on http://localhost:${port}/api`);
 }
 
 bootstrap();

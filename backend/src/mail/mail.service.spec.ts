@@ -26,7 +26,10 @@ describe('MailService', () => {
     mailerService.sendMail.mockResolvedValue(undefined);
     await service.sendWelcomeEmail('a@test.com', 'Test User');
     expect(mailerService.sendMail).toHaveBeenCalledWith(
-      expect.objectContaining({ to: 'a@test.com', subject: expect.stringContaining('Welcome') }),
+      expect.objectContaining({
+        to: 'a@test.com',
+        subject: expect.stringContaining('Welcome'),
+      }),
     );
   });
 
@@ -45,17 +48,26 @@ describe('MailService', () => {
     mailerService.sendMail.mockResolvedValue(undefined);
     await service.sendTicketReadyEmail('a@test.com', 'Q7-005', 'Counter Q7');
     expect(mailerService.sendMail).toHaveBeenCalledWith(
-      expect.objectContaining({ to: 'a@test.com', subject: expect.stringContaining('Q7-005') }),
+      expect.objectContaining({
+        to: 'a@test.com',
+        subject: expect.stringContaining('Q7-005'),
+      }),
     );
   });
 
   it('never throws when mailerService.sendMail rejects — logs and resolves instead', async () => {
-    mailerService.sendMail.mockRejectedValue(new Error('SMTP connection refused'));
-    await expect(service.sendWelcomeEmail('a@test.com', 'Test User')).resolves.toBeUndefined();
+    mailerService.sendMail.mockRejectedValue(
+      new Error('SMTP connection refused'),
+    );
+    await expect(
+      service.sendWelcomeEmail('a@test.com', 'Test User'),
+    ).resolves.toBeUndefined();
   });
 
   it('never throws when mailerService.sendMail hangs — times out and resolves instead', async () => {
     mailerService.sendMail.mockImplementation(() => new Promise(() => {})); // never resolves
-    await expect(service.sendWelcomeEmail('a@test.com', 'Test User')).resolves.toBeUndefined();
+    await expect(
+      service.sendWelcomeEmail('a@test.com', 'Test User'),
+    ).resolves.toBeUndefined();
   }, 15000);
 });

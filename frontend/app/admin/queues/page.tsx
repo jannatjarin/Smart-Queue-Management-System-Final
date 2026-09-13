@@ -1,10 +1,10 @@
 "use client";
 
 import {
-    ChangeEvent,
-    FormEvent,
-    useEffect,
-    useState,
+ ChangeEvent,
+ FormEvent,
+ useEffect,
+ useState,
 } from "react";
 
 import axios from "axios";
@@ -14,920 +14,921 @@ import api from "@/lib/axios";
 
 interface Service {
 
-    id: number;
-    name: string;
+ id: number;
+ name: string;
 
 }
 
 
 interface Queue {
 
-    id: number;
-    name: string;
-    location: string;
-    status: string;
-    currentTicketNumber: number;
-    service: Service;
+ id: number;
+ name: string;
+ location: string;
+ status: string;
+ currentTicketNumber: number;
+ service: Service;
 
 }
 
 
 export default function AdminQueuesPage() {
 
-    const [queues, setQueues] =
-        useState<Queue[]>([]);
+ const [queues, setQueues] =
+ useState<Queue[]>([]);
 
-    const [services, setServices] =
-        useState<Service[]>([]);
+ const [services, setServices] =
+ useState<Service[]>([]);
 
-    const [formData, setFormData] =
-        useState(
-            {
-                name: "",
-                location: "",
-                serviceId: "",
-            }
-        );
+ const [formData, setFormData] =
+ useState(
+ {
+ name: "",
+ location: "",
+ serviceId: "",
+ }
+ );
 
-    const [editId, setEditId] =
-        useState<number | null>(
-            null
-        );
+ const [editId, setEditId] =
+ useState<number | null>(
+ null
+ );
 
-    const [refresh, setRefresh] =
-        useState(0);
+ const [refresh, setRefresh] =
+ useState(0);
 
-    const [
-        responseMsg,
-        setResponseMsg
-    ] =
-        useState("");
+ const [
+ responseMsg,
+ setResponseMsg
+ ] =
+ useState("");
 
-    const [err, setErr] =
-        useState("");
+ const [err, setErr] =
+ useState("");
 
-    const [loading, setLoading] =
-        useState(true);
+ const [loading, setLoading] =
+ useState(true);
 
-    const [saving, setSaving] =
-        useState(false);
+ const [saving, setSaving] =
+ useState(false);
 
 
-    useEffect(
-        () => {
+ useEffect(
+ () => {
 
-            const getData =
-                async () => {
+ const getData =
+ async () => {
 
-                    setLoading(
-                        true
-                    );
+ setLoading(
+ true
+ );
 
 
-                    try {
+ try {
 
-                        const queuesResponse =
-                            await api.get<Queue[]>(
-                                "/queues"
-                            );
+ const queuesResponse =
+ await api.get<Queue[]>(
+ "/queues"
+ );
 
 
-                        const servicesResponse =
-                            await api.get<Service[]>(
-                                "/services"
-                            );
+ const servicesResponse =
+ await api.get<Service[]>(
+ "/services"
+ );
 
 
-                        setQueues(
-                            queuesResponse.data
-                        );
+ setQueues(
+ queuesResponse.data
+ );
 
-                        setServices(
-                            servicesResponse.data
-                        );
+ setServices(
+ servicesResponse.data
+ );
 
-                        setErr("");
+ setErr("");
 
-                    }
+ }
 
-                    catch (error) {
+ catch (error) {
 
-                        if (
-                            axios.isAxiosError(
-                                error
-                            ) &&
-                            error.response
-                                ?.data
-                                ?.message
-                        ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                            const message =
-                                error.response
-                                    .data
-                                    .message;
+ const message =
+ error.response
+ .data
+ .message;
 
 
-                            setErr(
-                                Array.isArray(
-                                    message
-                                )
-                                    ? message.join(
-                                        ", "
-                                    )
-                                    : message
-                            );
+ setErr(
+ Array.isArray(
+ message
+ )
+ ? message.join(
+ ", "
+ )
+ : message
+ );
 
-                        }
+ }
 
-                        else {
+ else {
 
-                            setErr(
-                                "Could not load queue information"
-                            );
+ setErr(
+ "Could not load queue information"
+ );
 
-                        }
+ }
 
-                    }
+ }
 
-                    finally {
+ finally {
 
-                        setLoading(
-                            false
-                        );
+ setLoading(
+ false
+ );
 
-                    }
+ }
 
-                };
+ };
 
 
-            getData();
+ getData();
 
-        },
-        [refresh]
-    );
+ },
+ [refresh]
+ );
 
 
-    const onChangeHandle = (
-        e:
-            ChangeEvent<
-                HTMLInputElement |
-                HTMLSelectElement
-            >
-    ) => {
+ const onChangeHandle = (
+ e:
+ ChangeEvent<
+ HTMLInputElement |
+ HTMLSelectElement
+ >
+ ) => {
 
-        const {
-            name,
-            value,
-        } = e.target;
+ const {
+ name,
+ value,
+ } = e.target;
 
 
-        setFormData(
-            {
-                ...formData,
-                [name]: value,
-            }
-        );
+ setFormData(
+ {
+ ...formData,
+ [name]: value,
+ }
+ );
 
-    };
+ };
 
 
-    const clearForm =
-        () => {
+ const clearForm =
+ () => {
 
-            setFormData(
-                {
-                    name: "",
-                    location: "",
-                    serviceId: "",
-                }
-            );
+ setFormData(
+ {
+ name: "",
+ location: "",
+ serviceId: "",
+ }
+ );
 
-            setEditId(
-                null
-            );
+ setEditId(
+ null
+ );
 
-        };
+ };
 
 
-    const editQueue = (
-        queue: Queue
-    ) => {
+ const editQueue = (
+ queue: Queue
+ ) => {
 
-        setEditId(
-            queue.id
-        );
+ setEditId(
+ queue.id
+ );
 
 
-        setFormData(
-            {
-                name:
-                    queue.name,
+ setFormData(
+ {
+ name:
+ queue.name,
 
-                location:
-                    queue.location,
+ location:
+ queue.location,
 
-                serviceId:
-                    String(
-                        queue.service.id
-                    ),
-            }
-        );
+ serviceId:
+ String(
+ queue.service.id
+ ),
+ }
+ );
 
 
-        setResponseMsg("");
-        setErr("");
+ setResponseMsg("");
+ setErr("");
 
-    };
+ };
 
 
-    const onSubmitHandle =
-        async (
-            e:
-                FormEvent<
-                    HTMLFormElement
-                >
-        ) => {
+ const onSubmitHandle =
+ async (
+ e:
+ FormEvent<
+ HTMLFormElement
+ >
+ ) => {
 
-            e.preventDefault();
+ e.preventDefault();
 
-            setResponseMsg("");
-            setErr("");
+ setResponseMsg("");
+ setErr("");
 
 
-            if (
-                !formData.name.trim() ||
-                !formData.location.trim()
-            ) {
+ if (
+ !formData.name.trim() ||
+ !formData.location.trim()
+ ) {
 
-                setErr(
-                    "Queue name and location are required"
-                );
+ setErr(
+ "Queue name and location are required"
+ );
 
-                return;
+ return;
 
-            }
+ }
 
 
-            if (
-                editId == null &&
-                !formData.serviceId
-            ) {
+ if (
+ editId == null &&
+ !formData.serviceId
+ ) {
 
-                setErr(
-                    "Please select a service"
-                );
+ setErr(
+ "Please select a service"
+ );
 
-                return;
+ return;
 
-            }
+ }
 
 
-            setSaving(
-                true
-            );
+ setSaving(
+ true
+ );
 
 
-            try {
+ try {
 
-                if (
-                    editId == null
-                ) {
+ if (
+ editId == null
+ ) {
 
-                    await api.post(
-                        "/queues",
-                        {
-                            name:
-                                formData.name,
+ await api.post(
+ "/queues",
+ {
+ name:
+ formData.name,
 
-                            location:
-                                formData.location,
+ location:
+ formData.location,
 
-                            serviceId:
-                                Number(
-                                    formData.serviceId
-                                ),
-                        }
-                    );
+ serviceId:
+ Number(
+ formData.serviceId
+ ),
+ }
+ );
 
 
-                    setResponseMsg(
-                        "Queue created successfully"
-                    );
+ setResponseMsg(
+ "Queue created successfully"
+ );
 
-                }
+ }
 
-                else {
+ else {
 
-                    await api.patch(
-                        `/queues/${editId}`,
-                        {
-                            name:
-                                formData.name,
+ await api.patch(
+ `/queues/${editId}`,
+ {
+ name:
+ formData.name,
 
-                            location:
-                                formData.location,
-                        }
-                    );
+ location:
+ formData.location,
+ }
+ );
 
 
-                    setResponseMsg(
-                        "Queue updated successfully"
-                    );
+ setResponseMsg(
+ "Queue updated successfully"
+ );
 
-                }
+ }
 
 
-                clearForm();
+ clearForm();
 
 
-                setRefresh(
-                    (value) =>
-                        value + 1
-                );
+ setRefresh(
+ (value) =>
+ value + 1
+ );
 
-            }
+ }
 
-            catch (error) {
+ catch (error) {
 
-                if (
-                    axios.isAxiosError(
-                        error
-                    ) &&
-                    error.response
-                        ?.data
-                        ?.message
-                ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                    const message =
-                        error.response
-                            .data
-                            .message;
+ const message =
+ error.response
+ .data
+ .message;
 
 
-                    setErr(
-                        Array.isArray(
-                            message
-                        )
-                            ? message.join(
-                                ", "
-                            )
-                            : message
-                    );
+ setErr(
+ Array.isArray(
+ message
+ )
+ ? message.join(
+ ", "
+ )
+ : message
+ );
 
-                }
+ }
 
-                else {
+ else {
 
-                    setErr(
-                        "Could not save queue"
-                    );
+ setErr(
+ "Could not save queue"
+ );
 
-                }
+ }
 
-            }
+ }
 
-            finally {
+ finally {
 
-                setSaving(
-                    false
-                );
+ setSaving(
+ false
+ );
 
-            }
+ }
 
-        };
+ };
 
 
-    const updateQueueStatus =
-        async (
-            id: number,
-            status: string
-        ) => {
+ const updateQueueStatus =
+ async (
+ id: number,
+ status: string
+ ) => {
 
-            setResponseMsg("");
-            setErr("");
+ setResponseMsg("");
+ setErr("");
 
 
-            try {
+ try {
 
-                await api.patch(
-                    `/queues/${id}/status`,
-                    {
-                        status,
-                    }
-                );
+ await api.patch(
+ `/queues/${id}/status`,
+ {
+ status,
+ }
+ );
 
 
-                setResponseMsg(
-                    "Queue status updated successfully"
-                );
+ setResponseMsg(
+ "Queue status updated successfully"
+ );
 
 
-                setRefresh(
-                    (value) =>
-                        value + 1
-                );
+ setRefresh(
+ (value) =>
+ value + 1
+ );
 
-            }
+ }
 
-            catch (error) {
+ catch (error) {
 
-                if (
-                    axios.isAxiosError(
-                        error
-                    ) &&
-                    error.response
-                        ?.data
-                        ?.message
-                ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                    const message =
-                        error.response
-                            .data
-                            .message;
+ const message =
+ error.response
+ .data
+ .message;
 
 
-                    setErr(
-                        Array.isArray(
-                            message
-                        )
-                            ? message.join(
-                                ", "
-                            )
-                            : message
-                    );
+ setErr(
+ Array.isArray(
+ message
+ )
+ ? message.join(
+ ", "
+ )
+ : message
+ );
 
-                }
+ }
 
-                else {
+ else {
 
-                    setErr(
-                        "Could not update queue status"
-                    );
+ setErr(
+ "Could not update queue status"
+ );
 
-                }
+ }
 
-            }
+ }
 
-        };
+ };
 
 
-    const deleteQueue =
-        async (
-            id: number
-        ) => {
+ const deleteQueue =
+ async (
+ id: number
+ ) => {
 
-            setResponseMsg("");
-            setErr("");
+ setResponseMsg("");
+ setErr("");
 
 
-            try {
+ try {
 
-                await api.delete(
-                    `/queues/${id}`
-                );
+ await api.delete(
+ `/queues/${id}`
+ );
 
 
-                setResponseMsg(
-                    "Queue deleted successfully"
-                );
+ setResponseMsg(
+ "Queue deleted successfully"
+ );
 
 
-                if (
-                    editId == id
-                ) {
+ if (
+ editId == id
+ ) {
 
-                    clearForm();
+ clearForm();
 
-                }
+ }
 
 
-                setRefresh(
-                    (value) =>
-                        value + 1
-                );
+ setRefresh(
+ (value) =>
+ value + 1
+ );
 
-            }
+ }
 
-            catch (error) {
+ catch (error) {
 
-                if (
-                    axios.isAxiosError(
-                        error
-                    ) &&
-                    error.response
-                        ?.data
-                        ?.message
-                ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                    const message =
-                        error.response
-                            .data
-                            .message;
+ const message =
+ error.response
+ .data
+ .message;
 
 
-                    setErr(
-                        Array.isArray(
-                            message
-                        )
-                            ? message.join(
-                                ", "
-                            )
-                            : message
-                    );
+ setErr(
+ Array.isArray(
+ message
+ )
+ ? message.join(
+ ", "
+ )
+ : message
+ );
 
-                }
+ }
 
-                else {
+ else {
 
-                    setErr(
-                        "Could not delete queue"
-                    );
+ setErr(
+ "Could not delete queue"
+ );
 
-                }
+ }
 
-            }
+ }
 
-        };
+ };
 
 
-    return (
-        <div className="max-w-7xl mx-auto py-8">
+ return (
+ <div className="max-w-7xl mx-auto py-8">
 
-            <h1 className="text-3xl font-bold mb-2">
-                Queue Management
-            </h1>
+ <h1 className="text-3xl font-bold mb-2">
+ Queue Management
+ </h1>
 
 
-            <p className="mb-6">
-                Create and manage queues.
-            </p>
+ <p className="mb-6">
+ Create and manage queues.
+ </p>
 
 
-            {
-                responseMsg &&
-                <div className="alert alert-success mb-4">
+ {
+ responseMsg &&
+ <div className="alert alert-success mb-4">
 
-                    <span>
-                        {responseMsg}
-                    </span>
+ <span>
+ {responseMsg}
+ </span>
 
-                </div>
-            }
+ </div>
+ }
 
 
-            {
-                err &&
-                <div className="alert alert-error mb-4">
+ {
+ err &&
+ <div className="alert alert-error mb-4">
 
-                    <span>
-                        {err}
-                    </span>
+ <span>
+ {err}
+ </span>
 
-                </div>
-            }
+ </div>
+ }
 
 
-            <div className="card bg-base-100 shadow border mb-8">
+ <div className="card bg-white shadow border mb-8">
 
-                <div className="card-body">
+ <div className="card-body">
 
-                    <h2 className="card-title">
+ <h2 className="card-title">
 
-                        {
-                            editId == null
-                                ? "Create Queue"
-                                : "Edit Queue"
-                        }
+ {
+ editId == null
+ ? "Create Queue"
+ : "Edit Queue"
+ }
 
-                    </h2>
+ </h2>
 
 
-                    <form
-                        onSubmit={
-                            onSubmitHandle
-                        }
-                    >
+ <form
+ onSubmit={
+ onSubmitHandle
+ }
+ >
 
-                        <div className="grid md:grid-cols-3 gap-4">
+ <div className="grid md:grid-cols-3 gap-4">
 
-                            <div>
+ <div>
 
-                                <label className="label">
-                                    Queue Name
-                                </label>
+ <label className="label">
+ Queue Name
+ </label>
 
-                                <input
-                                    type="text"
-                                    name="name"
-                                    className="input input-bordered w-full"
-                                    value={
-                                        formData.name
-                                    }
-                                    onChange={
-                                        onChangeHandle
-                                    }
-                                    required
-                                />
+ <input
+ type="text"
+ name="name"
+ className="input input-bordered w-full"
+ value={
+ formData.name
+ }
+ onChange={
+ onChangeHandle
+ }
+ required
+ />
 
-                            </div>
+ </div>
 
 
-                            <div>
+ <div>
 
-                                <label className="label">
-                                    Location
-                                </label>
+ <label className="label">
+ Location
+ </label>
 
-                                <input
-                                    type="text"
-                                    name="location"
-                                    className="input input-bordered w-full"
-                                    value={
-                                        formData.location
-                                    }
-                                    onChange={
-                                        onChangeHandle
-                                    }
-                                    required
-                                />
+ <input
+ type="text"
+ name="location"
+ className="input input-bordered w-full"
+ value={
+ formData.location
+ }
+ onChange={
+ onChangeHandle
+ }
+ required
+ />
 
-                            </div>
+ </div>
 
 
-                            <div>
+ <div>
 
-                                <label className="label">
-                                    Service
-                                </label>
+ <label className="label">
+ Service
+ </label>
 
-                                <select
-                                    name="serviceId"
-                                    className="select select-bordered w-full"
-                                    value={
-                                        formData.serviceId
-                                    }
-                                    onChange={
-                                        onChangeHandle
-                                    }
-                                    disabled={
-                                        editId != null
-                                    }
-                                    required={
-                                        editId == null
-                                    }
-                                >
+ <select
+ name="serviceId"
+ className="select select-bordered w-full"
+ value={
+ formData.serviceId
+ }
+ onChange={
+ onChangeHandle
+ }
+ disabled={
+ editId != null
+ }
+ required={
+ editId == null
+ }
+ >
 
-                                    <option value="">
-                                        Select Service
-                                    </option>
+ <option value="">
+ Select Service
+ </option>
 
 
-                                    {
-                                        services.map(
-                                            (service) => (
+ {
+ services.map(
+ (service) => (
 
-                                                <option
-                                                    key={
-                                                        service.id
-                                                    }
-                                                    value={
-                                                        service.id
-                                                    }
-                                                >
-                                                    {
-                                                        service.name
-                                                    }
-                                                </option>
+ <option
+ key={
+ service.id
+ }
+ value={
+ service.id
+ }
+ >
+ {
+ service.name
+ }
+ </option>
 
-                                            )
-                                        )
-                                    }
+ )
+ )
+ }
 
-                                </select>
+ </select>
 
 
-                                {
-                                    editId != null &&
-                                    <p className="text-xs opacity-70 mt-1">
-                                        Service cannot be changed while editing a queue.
-                                    </p>
-                                }
+ {
+ editId != null &&
+ <p className="text-xs opacity-70 mt-1">
+ Service cannot be changed while editing a queue.
+ </p>
+ }
 
-                            </div>
+ </div>
 
-                        </div>
+ </div>
 
 
-                        <div className="flex gap-3 mt-6">
+ <div className="flex gap-3 mt-6">
 
-                            <button
-                                type="submit"
-                                className="btn btn-primary"
-                                disabled={
-                                    saving
-                                }
-                            >
+ <button
+ type="submit"
+ className="btn btn-primary"
+ disabled={
+ saving
+ }
+ >
 
-                                {
-                                    saving
-                                        ? "Saving..."
-                                        : editId == null
-                                            ? "Create Queue"
-                                            : "Update Queue"
-                                }
+ {
+ saving
+ ? "Saving..."
+ : editId == null
+ ? "Create Queue"
+ : "Update Queue"
+ }
 
-                            </button>
+ </button>
 
 
-                            {
-                                editId != null &&
-                                <button
-                                    type="button"
-                                    className="btn btn-outline"
-                                    onClick={
-                                        clearForm
-                                    }
-                                >
-                                    Cancel Edit
-                                </button>
-                            }
+ {
+ editId != null &&
+ <button
+ type="button"
+ className="btn btn-outline"
+ onClick={
+ clearForm
+ }
+ >
+ Cancel Edit
+ </button>
+ }
 
-                        </div>
+ </div>
 
-                    </form>
+ </form>
 
-                </div>
+ </div>
 
-            </div>
+ </div>
 
 
-            {
-                loading
-                    ? (
-                        <div className="flex items-center justify-center p-10">
+ {
+ loading
+ ? (
+ <div className="flex items-center justify-center p-10">
 
-                            <span className="loading loading-spinner"></span>
+ <span className="loading loading-spinner"></span>
 
-                            <span className="ml-3">
-                                Loading queues...
-                            </span>
+ <span className="ml-3">
+ Loading queues...
+ </span>
 
-                        </div>
-                    )
-                    : (
-                        <div className="overflow-x-auto">
+ </div>
+ )
+ : (
+ <div className="overflow-x-auto">
 
-                            <table className="table table-zebra">
+ <table className="table ">
 
-                                <thead>
+ <thead>
 
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Name</th>
-                                        <th>Service</th>
-                                        <th>Location</th>
-                                        <th>Status</th>
-                                        <th>Current Number</th>
-                                        <th>Actions</th>
-                                    </tr>
+ <tr>
+ <th>ID</th>
+ <th>Name</th>
+ <th>Service</th>
+ <th>Location</th>
+ <th>Status</th>
+ <th>Current Number</th>
+ <th>Actions</th>
+ </tr>
 
-                                </thead>
+ </thead>
 
 
-                                <tbody>
+ <tbody>
 
-                                    {
-                                        queues.map(
-                                            (queue) => (
+ {
+ queues.map(
+ (queue) => (
 
-                                                <tr
-                                                    key={
-                                                        queue.id
-                                                    }
-                                                >
+ <tr
+ key={
+ queue.id
+ }
+ >
 
-                                                    <td>
-                                                        {
-                                                            queue.id
-                                                        }
-                                                    </td>
+ <td>
+ {
+ queue.id
+ }
+ </td>
 
 
-                                                    <td>
-                                                        {
-                                                            queue.name
-                                                        }
-                                                    </td>
+ <td>
+ {
+ queue.name
+ }
+ </td>
 
 
-                                                    <td>
-                                                        {
-                                                            queue
-                                                                .service
-                                                                .name
-                                                        }
-                                                    </td>
+ <td>
+ {
+ queue
+ .service
+ .name
+ }
+ </td>
 
 
-                                                    <td>
-                                                        {
-                                                            queue.location
-                                                        }
-                                                    </td>
+ <td>
+ {
+ queue.location
+ }
+ </td>
 
 
-                                                    <td>
+ <td>
 
-                                                        <select
-                                                            className="select select-bordered select-sm"
-                                                            value={
-                                                                queue.status
-                                                            }
-                                                            onChange={
-                                                                (e) =>
-                                                                    updateQueueStatus(
-                                                                        queue.id,
-                                                                        e.target.value
-                                                                    )
-                                                            }
-                                                        >
+ <select
+ className="select select-bordered select-sm"
+ value={
+ queue.status
+ }
+ onChange={
+ (e) =>
+ updateQueueStatus(
+ queue.id,
+ e.target.value
+ )
+ }
+ >
 
-                                                            <option value="open">
-                                                                Open
-                                                            </option>
+ <option value="open">
+ Open
+ </option>
 
-                                                            <option value="closed">
-                                                                Closed
-                                                            </option>
+ <option value="closed">
+ Closed
+ </option>
 
-                                                        </select>
+ </select>
 
-                                                    </td>
+ </td>
 
 
-                                                    <td>
-                                                        {
-                                                            queue.currentTicketNumber
-                                                        }
-                                                    </td>
+ <td>
+ {
+ queue.currentTicketNumber
+ }
+ </td>
 
 
-                                                    <td>
+ <td>
 
-                                                        <div className="flex flex-wrap gap-2">
+ <div className="flex flex-wrap gap-2">
 
-                                                            <button
-                                                                className="btn btn-outline btn-sm"
-                                                                onClick={
-                                                                    () =>
-                                                                        editQueue(
-                                                                            queue
-                                                                        )
-                                                                }
-                                                            >
-                                                                Edit
-                                                            </button>
+ <button
+ className="btn btn-outline btn-sm"
+ onClick={
+ () =>
+ editQueue(
+ queue
+ )
+ }
+ >
+ Edit
+ </button>
 
 
-                                                            <button
-                                                                className="btn btn-error btn-sm"
-                                                                onClick={
-                                                                    () =>
-                                                                        deleteQueue(
-                                                                            queue.id
-                                                                        )
-                                                                }
-                                                            >
-                                                                Delete
-                                                            </button>
+ <button
+ className="btn btn-error btn-sm"
+ onClick={
+ () =>
+ deleteQueue(
+ queue.id
+ )
+ }
+ >
+ Delete
+ </button>
 
-                                                        </div>
+ </div>
 
-                                                    </td>
+ </td>
 
-                                                </tr>
+ </tr>
 
-                                            )
-                                        )
-                                    }
+ )
+ )
+ }
 
-                                </tbody>
+ </tbody>
 
-                            </table>
+ </table>
 
 
-                            {
-                                queues.length == 0 &&
-                                <p className="mt-4">
-                                    No queues found.
-                                </p>
-                            }
+ {
+ queues.length == 0 &&
+ <p className="mt-4">
+ No queues found.
+ </p>
+ }
 
-                        </div>
-                    )
-            }
+ </div>
+ )
+ }
 
-        </div>
-    );
+ </div>
+ );
 
 }
+

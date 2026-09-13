@@ -1,10 +1,5 @@
 // src/services/services.entity.ts
-import {
-  Column,
-  Entity,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Queues } from 'src/queues/queues.entity';
 import { Tickets } from 'src/tickets/tickets.entity';
 

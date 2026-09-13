@@ -1,18 +1,18 @@
 import RoleGuard from "@/components/auth/RoleGuard";
 
 export default function StaffLayout(
-    {
-        children
-    }: {
-        children: React.ReactNode
-    }
+ {
+ children
+ }: {
+ children: React.ReactNode
+ }
 ) {
 
-    return (
-        <RoleGuard allowedRole="staff">
+ return (
+ <RoleGuard allowedRole="staff">
 
-            {children}
+ {children}
 
-        </RoleGuard>
-    );
+ </RoleGuard>
+ );
 }

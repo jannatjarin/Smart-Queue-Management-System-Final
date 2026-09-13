@@ -1,79 +1,42 @@
 import { Module } from '@nestjs/common';
 
-import {
-  JwtModule,
-} from '@nestjs/jwt';
+import { JwtModule } from '@nestjs/jwt';
 
-import {
-  ConfigModule,
-  ConfigService,
-} from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
-import { AuthService } from
-  './auth.service';
+import { AuthService } from './auth.service';
 
-import { AuthController } from
-  './auth.controller';
+import { AuthController } from './auth.controller';
 
-import { UsersModule } from
-  'src/users/users.module';
+import { UsersModule } from 'src/users/users.module';
 
-import { JwtGuard } from
-  './jwtGuard';
+import { JwtGuard } from './jwtGuard';
 
-import { JwtStrategy } from
-  './jwtStrategy';
+import { JwtStrategy } from './jwtStrategy';
 
-import { RolesGuard } from
-  './roles/roles.guard';
+import { RolesGuard } from './roles/roles.guard';
 
-import { MailModule } from
-  'src/mail/mail.module';
+import { MailModule } from 'src/mail/mail.module';
 
-import { NotificationsModule } from
-  'src/notifications/notifications.module';
+import { NotificationsModule } from 'src/notifications/notifications.module';
 
 @Module({
   imports: [
+    JwtModule.registerAsync({
+      global: true,
 
-    JwtModule.registerAsync(
-      {
-        global:
-          true,
+      imports: [ConfigModule],
 
-        imports:
-          [
-            ConfigModule,
-          ],
+      useFactory: (config: ConfigService) => ({
+        secret: config.getOrThrow<string>('JWT_ACCESS_SECRET'),
 
-        useFactory:
-          (
-            config:
-              ConfigService,
-          ) => (
-            {
-              secret:
-                config.getOrThrow<string>(
-                  'JWT_ACCESS_SECRET',
-                ),
+        signOptions: {
+          expiresIn: config.getOrThrow<string>('JWT_ACCESS_EXPIRES_IN') as any,
+        },
+      }),
 
-              signOptions:
-              {
-                expiresIn:
-                  config
-                    .getOrThrow<string>(
-                      'JWT_ACCESS_EXPIRES_IN',
-                    ) as any,
-              },
-            }
-          ),
-
-        inject:
-          [
-            ConfigService,
-          ],
-      },
-    ),
+      inject: [ConfigService],
+    }),
 
     UsersModule,
 
@@ -82,23 +45,10 @@ import { NotificationsModule } from
     NotificationsModule,
   ],
 
-  controllers:
-    [
-      AuthController,
-    ],
+  controllers: [AuthController],
 
-  providers:
-    [
-      AuthService,
-      JwtGuard,
-      JwtStrategy,
-      RolesGuard,
-    ],
+  providers: [AuthService, JwtGuard, JwtStrategy, RolesGuard],
 
-  exports:
-    [
-      JwtGuard,
-      RolesGuard,
-    ],
+  exports: [JwtGuard, RolesGuard],
 })
-export class AuthModule { }
+export class AuthModule {}

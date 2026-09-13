@@ -1,16 +1,16 @@
 interface StatusBadgeProps {
-    status: string
+ status: string
 }
 
 export default function StatusBadge(
-    { status }: StatusBadgeProps
+ { status }: StatusBadgeProps
 ) {
 
-    return (
-        <span className="badge badge-outline">
+ return (
+ <span className="badge badge-outline">
 
-            {status}
+ {status}
 
-        </span>
-    );
+ </span>
+ );
 }

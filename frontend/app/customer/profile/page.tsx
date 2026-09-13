@@ -1,10 +1,10 @@
 "use client";
 
 import {
-    ChangeEvent,
-    FormEvent,
-    useEffect,
-    useState,
+ ChangeEvent,
+ FormEvent,
+ useEffect,
+ useState,
 } from "react";
 
 import axios from "axios";
@@ -14,411 +14,412 @@ import api from "@/lib/axios";
 
 interface UserData {
 
-    fullName: string;
-    email: string;
-    phone: string | null;
-    role: string;
+ fullName: string;
+ email: string;
+ phone: string | null;
+ role: string;
 
 }
 
 
 export default function ProfilePage() {
 
-    const [formData, setFormData] =
-        useState(
-            {
-                fullName: "",
-                email: "",
-                phone: "",
-                role: "",
-            }
-        );
+ const [formData, setFormData] =
+ useState(
+ {
+ fullName: "",
+ email: "",
+ phone: "",
+ role: "",
+ }
+ );
 
-    const [
-        responseMsg,
-        setResponseMsg
-    ] =
-        useState("");
+ const [
+ responseMsg,
+ setResponseMsg
+ ] =
+ useState("");
 
-    const [err, setErr] =
-        useState("");
+ const [err, setErr] =
+ useState("");
 
-    const [loading, setLoading] =
-        useState(true);
+ const [loading, setLoading] =
+ useState(true);
 
-    const [saving, setSaving] =
-        useState(false);
+ const [saving, setSaving] =
+ useState(false);
 
 
-    useEffect(
-        () => {
+ useEffect(
+ () => {
 
-            const getProfile =
-                async () => {
+ const getProfile =
+ async () => {
 
-                    try {
+ try {
 
-                        const response =
-                            await api.get<UserData>(
-                                "/users/me"
-                            );
+ const response =
+ await api.get<UserData>(
+ "/users/me"
+ );
 
-                        setFormData(
-                            {
-                                fullName:
-                                    response.data
-                                        .fullName,
+ setFormData(
+ {
+ fullName:
+ response.data
+ .fullName,
 
-                                email:
-                                    response.data
-                                        .email,
+ email:
+ response.data
+ .email,
 
-                                phone:
-                                    response.data
-                                        .phone ||
-                                    "",
+ phone:
+ response.data
+ .phone ||
+ "",
 
-                                role:
-                                    response.data
-                                        .role,
-                            }
-                        );
+ role:
+ response.data
+ .role,
+ }
+ );
 
-                        setErr("");
+ setErr("");
 
-                    }
+ }
 
-                    catch (error) {
+ catch (error) {
 
-                        if (
-                            axios.isAxiosError(
-                                error
-                            ) &&
-                            error.response
-                                ?.data
-                                ?.message
-                        ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                            setErr(
-                                error.response
-                                    .data
-                                    .message
-                            );
+ setErr(
+ error.response
+ .data
+ .message
+ );
 
-                        }
+ }
 
-                        else {
+ else {
 
-                            setErr(
-                                "Could not load profile"
-                            );
+ setErr(
+ "Could not load profile"
+ );
 
-                        }
+ }
 
-                    }
+ }
 
-                    finally {
+ finally {
 
-                        setLoading(
-                            false
-                        );
+ setLoading(
+ false
+ );
 
-                    }
+ }
 
-                };
+ };
 
 
-            getProfile();
+ getProfile();
 
-        },
-        []
-    );
+ },
+ []
+ );
 
 
-    const onChangeHandle = (
-        e:
-            ChangeEvent<
-                HTMLInputElement
-            >
-    ) => {
+ const onChangeHandle = (
+ e:
+ ChangeEvent<
+ HTMLInputElement
+ >
+ ) => {
 
-        const {
-            name,
-            value,
-        } = e.target;
+ const {
+ name,
+ value,
+ } = e.target;
 
-        setFormData(
-            {
-                ...formData,
-                [name]: value,
-            }
-        );
+ setFormData(
+ {
+ ...formData,
+ [name]: value,
+ }
+ );
 
-    };
+ };
 
 
-    const updateProfile = async (
-        e:
-            FormEvent<
-                HTMLFormElement
-            >
-    ) => {
+ const updateProfile = async (
+ e:
+ FormEvent<
+ HTMLFormElement
+ >
+ ) => {
 
-        e.preventDefault();
+ e.preventDefault();
 
-        setResponseMsg("");
-        setErr("");
+ setResponseMsg("");
+ setErr("");
 
 
-        if (
-            !formData.fullName.trim()
-        ) {
+ if (
+ !formData.fullName.trim()
+ ) {
 
-            setErr(
-                "Full name is required"
-            );
+ setErr(
+ "Full name is required"
+ );
 
-            return;
+ return;
 
-        }
+ }
 
 
-        setSaving(
-            true
-        );
+ setSaving(
+ true
+ );
 
 
-        try {
+ try {
 
-            const response =
-                await api.patch<UserData>(
-                    "/users/me",
-                    {
-                        fullName:
-                            formData.fullName,
+ const response =
+ await api.patch<UserData>(
+ "/users/me",
+ {
+ fullName:
+ formData.fullName,
 
-                        phone:
-                            formData.phone,
-                    }
-                );
+ phone:
+ formData.phone,
+ }
+ );
 
 
-            setFormData(
-                {
-                    fullName:
-                        response.data
-                            .fullName,
+ setFormData(
+ {
+ fullName:
+ response.data
+ .fullName,
 
-                    email:
-                        response.data
-                            .email,
+ email:
+ response.data
+ .email,
 
-                    phone:
-                        response.data
-                            .phone ||
-                        "",
+ phone:
+ response.data
+ .phone ||
+ "",
 
-                    role:
-                        response.data
-                            .role,
-                }
-            );
+ role:
+ response.data
+ .role,
+ }
+ );
 
 
-            setResponseMsg(
-                "Profile updated successfully"
-            );
+ setResponseMsg(
+ "Profile updated successfully"
+ );
 
-        }
+ }
 
-        catch (error) {
+ catch (error) {
 
-            if (
-                axios.isAxiosError(
-                    error
-                ) &&
-                error.response
-                    ?.data
-                    ?.message
-            ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                setErr(
-                    error.response
-                        .data
-                        .message
-                );
+ setErr(
+ error.response
+ .data
+ .message
+ );
 
-            }
+ }
 
-            else {
+ else {
 
-                setErr(
-                    "Could not update profile"
-                );
+ setErr(
+ "Could not update profile"
+ );
 
-            }
+ }
 
-        }
+ }
 
-        finally {
+ finally {
 
-            setSaving(
-                false
-            );
+ setSaving(
+ false
+ );
 
-        }
+ }
 
-    };
+ };
 
 
-    if (loading) {
+ if (loading) {
 
-        return (
-            <div className="flex items-center justify-center p-10">
+ return (
+ <div className="flex items-center justify-center p-10">
 
-                <span className="loading loading-spinner"></span>
+ <span className="loading loading-spinner"></span>
 
-                <span className="ml-3">
-                    Loading profile...
-                </span>
+ <span className="ml-3">
+ Loading profile...
+ </span>
 
-            </div>
-        );
+ </div>
+ );
 
-    }
+ }
 
 
-    return (
-        <div className="max-w-xl mx-auto py-8">
+ return (
+ <div className="max-w-xl mx-auto py-8">
 
-            <div className="card bg-base-100 shadow-xl border">
+ <div className="card bg-white shadow-xl border">
 
-                <div className="card-body">
+ <div className="card-body">
 
-                    <h1 className="text-2xl font-bold">
-                        My Profile
-                    </h1>
+ <h1 className="text-2xl font-bold">
+ My Profile
+ </h1>
 
 
-                    {
-                        responseMsg &&
-                        <div className="alert alert-success mt-4">
+ {
+ responseMsg &&
+ <div className="alert alert-success mt-4">
 
-                            <span>
-                                {responseMsg}
-                            </span>
+ <span>
+ {responseMsg}
+ </span>
 
-                        </div>
-                    }
+ </div>
+ }
 
 
-                    {
-                        err &&
-                        <div className="alert alert-error mt-4">
+ {
+ err &&
+ <div className="alert alert-error mt-4">
 
-                            <span>
-                                {err}
-                            </span>
+ <span>
+ {err}
+ </span>
 
-                        </div>
-                    }
+ </div>
+ }
 
 
-                    <form
-                        onSubmit={
-                            updateProfile
-                        }
-                        className="mt-4"
-                    >
+ <form
+ onSubmit={
+ updateProfile
+ }
+ className="mt-4"
+ >
 
-                        <label className="label">
-                            Full Name
-                        </label>
+ <label className="label">
+ Full Name
+ </label>
 
-                        <input
-                            type="text"
-                            name="fullName"
-                            className="input input-bordered w-full"
-                            value={
-                                formData.fullName
-                            }
-                            onChange={
-                                onChangeHandle
-                            }
-                            required
-                        />
+ <input
+ type="text"
+ name="fullName"
+ className="input input-bordered w-full"
+ value={
+ formData.fullName
+ }
+ onChange={
+ onChangeHandle
+ }
+ required
+ />
 
 
-                        <label className="label mt-3">
-                            Email
-                        </label>
+ <label className="label mt-3">
+ Email
+ </label>
 
-                        <input
-                            type="email"
-                            name="email"
-                            className="input input-bordered w-full"
-                            value={
-                                formData.email
-                            }
-                            disabled
-                        />
+ <input
+ type="email"
+ name="email"
+ className="input input-bordered w-full"
+ value={
+ formData.email
+ }
+ disabled
+ />
 
 
-                        <label className="label mt-3">
-                            Phone
-                        </label>
+ <label className="label mt-3">
+ Phone
+ </label>
 
-                        <input
-                            type="text"
-                            name="phone"
-                            className="input input-bordered w-full"
-                            value={
-                                formData.phone
-                            }
-                            onChange={
-                                onChangeHandle
-                            }
-                        />
+ <input
+ type="text"
+ name="phone"
+ className="input input-bordered w-full"
+ value={
+ formData.phone
+ }
+ onChange={
+ onChangeHandle
+ }
+ />
 
 
-                        <label className="label mt-3">
-                            Role
-                        </label>
+ <label className="label mt-3">
+ Role
+ </label>
 
-                        <input
-                            type="text"
-                            name="role"
-                            className="input input-bordered w-full"
-                            value={
-                                formData.role
-                            }
-                            disabled
-                        />
+ <input
+ type="text"
+ name="role"
+ className="input input-bordered w-full"
+ value={
+ formData.role
+ }
+ disabled
+ />
 
 
-                        <button
-                            type="submit"
-                            className="btn btn-primary w-full mt-6"
-                            disabled={
-                                saving
-                            }
-                        >
+ <button
+ type="submit"
+ className="btn btn-primary w-full mt-6"
+ disabled={
+ saving
+ }
+ >
 
-                            {
-                                saving
-                                    ? "Updating..."
-                                    : "Update Profile"
-                            }
+ {
+ saving
+ ? "Updating..."
+ : "Update Profile"
+ }
 
-                        </button>
+ </button>
 
-                    </form>
+ </form>
 
-                </div>
+ </div>
 
-            </div>
+ </div>
 
-        </div>
-    );
+ </div>
+ );
 
 }
+

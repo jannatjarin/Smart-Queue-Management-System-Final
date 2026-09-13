@@ -1,12 +1,6 @@
-import {
-  IsIn,
-  IsInt,
-  IsOptional,
-  IsPositive,
-} from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsPositive } from 'class-validator';
 
 export class CreateTicketDto {
-
   @IsInt()
   @IsPositive()
   serviceId: number;
@@ -16,11 +10,6 @@ export class CreateTicketDto {
   queueId: number;
 
   @IsOptional()
-  @IsIn([
-    'normal',
-    'urgent',
-  ])
-  priority?:
-    'normal' |
-    'urgent';
+  @IsIn(['normal', 'urgent'])
+  priority?: 'normal' | 'urgent';
 }

@@ -1,8 +1,8 @@
 "use client";
 
 import {
-    useEffect,
-    useState,
+ useEffect,
+ useState,
 } from "react";
 
 import axios from "axios";
@@ -12,614 +12,615 @@ import api from "@/lib/axios";
 
 interface User {
 
-    id: number;
-    fullName: string;
-    email: string;
-    phone: string | null;
-    role: string;
+ id: number;
+ fullName: string;
+ email: string;
+ phone: string | null;
+ role: string;
 
 }
 
 
 interface UsersResponse {
 
-    data: User[];
-    total: number;
-    page: number;
-    limit: number;
+ data: User[];
+ total: number;
+ page: number;
+ limit: number;
 
 }
 
 
 export default function AdminUsersPage() {
 
-    const [users, setUsers] =
-        useState<User[]>([]);
+ const [users, setUsers] =
+ useState<User[]>([]);
 
-    const [
-        searchInput,
-        setSearchInput
-    ] =
-        useState("");
+ const [
+ searchInput,
+ setSearchInput
+ ] =
+ useState("");
 
-    const [search, setSearch] =
-        useState("");
+ const [search, setSearch] =
+ useState("");
 
-    const [role, setRole] =
-        useState("");
+ const [role, setRole] =
+ useState("");
 
-    const [sort, setSort] =
-        useState("DESC");
+ const [sort, setSort] =
+ useState("DESC");
 
-    const [page, setPage] =
-        useState(1);
+ const [page, setPage] =
+ useState(1);
 
-    const [total, setTotal] =
-        useState(0);
+ const [total, setTotal] =
+ useState(0);
 
-    const [refresh, setRefresh] =
-        useState(0);
+ const [refresh, setRefresh] =
+ useState(0);
 
-    const [
-        responseMsg,
-        setResponseMsg
-    ] =
-        useState("");
+ const [
+ responseMsg,
+ setResponseMsg
+ ] =
+ useState("");
 
-    const [err, setErr] =
-        useState("");
+ const [err, setErr] =
+ useState("");
 
-    const [loading, setLoading] =
-        useState(true);
+ const [loading, setLoading] =
+ useState(true);
 
-    const limit = 10;
+ const limit = 10;
 
 
-    useEffect(
-        () => {
+ useEffect(
+ () => {
 
-            const getUsers =
-                async () => {
+ const getUsers =
+ async () => {
 
-                    setLoading(
-                        true
-                    );
+ setLoading(
+ true
+ );
 
 
-                    try {
+ try {
 
-                        let url =
-                            `/users?page=${page}&limit=${limit}&sort=${sort}`;
+ let url =
+ `/users?page=${page}&limit=${limit}&sort=${sort}`;
 
 
-                        if (search) {
+ if (search) {
 
-                            url =
-                                url +
-                                `&search=${encodeURIComponent(
-                                    search
-                                )}`;
+ url =
+ url +
+ `&search=${encodeURIComponent(
+ search
+ )}`;
 
-                        }
+ }
 
 
-                        if (role) {
+ if (role) {
 
-                            url =
-                                url +
-                                `&role=${role}`;
+ url =
+ url +
+ `&role=${role}`;
 
-                        }
+ }
 
 
-                        const response =
-                            await api.get<UsersResponse>(
-                                url
-                            );
+ const response =
+ await api.get<UsersResponse>(
+ url
+ );
 
 
-                        setUsers(
-                            response.data.data
-                        );
+ setUsers(
+ response.data.data
+ );
 
-                        setTotal(
-                            response.data.total
-                        );
+ setTotal(
+ response.data.total
+ );
 
-                        setErr("");
+ setErr("");
 
-                    }
+ }
 
-                    catch (error) {
+ catch (error) {
 
-                        if (
-                            axios.isAxiosError(
-                                error
-                            ) &&
-                            error.response
-                                ?.data
-                                ?.message
-                        ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                            const message =
-                                error.response
-                                    .data
-                                    .message;
+ const message =
+ error.response
+ .data
+ .message;
 
-                            setErr(
-                                Array.isArray(
-                                    message
-                                )
-                                    ? message.join(
-                                        ", "
-                                    )
-                                    : message
-                            );
+ setErr(
+ Array.isArray(
+ message
+ )
+ ? message.join(
+ ", "
+ )
+ : message
+ );
 
-                        }
+ }
 
-                        else {
+ else {
 
-                            setErr(
-                                "Could not load users"
-                            );
+ setErr(
+ "Could not load users"
+ );
 
-                        }
+ }
 
-                    }
+ }
 
-                    finally {
+ finally {
 
-                        setLoading(
-                            false
-                        );
+ setLoading(
+ false
+ );
 
-                    }
+ }
 
-                };
+ };
 
 
-            getUsers();
+ getUsers();
 
-        },
-        [
-            search,
-            role,
-            sort,
-            page,
-            refresh,
-        ]
-    );
+ },
+ [
+ search,
+ role,
+ sort,
+ page,
+ refresh,
+ ]
+ );
 
 
-    const updateRole =
-        async (
-            id: number,
-            newRole: string
-        ) => {
+ const updateRole =
+ async (
+ id: number,
+ newRole: string
+ ) => {
 
-            setResponseMsg("");
-            setErr("");
+ setResponseMsg("");
+ setErr("");
 
 
-            try {
+ try {
 
-                await api.patch(
-                    `/users/${id}/role`,
-                    {
-                        role:
-                            newRole,
-                    }
-                );
+ await api.patch(
+ `/users/${id}/role`,
+ {
+ role:
+ newRole,
+ }
+ );
 
 
-                setResponseMsg(
-                    "User role updated successfully"
-                );
+ setResponseMsg(
+ "User role updated successfully"
+ );
 
 
-                setRefresh(
-                    (value) =>
-                        value + 1
-                );
+ setRefresh(
+ (value) =>
+ value + 1
+ );
 
-            }
+ }
 
-            catch (error) {
+ catch (error) {
 
-                if (
-                    axios.isAxiosError(
-                        error
-                    ) &&
-                    error.response
-                        ?.data
-                        ?.message
-                ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                    const message =
-                        error.response
-                            .data
-                            .message;
+ const message =
+ error.response
+ .data
+ .message;
 
 
-                    setErr(
-                        Array.isArray(
-                            message
-                        )
-                            ? message.join(
-                                ", "
-                            )
-                            : message
-                    );
+ setErr(
+ Array.isArray(
+ message
+ )
+ ? message.join(
+ ", "
+ )
+ : message
+ );
 
-                }
+ }
 
-                else {
+ else {
 
-                    setErr(
-                        "Could not update user role"
-                    );
+ setErr(
+ "Could not update user role"
+ );
 
-                }
+ }
 
-            }
+ }
 
-        };
+ };
 
 
-    const searchUsers =
-        () => {
+ const searchUsers =
+ () => {
 
-            setPage(
-                1
-            );
+ setPage(
+ 1
+ );
 
-            setSearch(
-                searchInput
-            );
+ setSearch(
+ searchInput
+ );
 
-        };
+ };
 
 
-    const clearFilters =
-        () => {
+ const clearFilters =
+ () => {
 
-            setSearchInput("");
-            setSearch("");
-            setRole("");
-            setSort("DESC");
-            setPage(1);
+ setSearchInput("");
+ setSearch("");
+ setRole("");
+ setSort("DESC");
+ setPage(1);
 
-        };
+ };
 
 
-    const totalPages =
-        Math.max(
-            1,
-            Math.ceil(
-                total / limit
-            )
-        );
+ const totalPages =
+ Math.max(
+ 1,
+ Math.ceil(
+ total / limit
+ )
+ );
 
 
-    return (
-        <div className="max-w-7xl mx-auto py-8">
+ return (
+ <div className="max-w-7xl mx-auto py-8">
 
-            <h1 className="text-3xl font-bold mb-2">
-                User Management
-            </h1>
+ <h1 className="text-3xl font-bold mb-2">
+ User Management
+ </h1>
 
-            <p className="mb-6">
-                Search users and manage user roles.
-            </p>
+ <p className="mb-6">
+ Search users and manage user roles.
+ </p>
 
 
-            {
-                responseMsg &&
-                <div className="alert alert-success mb-4">
+ {
+ responseMsg &&
+ <div className="alert alert-success mb-4">
 
-                    <span>
-                        {responseMsg}
-                    </span>
+ <span>
+ {responseMsg}
+ </span>
 
-                </div>
-            }
+ </div>
+ }
 
 
-            {
-                err &&
-                <div className="alert alert-error mb-4">
+ {
+ err &&
+ <div className="alert alert-error mb-4">
 
-                    <span>
-                        {err}
-                    </span>
+ <span>
+ {err}
+ </span>
 
-                </div>
-            }
+ </div>
+ }
 
 
-            <div className="card bg-base-100 shadow border mb-6">
+ <div className="card bg-white shadow border mb-6">
 
-                <div className="card-body">
+ <div className="card-body">
 
-                    <div className="grid md:grid-cols-4 gap-4">
+ <div className="grid md:grid-cols-4 gap-4">
 
-                        <input
-                            type="text"
-                            className="input input-bordered w-full"
-                            placeholder="Search name or email"
-                            value={
-                                searchInput
-                            }
-                            onChange={
-                                (e) =>
-                                    setSearchInput(
-                                        e.target.value
-                                    )
-                            }
-                        />
+ <input
+ type="text"
+ className="input input-bordered w-full"
+ placeholder="Search name or email"
+ value={
+ searchInput
+ }
+ onChange={
+ (e) =>
+ setSearchInput(
+ e.target.value
+ )
+ }
+ />
 
 
-                        <select
-                            className="select select-bordered w-full"
-                            value={role}
-                            onChange={
-                                (e) => {
+ <select
+ className="select select-bordered w-full"
+ value={role}
+ onChange={
+ (e) => {
 
-                                    setRole(
-                                        e.target.value
-                                    );
+ setRole(
+ e.target.value
+ );
 
-                                    setPage(
-                                        1
-                                    );
+ setPage(
+ 1
+ );
 
-                                }
-                            }
-                        >
+ }
+ }
+ >
 
-                            <option value="">
-                                All Roles
-                            </option>
+ <option value="">
+ All Roles
+ </option>
 
-                            <option value="admin">
-                                Admin
-                            </option>
+ <option value="admin">
+ Admin
+ </option>
 
-                            <option value="staff">
-                                Staff
-                            </option>
+ <option value="staff">
+ Staff
+ </option>
 
-                            <option value="customer">
-                                Customer
-                            </option>
+ <option value="customer">
+ Customer
+ </option>
 
-                        </select>
+ </select>
 
 
-                        <select
-                            className="select select-bordered w-full"
-                            value={sort}
-                            onChange={
-                                (e) => {
+ <select
+ className="select select-bordered w-full"
+ value={sort}
+ onChange={
+ (e) => {
 
-                                    setSort(
-                                        e.target.value
-                                    );
+ setSort(
+ e.target.value
+ );
 
-                                    setPage(
-                                        1
-                                    );
+ setPage(
+ 1
+ );
 
-                                }
-                            }
-                        >
+ }
+ }
+ >
 
-                            <option value="DESC">
-                                Newest First
-                            </option>
+ <option value="DESC">
+ Newest First
+ </option>
 
-                            <option value="ASC">
-                                Oldest First
-                            </option>
+ <option value="ASC">
+ Oldest First
+ </option>
 
-                        </select>
+ </select>
 
 
-                        <button
-                            className="btn btn-primary"
-                            onClick={
-                                searchUsers
-                            }
-                        >
-                            Search
-                        </button>
+ <button
+ className="btn btn-primary"
+ onClick={
+ searchUsers
+ }
+ >
+ Search
+ </button>
 
-                    </div>
+ </div>
 
 
-                    <button
-                        className="btn btn-ghost btn-sm mt-3"
-                        onClick={
-                            clearFilters
-                        }
-                    >
-                        Clear Filters
-                    </button>
+ <button
+ className="btn btn-ghost btn-sm mt-3"
+ onClick={
+ clearFilters
+ }
+ >
+ Clear Filters
+ </button>
 
-                </div>
+ </div>
 
-            </div>
+ </div>
 
 
-            <div className="mb-4">
+ <div className="mb-4">
 
-                <span className="font-semibold">
-                    Total Users: {total}
-                </span>
+ <span className="font-semibold">
+ Total Users: {total}
+ </span>
 
-            </div>
+ </div>
 
 
-            {
-                loading
-                    ? (
-                        <div className="flex items-center justify-center p-10">
+ {
+ loading
+ ? (
+ <div className="flex items-center justify-center p-10">
 
-                            <span className="loading loading-spinner"></span>
+ <span className="loading loading-spinner"></span>
 
-                            <span className="ml-3">
-                                Loading users...
-                            </span>
+ <span className="ml-3">
+ Loading users...
+ </span>
 
-                        </div>
-                    )
-                    : (
-                        <div className="overflow-x-auto">
+ </div>
+ )
+ : (
+ <div className="overflow-x-auto">
 
-                            <table className="table table-zebra">
+ <table className="table ">
 
-                                <thead>
+ <thead>
 
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Name</th>
-                                        <th>Email</th>
-                                        <th>Phone</th>
-                                        <th>Role</th>
-                                    </tr>
+ <tr>
+ <th>ID</th>
+ <th>Name</th>
+ <th>Email</th>
+ <th>Phone</th>
+ <th>Role</th>
+ </tr>
 
-                                </thead>
+ </thead>
 
 
-                                <tbody>
+ <tbody>
 
-                                    {
-                                        users.map(
-                                            (user) => (
+ {
+ users.map(
+ (user) => (
 
-                                                <tr
-                                                    key={
-                                                        user.id
-                                                    }
-                                                >
+ <tr
+ key={
+ user.id
+ }
+ >
 
-                                                    <td>
-                                                        {user.id}
-                                                    </td>
+ <td>
+ {user.id}
+ </td>
 
-                                                    <td>
-                                                        {user.fullName}
-                                                    </td>
+ <td>
+ {user.fullName}
+ </td>
 
-                                                    <td>
-                                                        {user.email}
-                                                    </td>
+ <td>
+ {user.email}
+ </td>
 
-                                                    <td>
-                                                        {
-                                                            user.phone ||
-                                                            "-"
-                                                        }
-                                                    </td>
+ <td>
+ {
+ user.phone ||
+ "-"
+ }
+ </td>
 
-                                                    <td>
+ <td>
 
-                                                        <select
-                                                            className="select select-bordered select-sm"
-                                                            value={
-                                                                user.role
-                                                            }
-                                                            onChange={
-                                                                (e) =>
-                                                                    updateRole(
-                                                                        user.id,
-                                                                        e.target.value
-                                                                    )
-                                                            }
-                                                        >
+ <select
+ className="select select-bordered select-sm"
+ value={
+ user.role
+ }
+ onChange={
+ (e) =>
+ updateRole(
+ user.id,
+ e.target.value
+ )
+ }
+ >
 
-                                                            <option value="admin">
-                                                                Admin
-                                                            </option>
+ <option value="admin">
+ Admin
+ </option>
 
-                                                            <option value="staff">
-                                                                Staff
-                                                            </option>
+ <option value="staff">
+ Staff
+ </option>
 
-                                                            <option value="customer">
-                                                                Customer
-                                                            </option>
+ <option value="customer">
+ Customer
+ </option>
 
-                                                        </select>
+ </select>
 
-                                                    </td>
+ </td>
 
-                                                </tr>
+ </tr>
 
-                                            )
-                                        )
-                                    }
+ )
+ )
+ }
 
-                                </tbody>
+ </tbody>
 
-                            </table>
+ </table>
 
 
-                            {
-                                users.length == 0 &&
-                                <p className="mt-4">
-                                    No users found.
-                                </p>
-                            }
+ {
+ users.length == 0 &&
+ <p className="mt-4">
+ No users found.
+ </p>
+ }
 
-                        </div>
-                    )
-            }
+ </div>
+ )
+ }
 
 
-            <div className="flex items-center justify-center gap-4 mt-8">
+ <div className="flex items-center justify-center gap-4 mt-8">
 
-                <button
-                    className="btn btn-outline"
-                    disabled={
-                        page <= 1
-                    }
-                    onClick={
-                        () =>
-                            setPage(
-                                page - 1
-                            )
-                    }
-                >
-                    Previous
-                </button>
+ <button
+ className="btn btn-outline"
+ disabled={
+ page <= 1
+ }
+ onClick={
+ () =>
+ setPage(
+ page - 1
+ )
+ }
+ >
+ Previous
+ </button>
 
 
-                <span>
-                    Page {page} of {totalPages}
-                </span>
+ <span>
+ Page {page} of {totalPages}
+ </span>
 
 
-                <button
-                    className="btn btn-outline"
-                    disabled={
-                        page >=
-                        totalPages
-                    }
-                    onClick={
-                        () =>
-                            setPage(
-                                page + 1
-                            )
-                    }
-                >
-                    Next
-                </button>
+ <button
+ className="btn btn-outline"
+ disabled={
+ page >=
+ totalPages
+ }
+ onClick={
+ () =>
+ setPage(
+ page + 1
+ )
+ }
+ >
+ Next
+ </button>
 
-            </div>
+ </div>
 
-        </div>
-    );
+ </div>
+ );
 
 }
+

@@ -1,10 +1,10 @@
 "use client";
 
 import {
-    ChangeEvent,
-    FormEvent,
-    useEffect,
-    useState,
+ ChangeEvent,
+ FormEvent,
+ useEffect,
+ useState,
 } from "react";
 
 import axios from "axios";
@@ -14,900 +14,901 @@ import api from "@/lib/axios";
 
 interface Service {
 
-    id: number;
-    name: string;
-    description: string | null;
-    estimatedTime: number;
-    department: string;
-    isActive: boolean;
+ id: number;
+ name: string;
+ description: string | null;
+ estimatedTime: number;
+ department: string;
+ isActive: boolean;
 
 }
 
 
 export default function AdminServicesPage() {
 
-    const [services, setServices] =
-        useState<Service[]>([]);
+ const [services, setServices] =
+ useState<Service[]>([]);
 
-    const [formData, setFormData] =
-        useState(
-            {
-                name: "",
-                description: "",
-                estimatedTime: "",
-                department: "",
-            }
-        );
+ const [formData, setFormData] =
+ useState(
+ {
+ name: "",
+ description: "",
+ estimatedTime: "",
+ department: "",
+ }
+ );
 
-    const [editId, setEditId] =
-        useState<number | null>(
-            null
-        );
+ const [editId, setEditId] =
+ useState<number | null>(
+ null
+ );
 
-    const [refresh, setRefresh] =
-        useState(0);
+ const [refresh, setRefresh] =
+ useState(0);
 
-    const [
-        responseMsg,
-        setResponseMsg
-    ] =
-        useState("");
+ const [
+ responseMsg,
+ setResponseMsg
+ ] =
+ useState("");
 
-    const [err, setErr] =
-        useState("");
+ const [err, setErr] =
+ useState("");
 
-    const [loading, setLoading] =
-        useState(true);
+ const [loading, setLoading] =
+ useState(true);
 
-    const [saving, setSaving] =
-        useState(false);
+ const [saving, setSaving] =
+ useState(false);
 
 
-    useEffect(
-        () => {
+ useEffect(
+ () => {
 
-            const getServices =
-                async () => {
+ const getServices =
+ async () => {
 
-                    setLoading(
-                        true
-                    );
+ setLoading(
+ true
+ );
 
 
-                    try {
+ try {
 
-                        const response =
-                            await api.get<Service[]>(
-                                "/services?includeInactive=true"
-                            );
+ const response =
+ await api.get<Service[]>(
+ "/services?includeInactive=true"
+ );
 
 
-                        setServices(
-                            response.data
-                        );
+ setServices(
+ response.data
+ );
 
-                        setErr("");
+ setErr("");
 
-                    }
+ }
 
-                    catch (error) {
+ catch (error) {
 
-                        if (
-                            axios.isAxiosError(
-                                error
-                            ) &&
-                            error.response
-                                ?.data
-                                ?.message
-                        ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                            const message =
-                                error.response
-                                    .data
-                                    .message;
+ const message =
+ error.response
+ .data
+ .message;
 
-                            setErr(
-                                Array.isArray(
-                                    message
-                                )
-                                    ? message.join(
-                                        ", "
-                                    )
-                                    : message
-                            );
+ setErr(
+ Array.isArray(
+ message
+ )
+ ? message.join(
+ ", "
+ )
+ : message
+ );
 
-                        }
+ }
 
-                        else {
+ else {
 
-                            setErr(
-                                "Could not load services"
-                            );
+ setErr(
+ "Could not load services"
+ );
 
-                        }
+ }
 
-                    }
+ }
 
-                    finally {
+ finally {
 
-                        setLoading(
-                            false
-                        );
+ setLoading(
+ false
+ );
 
-                    }
+ }
 
-                };
+ };
 
 
-            getServices();
+ getServices();
 
-        },
-        [refresh]
-    );
+ },
+ [refresh]
+ );
 
 
-    const onChangeHandle = (
-        e:
-            ChangeEvent<
-                HTMLInputElement |
-                HTMLTextAreaElement
-            >
-    ) => {
+ const onChangeHandle = (
+ e:
+ ChangeEvent<
+ HTMLInputElement |
+ HTMLTextAreaElement
+ >
+ ) => {
 
-        const {
-            name,
-            value,
-        } = e.target;
+ const {
+ name,
+ value,
+ } = e.target;
 
 
-        setFormData(
-            {
-                ...formData,
-                [name]: value,
-            }
-        );
+ setFormData(
+ {
+ ...formData,
+ [name]: value,
+ }
+ );
 
-    };
+ };
 
 
-    const resetForm =
-        () => {
+ const resetForm =
+ () => {
 
-            setEditId(
-                null
-            );
+ setEditId(
+ null
+ );
 
 
-            setFormData(
-                {
-                    name: "",
-                    description: "",
-                    estimatedTime: "",
-                    department: "",
-                }
-            );
+ setFormData(
+ {
+ name: "",
+ description: "",
+ estimatedTime: "",
+ department: "",
+ }
+ );
 
-        };
+ };
 
 
-    const editService = (
-        service: Service
-    ) => {
+ const editService = (
+ service: Service
+ ) => {
 
-        setEditId(
-            service.id
-        );
+ setEditId(
+ service.id
+ );
 
 
-        setFormData(
-            {
-                name:
-                    service.name,
+ setFormData(
+ {
+ name:
+ service.name,
 
-                description:
-                    service.description ||
-                    "",
+ description:
+ service.description ||
+ "",
 
-                estimatedTime:
-                    String(
-                        service.estimatedTime
-                    ),
+ estimatedTime:
+ String(
+ service.estimatedTime
+ ),
 
-                department:
-                    service.department,
-            }
-        );
+ department:
+ service.department,
+ }
+ );
 
 
-        setResponseMsg("");
-        setErr("");
+ setResponseMsg("");
+ setErr("");
 
-    };
+ };
 
 
-    const onSubmitHandle =
-        async (
-            e:
-                FormEvent<
-                    HTMLFormElement
-                >
-        ) => {
+ const onSubmitHandle =
+ async (
+ e:
+ FormEvent<
+ HTMLFormElement
+ >
+ ) => {
 
-            e.preventDefault();
+ e.preventDefault();
 
-            setResponseMsg("");
-            setErr("");
+ setResponseMsg("");
+ setErr("");
 
 
-            if (
-                !formData.name.trim() ||
-                !formData.department.trim()
-            ) {
+ if (
+ !formData.name.trim() ||
+ !formData.department.trim()
+ ) {
 
-                setErr(
-                    "Name and department are required"
-                );
+ setErr(
+ "Name and department are required"
+ );
 
-                return;
+ return;
 
-            }
+ }
 
 
-            const estimatedTime =
-                Number(
-                    formData.estimatedTime
-                );
+ const estimatedTime =
+ Number(
+ formData.estimatedTime
+ );
 
 
-            if (
-                !Number.isInteger(
-                    estimatedTime
-                ) ||
-                estimatedTime <= 0
-            ) {
+ if (
+ !Number.isInteger(
+ estimatedTime
+ ) ||
+ estimatedTime <= 0
+ ) {
 
-                setErr(
-                    "Estimated time must be a positive whole number"
-                );
+ setErr(
+ "Estimated time must be a positive whole number"
+ );
 
-                return;
+ return;
 
-            }
+ }
 
 
-            setSaving(
-                true
-            );
+ setSaving(
+ true
+ );
 
 
-            try {
+ try {
 
-                if (
-                    editId == null
-                ) {
+ if (
+ editId == null
+ ) {
 
-                    await api.post(
-                        "/services",
-                        {
-                            name:
-                                formData.name,
+ await api.post(
+ "/services",
+ {
+ name:
+ formData.name,
 
-                            description:
-                                formData.description,
+ description:
+ formData.description,
 
-                            estimatedTime,
+ estimatedTime,
 
-                            department:
-                                formData.department,
-                        }
-                    );
+ department:
+ formData.department,
+ }
+ );
 
 
-                    setResponseMsg(
-                        "Service created successfully"
-                    );
+ setResponseMsg(
+ "Service created successfully"
+ );
 
-                }
+ }
 
-                else {
+ else {
 
-                    await api.patch(
-                        `/services/${editId}`,
-                        {
-                            name:
-                                formData.name,
+ await api.patch(
+ `/services/${editId}`,
+ {
+ name:
+ formData.name,
 
-                            description:
-                                formData.description,
+ description:
+ formData.description,
 
-                            estimatedTime,
+ estimatedTime,
 
-                            department:
-                                formData.department,
-                        }
-                    );
+ department:
+ formData.department,
+ }
+ );
 
 
-                    setResponseMsg(
-                        "Service updated successfully"
-                    );
+ setResponseMsg(
+ "Service updated successfully"
+ );
 
-                }
+ }
 
 
-                resetForm();
+ resetForm();
 
 
-                setRefresh(
-                    (value) =>
-                        value + 1
-                );
+ setRefresh(
+ (value) =>
+ value + 1
+ );
 
-            }
+ }
 
-            catch (error) {
+ catch (error) {
 
-                if (
-                    axios.isAxiosError(
-                        error
-                    ) &&
-                    error.response
-                        ?.data
-                        ?.message
-                ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                    const message =
-                        error.response
-                            .data
-                            .message;
+ const message =
+ error.response
+ .data
+ .message;
 
 
-                    setErr(
-                        Array.isArray(
-                            message
-                        )
-                            ? message.join(
-                                ", "
-                            )
-                            : message
-                    );
+ setErr(
+ Array.isArray(
+ message
+ )
+ ? message.join(
+ ", "
+ )
+ : message
+ );
 
-                }
+ }
 
-                else {
+ else {
 
-                    setErr(
-                        editId == null
-                            ? "Could not create service"
-                            : "Could not update service"
-                    );
+ setErr(
+ editId == null
+ ? "Could not create service"
+ : "Could not update service"
+ );
 
-                }
+ }
 
-            }
+ }
 
-            finally {
+ finally {
 
-                setSaving(
-                    false
-                );
+ setSaving(
+ false
+ );
 
-            }
+ }
 
-        };
+ };
 
 
-    const deactivateService =
-        async (
-            id: number
-        ) => {
+ const deactivateService =
+ async (
+ id: number
+ ) => {
 
-            setResponseMsg("");
-            setErr("");
+ setResponseMsg("");
+ setErr("");
 
 
-            try {
+ try {
 
-                await api.patch(
-                    `/services/${id}/deactivate`,
-                    {}
-                );
+ await api.patch(
+ `/services/${id}/deactivate`,
+ {}
+ );
 
 
-                setResponseMsg(
-                    "Service deactivated successfully"
-                );
+ setResponseMsg(
+ "Service deactivated successfully"
+ );
 
 
-                setRefresh(
-                    (value) =>
-                        value + 1
-                );
+ setRefresh(
+ (value) =>
+ value + 1
+ );
 
-            }
+ }
 
-            catch (error) {
+ catch (error) {
 
-                if (
-                    axios.isAxiosError(
-                        error
-                    ) &&
-                    error.response
-                        ?.data
-                        ?.message
-                ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                    const message =
-                        error.response
-                            .data
-                            .message;
+ const message =
+ error.response
+ .data
+ .message;
 
 
-                    setErr(
-                        Array.isArray(
-                            message
-                        )
-                            ? message.join(
-                                ", "
-                            )
-                            : message
-                    );
+ setErr(
+ Array.isArray(
+ message
+ )
+ ? message.join(
+ ", "
+ )
+ : message
+ );
 
-                }
+ }
 
-                else {
+ else {
 
-                    setErr(
-                        "Could not deactivate service"
-                    );
+ setErr(
+ "Could not deactivate service"
+ );
 
-                }
+ }
 
-            }
+ }
 
-        };
+ };
 
 
-    const deleteService =
-        async (
-            id: number
-        ) => {
+ const deleteService =
+ async (
+ id: number
+ ) => {
 
-            setResponseMsg("");
-            setErr("");
+ setResponseMsg("");
+ setErr("");
 
 
-            try {
+ try {
 
-                await api.delete(
-                    `/services/${id}`
-                );
+ await api.delete(
+ `/services/${id}`
+ );
 
 
-                setResponseMsg(
-                    "Service deleted successfully"
-                );
+ setResponseMsg(
+ "Service deleted successfully"
+ );
 
 
-                if (
-                    editId == id
-                ) {
+ if (
+ editId == id
+ ) {
 
-                    resetForm();
+ resetForm();
 
-                }
+ }
 
 
-                setRefresh(
-                    (value) =>
-                        value + 1
-                );
+ setRefresh(
+ (value) =>
+ value + 1
+ );
 
-            }
+ }
 
-            catch (error) {
+ catch (error) {
 
-                if (
-                    axios.isAxiosError(
-                        error
-                    ) &&
-                    error.response
-                        ?.data
-                        ?.message
-                ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                    const message =
-                        error.response
-                            .data
-                            .message;
+ const message =
+ error.response
+ .data
+ .message;
 
 
-                    setErr(
-                        Array.isArray(
-                            message
-                        )
-                            ? message.join(
-                                ", "
-                            )
-                            : message
-                    );
+ setErr(
+ Array.isArray(
+ message
+ )
+ ? message.join(
+ ", "
+ )
+ : message
+ );
 
-                }
+ }
 
-                else {
+ else {
 
-                    setErr(
-                        "Could not delete service"
-                    );
+ setErr(
+ "Could not delete service"
+ );
 
-                }
+ }
 
-            }
+ }
 
-        };
+ };
 
 
-    return (
-        <div className="max-w-7xl mx-auto py-8">
+ return (
+ <div className="max-w-7xl mx-auto py-8">
 
-            <h1 className="text-3xl font-bold mb-2">
-                Service Management
-            </h1>
+ <h1 className="text-3xl font-bold mb-2">
+ Service Management
+ </h1>
 
-            <p className="mb-6">
-                Create and manage queue services.
-            </p>
+ <p className="mb-6">
+ Create and manage queue services.
+ </p>
 
 
-            {
-                responseMsg &&
-                <div className="alert alert-success mb-4">
+ {
+ responseMsg &&
+ <div className="alert alert-success mb-4">
 
-                    <span>
-                        {responseMsg}
-                    </span>
+ <span>
+ {responseMsg}
+ </span>
 
-                </div>
-            }
+ </div>
+ }
 
 
-            {
-                err &&
-                <div className="alert alert-error mb-4">
+ {
+ err &&
+ <div className="alert alert-error mb-4">
 
-                    <span>
-                        {err}
-                    </span>
+ <span>
+ {err}
+ </span>
 
-                </div>
-            }
+ </div>
+ }
 
 
-            <div className="card bg-base-100 shadow border mb-8">
+ <div className="card bg-white shadow border mb-8">
 
-                <div className="card-body">
+ <div className="card-body">
 
-                    <h2 className="card-title">
-                        {
-                            editId == null
-                                ? "Create Service"
-                                : "Edit Service"
-                        }
-                    </h2>
+ <h2 className="card-title">
+ {
+ editId == null
+ ? "Create Service"
+ : "Edit Service"
+ }
+ </h2>
 
 
-                    <form
-                        onSubmit={
-                            onSubmitHandle
-                        }
-                    >
+ <form
+ onSubmit={
+ onSubmitHandle
+ }
+ >
 
-                        <div className="grid md:grid-cols-2 gap-4">
+ <div className="grid md:grid-cols-2 gap-4">
 
-                            <div>
+ <div>
 
-                                <label className="label">
-                                    Service Name
-                                </label>
+ <label className="label">
+ Service Name
+ </label>
 
-                                <input
-                                    type="text"
-                                    name="name"
-                                    className="input input-bordered w-full"
-                                    value={
-                                        formData.name
-                                    }
-                                    onChange={
-                                        onChangeHandle
-                                    }
-                                    required
-                                />
+ <input
+ type="text"
+ name="name"
+ className="input input-bordered w-full"
+ value={
+ formData.name
+ }
+ onChange={
+ onChangeHandle
+ }
+ required
+ />
 
-                            </div>
+ </div>
 
 
-                            <div>
+ <div>
 
-                                <label className="label">
-                                    Department
-                                </label>
+ <label className="label">
+ Department
+ </label>
 
-                                <input
-                                    type="text"
-                                    name="department"
-                                    className="input input-bordered w-full"
-                                    value={
-                                        formData.department
-                                    }
-                                    onChange={
-                                        onChangeHandle
-                                    }
-                                    required
-                                />
+ <input
+ type="text"
+ name="department"
+ className="input input-bordered w-full"
+ value={
+ formData.department
+ }
+ onChange={
+ onChangeHandle
+ }
+ required
+ />
 
-                            </div>
+ </div>
 
 
-                            <div>
+ <div>
 
-                                <label className="label">
-                                    Estimated Time
-                                    (minutes)
-                                </label>
+ <label className="label">
+ Estimated Time
+ (minutes)
+ </label>
 
-                                <input
-                                    type="number"
-                                    name="estimatedTime"
-                                    min="1"
-                                    step="1"
-                                    className="input input-bordered w-full"
-                                    value={
-                                        formData.estimatedTime
-                                    }
-                                    onChange={
-                                        onChangeHandle
-                                    }
-                                    required
-                                />
+ <input
+ type="number"
+ name="estimatedTime"
+ min="1"
+ step="1"
+ className="input input-bordered w-full"
+ value={
+ formData.estimatedTime
+ }
+ onChange={
+ onChangeHandle
+ }
+ required
+ />
 
-                            </div>
+ </div>
 
-                        </div>
+ </div>
 
 
-                        <label className="label mt-4">
-                            Description
-                        </label>
+ <label className="label mt-4">
+ Description
+ </label>
 
-                        <textarea
-                            name="description"
-                            className="textarea textarea-bordered w-full"
-                            value={
-                                formData.description
-                            }
-                            onChange={
-                                onChangeHandle
-                            }
-                        />
+ <textarea
+ name="description"
+ className="textarea textarea-bordered w-full"
+ value={
+ formData.description
+ }
+ onChange={
+ onChangeHandle
+ }
+ />
 
 
-                        <div className="flex gap-3 mt-6">
+ <div className="flex gap-3 mt-6">
 
-                            <button
-                                type="submit"
-                                className="btn btn-primary"
-                                disabled={
-                                    saving
-                                }
-                            >
+ <button
+ type="submit"
+ className="btn btn-primary"
+ disabled={
+ saving
+ }
+ >
 
-                                {
-                                    saving
-                                        ? "Saving..."
-                                        : editId == null
-                                            ? "Create Service"
-                                            : "Update Service"
-                                }
+ {
+ saving
+ ? "Saving..."
+ : editId == null
+ ? "Create Service"
+ : "Update Service"
+ }
 
-                            </button>
+ </button>
 
 
-                            {
-                                editId != null &&
-                                <button
-                                    type="button"
-                                    className="btn btn-outline"
-                                    onClick={
-                                        resetForm
-                                    }
-                                >
-                                    Cancel Edit
-                                </button>
-                            }
+ {
+ editId != null &&
+ <button
+ type="button"
+ className="btn btn-outline"
+ onClick={
+ resetForm
+ }
+ >
+ Cancel Edit
+ </button>
+ }
 
-                        </div>
+ </div>
 
-                    </form>
+ </form>
 
-                </div>
+ </div>
 
-            </div>
+ </div>
 
 
-            {
-                loading
-                    ? (
-                        <div className="flex items-center justify-center p-10">
+ {
+ loading
+ ? (
+ <div className="flex items-center justify-center p-10">
 
-                            <span className="loading loading-spinner"></span>
+ <span className="loading loading-spinner"></span>
 
-                            <span className="ml-3">
-                                Loading services...
-                            </span>
+ <span className="ml-3">
+ Loading services...
+ </span>
 
-                        </div>
-                    )
-                    : (
-                        <div className="overflow-x-auto">
+ </div>
+ )
+ : (
+ <div className="overflow-x-auto">
 
-                            <table className="table table-zebra">
+ <table className="table ">
 
-                                <thead>
+ <thead>
 
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Name</th>
-                                        <th>Department</th>
-                                        <th>Estimated Time</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
+ <tr>
+ <th>ID</th>
+ <th>Name</th>
+ <th>Department</th>
+ <th>Estimated Time</th>
+ <th>Status</th>
+ <th>Actions</th>
+ </tr>
 
-                                </thead>
+ </thead>
 
 
-                                <tbody>
+ <tbody>
 
-                                    {
-                                        services.map(
-                                            (
-                                                service
-                                            ) => (
+ {
+ services.map(
+ (
+ service
+ ) => (
 
-                                                <tr
-                                                    key={
-                                                        service.id
-                                                    }
-                                                >
+ <tr
+ key={
+ service.id
+ }
+ >
 
-                                                    <td>
-                                                        {service.id}
-                                                    </td>
+ <td>
+ {service.id}
+ </td>
 
 
-                                                    <td>
+ <td>
 
-                                                        <div className="font-semibold">
-                                                            {service.name}
-                                                        </div>
+ <div className="font-semibold">
+ {service.name}
+ </div>
 
-                                                        {
-                                                            service.description &&
-                                                            <div className="text-sm opacity-70">
-                                                                {
-                                                                    service.description
-                                                                }
-                                                            </div>
-                                                        }
+ {
+ service.description &&
+ <div className="text-sm opacity-70">
+ {
+ service.description
+ }
+ </div>
+ }
 
-                                                    </td>
+ </td>
 
 
-                                                    <td>
-                                                        {service.department}
-                                                    </td>
+ <td>
+ {service.department}
+ </td>
 
 
-                                                    <td>
-                                                        {
-                                                            service.estimatedTime
-                                                        } minutes
-                                                    </td>
+ <td>
+ {
+ service.estimatedTime
+ } minutes
+ </td>
 
 
-                                                    <td>
+ <td>
 
-                                                        <span
-                                                            className={
-                                                                service.isActive
-                                                                    ? "badge badge-success"
-                                                                    : "badge badge-error"
-                                                            }
-                                                        >
+ <span
+ className={
+ service.isActive
+ ? "badge badge-success"
+ : "badge badge-error"
+ }
+ >
 
-                                                            {
-                                                                service.isActive
-                                                                    ? "Active"
-                                                                    : "Inactive"
-                                                            }
+ {
+ service.isActive
+ ? "Active"
+ : "Inactive"
+ }
 
-                                                        </span>
+ </span>
 
-                                                    </td>
+ </td>
 
 
-                                                    <td>
+ <td>
 
-                                                        <div className="flex flex-wrap gap-2">
+ <div className="flex flex-wrap gap-2">
 
-                                                            <button
-                                                                className="btn btn-outline btn-sm"
-                                                                onClick={
-                                                                    () =>
-                                                                        editService(
-                                                                            service
-                                                                        )
-                                                                }
-                                                            >
-                                                                Edit
-                                                            </button>
+ <button
+ className="btn btn-outline btn-sm"
+ onClick={
+ () =>
+ editService(
+ service
+ )
+ }
+ >
+ Edit
+ </button>
 
 
-                                                            {
-                                                                service.isActive &&
-                                                                <button
-                                                                    className="btn btn-warning btn-sm"
-                                                                    onClick={
-                                                                        () =>
-                                                                            deactivateService(
-                                                                                service.id
-                                                                            )
-                                                                    }
-                                                                >
-                                                                    Deactivate
-                                                                </button>
-                                                            }
+ {
+ service.isActive &&
+ <button
+ className="btn btn-warning btn-sm"
+ onClick={
+ () =>
+ deactivateService(
+ service.id
+ )
+ }
+ >
+ Deactivate
+ </button>
+ }
 
 
-                                                            <button
-                                                                className="btn btn-error btn-sm"
-                                                                onClick={
-                                                                    () =>
-                                                                        deleteService(
-                                                                            service.id
-                                                                        )
-                                                                }
-                                                            >
-                                                                Delete
-                                                            </button>
+ <button
+ className="btn btn-error btn-sm"
+ onClick={
+ () =>
+ deleteService(
+ service.id
+ )
+ }
+ >
+ Delete
+ </button>
 
-                                                        </div>
+ </div>
 
-                                                    </td>
+ </td>
 
-                                                </tr>
+ </tr>
 
-                                            )
-                                        )
-                                    }
+ )
+ )
+ }
 
-                                </tbody>
+ </tbody>
 
-                            </table>
+ </table>
 
 
-                            {
-                                services.length == 0 &&
-                                <p className="mt-4">
-                                    No services found.
-                                </p>
-                            }
+ {
+ services.length == 0 &&
+ <p className="mt-4">
+ No services found.
+ </p>
+ }
 
-                        </div>
-                    )
-            }
+ </div>
+ )
+ }
 
-        </div>
-    );
+ </div>
+ );
 
 }
+

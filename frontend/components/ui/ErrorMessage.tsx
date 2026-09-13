@@ -1,18 +1,18 @@
 interface ErrorMessageProps {
-    message: string
+ message: string
 }
 
 export default function ErrorMessage(
-    { message }: ErrorMessageProps
+ { message }: ErrorMessageProps
 ) {
 
-    return (
-        <div className="alert alert-error">
+ return (
+ <div className="alert alert-error">
 
-            <span>
-                {message}
-            </span>
+ <span>
+ {message}
+ </span>
 
-        </div>
-    );
+ </div>
+ );
 }

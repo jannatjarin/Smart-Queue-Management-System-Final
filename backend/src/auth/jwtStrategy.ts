@@ -1,24 +1,12 @@
-import {
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 
-import {
-  PassportStrategy,
-} from '@nestjs/passport';
+import { PassportStrategy } from '@nestjs/passport';
 
-import {
-  ExtractJwt,
-  Strategy,
-} from 'passport-jwt';
+import { ExtractJwt, Strategy } from 'passport-jwt';
 
-import {
-  ConfigService,
-} from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 
-import {
-  UsersService,
-} from 'src/users/users.service';
+import { UsersService } from 'src/users/users.service';
 
 interface TokenPayload {
   id: number;
@@ -26,68 +14,34 @@ interface TokenPayload {
 }
 
 @Injectable()
-export class JwtStrategy
-  extends PassportStrategy(
-    Strategy,
-  ) {
-
+export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    private readonly configService:
-      ConfigService,
+    private readonly configService: ConfigService,
 
-    private readonly usersService:
-      UsersService,
+    private readonly usersService: UsersService,
   ) {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
 
-    super(
-      {
-        jwtFromRequest:
-          ExtractJwt
-            .fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
 
-        ignoreExpiration:
-          false,
-
-        secretOrKey:
-          configService
-            .getOrThrow<string>(
-              'JWT_ACCESS_SECRET',
-            ),
-      },
-    );
+      secretOrKey: configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
+    });
   }
 
-  async validate(
-    payload: TokenPayload,
-  ) {
-
+  async validate(payload: TokenPayload) {
     try {
-
-      const user =
-        await this.usersService
-          .getUserById(
-            payload.id,
-          );
+      const user = await this.usersService.getUserById(payload.id);
 
       return {
-        id:
-          user.id,
+        id: user.id,
 
-        email:
-          user.email,
+        email: user.email,
 
-        role:
-          user.role,
+        role: user.role,
       };
-
-    }
-
-    catch {
-
-      throw new UnauthorizedException(
-        'User no longer exists',
-      );
-
+    } catch {
+      throw new UnauthorizedException('User no longer exists');
     }
   }
 }

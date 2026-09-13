@@ -4,284 +4,146 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import {
-  InjectRepository,
-} from '@nestjs/typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
-import {
-  In,
-  Repository,
-} from 'typeorm';
+import { In, Repository } from 'typeorm';
 
-import {
-  Services,
-} from './services.entity';
+import { Services } from './services.entity';
 
-import {
-  Queues,
-} from '../queues/queues.entity';
+import { Queues } from '../queues/queues.entity';
 
-import {
-  Tickets,
-} from '../tickets/tickets.entity';
+import { Tickets } from '../tickets/tickets.entity';
 
-import {
-  QueueStatus,
-} from '../common/enums/queue-status.enum';
+import { QueueStatus } from '../common/enums/queue-status.enum';
 
-import {
-  CreateServiceDto,
-} from './dto/create-service.dto';
+import { CreateServiceDto } from './dto/create-service.dto';
 
-import {
-  UpdateServiceDto,
-} from './dto/update-service.dto';
+import { UpdateServiceDto } from './dto/update-service.dto';
 
-import {
-  TicketStatus,
-} from '../common/enums/ticket-status.enum';
+import { TicketStatus } from '../common/enums/ticket-status.enum';
 
 @Injectable()
 export class ServicesService {
-
   constructor(
     @InjectRepository(Services)
-    private readonly servicesRepository:
-      Repository<Services>,
+    private readonly servicesRepository: Repository<Services>,
 
     @InjectRepository(Queues)
-    private readonly queuesRepository:
-      Repository<Queues>,
+    private readonly queuesRepository: Repository<Queues>,
 
     @InjectRepository(Tickets)
-    private readonly ticketsRepository:
-      Repository<Tickets>,
+    private readonly ticketsRepository: Repository<Tickets>,
   ) {}
 
-  async create(
-    dto: CreateServiceDto,
-  ): Promise<Services> {
+  async create(dto: CreateServiceDto): Promise<Services> {
+    const service = this.servicesRepository.create(dto);
 
-    const service =
-      this.servicesRepository
-        .create(
-          dto,
-        );
-
-    return this.servicesRepository
-      .save(
-        service,
-      );
+    return this.servicesRepository.save(service);
   }
 
-  async findAll(
-    includeInactive =
-      false,
-  ): Promise<Services[]> {
-
+  async findAll(includeInactive = false): Promise<Services[]> {
     if (includeInactive) {
-
-      return this.servicesRepository
-        .find();
-
+      return this.servicesRepository.find();
     }
 
-    return this.servicesRepository
-      .find(
-        {
-          where: {
-            isActive:
-              true,
-          },
-        },
-      );
+    return this.servicesRepository.find({
+      where: {
+        isActive: true,
+      },
+    });
   }
 
-  async findOne(
-    id: number,
-  ): Promise<Services> {
+  async findOne(id: number): Promise<Services> {
+    const service = await this.servicesRepository.findOne({
+      where: {
+        id,
+      },
 
-    const service =
-      await this.servicesRepository
-        .findOne(
-          {
-            where: {
-              id,
-            },
-
-            relations: [
-              'queues',
-            ],
-          },
-        );
+      relations: ['queues'],
+    });
 
     if (!service) {
-
-      throw new NotFoundException(
-        `Service with id ${id} not found`,
-      );
-
+      throw new NotFoundException(`Service with id ${id} not found`);
     }
 
     return service;
   }
 
-  async update(
-    id: number,
-    dto: UpdateServiceDto,
-  ): Promise<Services> {
+  async update(id: number, dto: UpdateServiceDto): Promise<Services> {
+    const service = await this.findOne(id);
 
-    const service =
-      await this.findOne(
-        id,
-      );
+    Object.assign(service, dto);
 
-    Object.assign(
-      service,
-      dto,
-    );
-
-    return this.servicesRepository
-      .save(
-        service,
-      );
+    return this.servicesRepository.save(service);
   }
 
-  async deactivate(
-    id: number,
-  ): Promise<Services> {
+  async deactivate(id: number): Promise<Services> {
+    const service = await this.findOne(id);
 
-    const service =
-      await this.findOne(
-        id,
+    const activeTicketCount = await this.ticketsRepository.count({
+      where: {
+        service: {
+          id,
+        },
+
+        status: In([TicketStatus.WAITING, TicketStatus.CALLED]),
+      },
+    });
+
+    if (activeTicketCount > 0) {
+      throw new BadRequestException(
+        'Cannot deactivate a service while it has waiting or called tickets',
       );
+    }
 
-      const activeTicketCount =
-  await this.ticketsRepository
-    .count(
-      {
-        where: {
-          service: {
-            id,
-          },
+    service.isActive = false;
 
-          status:
-            In(
-              [
-                TicketStatus.WAITING,
-                TicketStatus.CALLED,
-              ],
-            ),
+    const saved = await this.servicesRepository.save(service);
+
+    const queues = await this.queuesRepository.find({
+      where: {
+        service: {
+          id,
         },
       },
-    );
+    });
 
-if (
-  activeTicketCount >
-  0
-) {
+    if (queues.length > 0) {
+      queues.forEach((queue) => {
+        queue.status = QueueStatus.CLOSED;
+      });
 
-  throw new BadRequestException(
-    'Cannot deactivate a service while it has waiting or called tickets',
-  );
-
-}
-
-    service.isActive =
-      false;
-
-    const saved =
-      await this.servicesRepository
-        .save(
-          service,
-        );
-
-    const queues =
-      await this.queuesRepository
-        .find(
-          {
-            where: {
-              service: {
-                id,
-              },
-            },
-          },
-        );
-
-    if (
-      queues.length >
-      0
-    ) {
-
-      queues.forEach(
-        (
-          queue,
-        ) => {
-
-          queue.status =
-            QueueStatus.CLOSED;
-
-        },
-      );
-
-      await this.queuesRepository
-        .save(
-          queues,
-        );
+      await this.queuesRepository.save(queues);
     }
 
     return saved;
   }
 
-  async remove(
-    id: number,
-  ): Promise<void> {
+  async remove(id: number): Promise<void> {
+    const service = await this.findOne(id);
 
-    const service =
-      await this.findOne(
-        id,
-      );
+    const queueCount = await this.queuesRepository.count({
+      where: {
+        service: {
+          id,
+        },
+      },
+    });
 
-    const queueCount =
-      await this.queuesRepository
-        .count(
-          {
-            where: {
-              service: {
-                id,
-              },
-            },
-          },
-        );
+    const ticketCount = await this.ticketsRepository.count({
+      where: {
+        service: {
+          id,
+        },
+      },
+    });
 
-    const ticketCount =
-      await this.ticketsRepository
-        .count(
-          {
-            where: {
-              service: {
-                id,
-              },
-            },
-          },
-        );
-
-    if (
-      queueCount >
-        0 ||
-      ticketCount >
-        0
-    ) {
-
+    if (queueCount > 0 || ticketCount > 0) {
       throw new BadRequestException(
         'Cannot delete a service that already has queues or ticket history. Deactivate it instead.',
       );
-
     }
 
-    await this.servicesRepository
-      .remove(
-        service,
-      );
+    await this.servicesRepository.remove(service);
   }
 }

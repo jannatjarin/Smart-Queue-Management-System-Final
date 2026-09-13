@@ -6,378 +6,194 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import {
-  InjectRepository,
-} from '@nestjs/typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
-import {
-  In,
-  Repository,
-} from 'typeorm';
+import { In, Repository } from 'typeorm';
 
-import {
-  Counters,
-} from './counters.entity';
+import { Counters } from './counters.entity';
 
-import {
-  Users,
-} from '../users/users.entity';
+import { Users } from '../users/users.entity';
 
-import {
-  Services,
-} from '../services/services.entity';
+import { Services } from '../services/services.entity';
 
-import {
-  Role,
-} from '../common/enums/role.enum';
+import { Role } from '../common/enums/role.enum';
 
-import {
-  CreateCounterDto,
-} from './dto/create-counter.dto';
+import { CreateCounterDto } from './dto/create-counter.dto';
 
-import {
-  UpdateCounterStatusDto,
-} from './dto/update-status.dto';
+import { UpdateCounterStatusDto } from './dto/update-status.dto';
 
-import {
-  CurrentUserPayload,
-} from '../common/current-user.interface';
+import { CurrentUserPayload } from '../common/current-user.interface';
 
-import {
-  CounterStatus,
-} from '../common/enums/counter-status.enum';
+import { CounterStatus } from '../common/enums/counter-status.enum';
 
-import {
-  TicketStatus,
-} from '../common/enums/ticket-status.enum';
+import { TicketStatus } from '../common/enums/ticket-status.enum';
 
 @Injectable()
 export class CountersService {
-
   constructor(
     @InjectRepository(Counters)
-    private readonly countersRepository:
-      Repository<Counters>,
+    private readonly countersRepository: Repository<Counters>,
 
     @InjectRepository(Users)
-    private readonly usersRepository:
-      Repository<Users>,
+    private readonly usersRepository: Repository<Users>,
 
     @InjectRepository(Services)
-    private readonly servicesRepository:
-      Repository<Services>,
-  ) { }
+    private readonly servicesRepository: Repository<Services>,
+  ) {}
 
-  private async getCounter(
-    id: number,
-  ): Promise<Counters> {
+  private async getCounter(id: number): Promise<Counters> {
+    const counter = await this.countersRepository.findOne({
+      where: {
+        id,
+      },
 
-    const counter =
-      await this.countersRepository
-        .findOne(
-          {
-            where: {
-              id,
-            },
-
-            relations: [
-              'staff',
-              'services',
-              'tickets',
-            ],
-          },
-        );
+      relations: ['staff', 'services', 'tickets'],
+    });
 
     if (!counter) {
-
-      throw new NotFoundException(
-        `Counter with id ${id} not found`,
-      );
-
+      throw new NotFoundException(`Counter with id ${id} not found`);
     }
 
     return counter;
   }
 
-  async create(
-    dto: CreateCounterDto,
-  ): Promise<Counters> {
-
-    const existingCounter =
-      await this.countersRepository
-        .findOne(
-          {
-            where: {
-              name:
-                dto.name,
-            },
-          },
-        );
+  async create(dto: CreateCounterDto): Promise<Counters> {
+    const existingCounter = await this.countersRepository.findOne({
+      where: {
+        name: dto.name,
+      },
+    });
 
     if (existingCounter) {
-
-      throw new ConflictException(
-        'A counter with this name already exists.',
-      );
-
+      throw new ConflictException('A counter with this name already exists.');
     }
 
-    let services:
-      Services[] = [];
+    let services: Services[] = [];
 
-    if (
-      dto.serviceIds?.length
-    ) {
+    if (dto.serviceIds?.length) {
+      services = await this.servicesRepository.find({
+        where: {
+          id: In(dto.serviceIds),
 
-      services =
-        await this.servicesRepository
-          .find(
-            {
-              where: {
-                id:
-                  In(
-                    dto.serviceIds,
-                  ),
+          isActive: true,
+        },
+      });
 
-                isActive:
-                  true,
-              },
-            },
-          );
-
-      if (
-        services.length !=
-        dto.serviceIds.length
-      ) {
-
+      if (services.length != dto.serviceIds.length) {
         throw new NotFoundException(
           'One or more serviceIds do not exist or are inactive',
         );
-
       }
     }
 
-    const counter =
-      this.countersRepository
-        .create(
-          {
-            name:
-              dto.name,
+    const counter = this.countersRepository.create({
+      name: dto.name,
 
-            services,
-          },
-        );
+      services,
+    });
 
-    return this.countersRepository
-      .save(
-        counter,
-      );
+    return this.countersRepository.save(counter);
   }
 
-  async findAll(
-    currentUser:
-      CurrentUserPayload,
-  ): Promise<Counters[]> {
-
-    if (
-      currentUser.role ==
-      Role.STAFF
-    ) {
-
-      return this.countersRepository
-        .find(
-          {
-            where: {
-              staff: {
-                id:
-                  currentUser.id,
-              },
-            },
-
-            relations: [
-              'staff',
-              'services',
-            ],
+  async findAll(currentUser: CurrentUserPayload): Promise<Counters[]> {
+    if (currentUser.role == Role.STAFF) {
+      return this.countersRepository.find({
+        where: {
+          staff: {
+            id: currentUser.id,
           },
-        );
+        },
+
+        relations: ['staff', 'services'],
+      });
     }
 
-    return this.countersRepository
-      .find(
-        {
-          relations: [
-            'staff',
-            'services',
-          ],
-        },
-      );
+    return this.countersRepository.find({
+      relations: ['staff', 'services'],
+    });
   }
 
   async findOne(
     id: number,
-    currentUser:
-      CurrentUserPayload,
+    currentUser: CurrentUserPayload,
   ): Promise<Counters> {
+    const counter = await this.getCounter(id);
 
-    const counter =
-      await this.getCounter(
-        id,
-      );
-
-    if (
-      currentUser.role ==
-      Role.STAFF &&
-      counter.staff?.id !=
-      currentUser.id
-    ) {
-
-      throw new ForbiddenException(
-        'You can only view your assigned counter',
-      );
-
+    if (currentUser.role == Role.STAFF && counter.staff?.id != currentUser.id) {
+      throw new ForbiddenException('You can only view your assigned counter');
     }
 
     return counter;
   }
 
-  async assignStaff(
-    id: number,
-    staffId: number,
-  ): Promise<Counters> {
+  async assignStaff(id: number, staffId: number): Promise<Counters> {
+    const counter = await this.getCounter(id);
 
-    const counter =
-      await this.getCounter(
-        id,
-      );
-
-    const staff =
-      await this.usersRepository
-        .findOne(
-          {
-            where: {
-              id:
-                staffId,
-            },
-          },
-        );
+    const staff = await this.usersRepository.findOne({
+      where: {
+        id: staffId,
+      },
+    });
 
     if (!staff) {
-
-      throw new NotFoundException(
-        `User with id ${staffId} not found`,
-      );
-
+      throw new NotFoundException(`User with id ${staffId} not found`);
     }
 
-    if (
-      staff.role !=
-      Role.STAFF
-    ) {
-
-      throw new BadRequestException(
-        'Assigned user must have the staff role',
-      );
-
+    if (staff.role != Role.STAFF) {
+      throw new BadRequestException('Assigned user must have the staff role');
     }
-      const changingStaff =
-    counter.staff?.id !=
-    staffId;
+    const changingStaff = counter.staff?.id != staffId;
 
-    if (
-      changingStaff &&
-      counter.status !=
-      CounterStatus.CLOSED
-    ) {
-
+    if (changingStaff && counter.status != CounterStatus.CLOSED) {
       throw new BadRequestException(
         'Close the counter before changing the assigned staff member',
       );
-
     }
 
-    const hasCalledTicket =
-      counter.tickets?.some(
-        (ticket) =>
-          ticket.status ==
-          TicketStatus.CALLED,
-      );
+    const hasCalledTicket = counter.tickets?.some(
+      (ticket) => ticket.status == TicketStatus.CALLED,
+    );
 
-    if (
-      changingStaff &&
-      hasCalledTicket
-    ) {
-
+    if (changingStaff && hasCalledTicket) {
       throw new BadRequestException(
         'Complete the currently called ticket before changing the assigned staff member',
       );
-
     }
 
-    const existingAssignment =
-      await this.countersRepository
-        .findOne(
-          {
-            where: {
-              staff: {
-                id:
-                  staffId,
-              },
-            },
-          },
-        );
+    const existingAssignment = await this.countersRepository.findOne({
+      where: {
+        staff: {
+          id: staffId,
+        },
+      },
+    });
 
-    if (
-      existingAssignment &&
-      existingAssignment.id !=
-      id
-    ) {
-
+    if (existingAssignment && existingAssignment.id != id) {
       throw new BadRequestException(
         'This staff member is already assigned to another counter',
       );
-
     }
 
-    counter.staff =
-      staff;
+    counter.staff = staff;
 
-    return this.countersRepository
-      .save(
-        counter,
-      );
+    return this.countersRepository.save(counter);
   }
 
   async updateStatus(
     id: number,
     dto: UpdateCounterStatusDto,
-    currentUser:
-      CurrentUserPayload,
+    currentUser: CurrentUserPayload,
   ): Promise<Counters> {
+    const counter = await this.getCounter(id);
 
-    const counter =
-      await this.getCounter(
-        id,
-      );
-
-    if (
-      currentUser.role ==
-      Role.STAFF &&
-      counter.staff?.id !=
-      currentUser.id
-    ) {
-
+    if (currentUser.role == Role.STAFF && counter.staff?.id != currentUser.id) {
       throw new ForbiddenException(
         'You can only change the status of your assigned counter',
       );
-
     }
 
-    counter.status =
-      dto.status;
+    counter.status = dto.status;
 
-    return this.countersRepository
-      .save(
-        counter,
-      );
+    return this.countersRepository.save(counter);
   }
 }

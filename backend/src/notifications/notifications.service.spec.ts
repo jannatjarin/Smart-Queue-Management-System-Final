@@ -5,7 +5,6 @@ import { Notifications } from './notifications.entity';
 import { NotificationType } from '../common/enums/notification-type.enum';
 import { NotificationStatus } from '../common/enums/notification-status.enum';
 
-
 const mockRepository = () => ({
   create: jest.fn(),
   save: jest.fn(),
@@ -20,7 +19,10 @@ describe('NotificationsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         NotificationsService,
-        { provide: getRepositoryToken(Notifications), useFactory: mockRepository },
+        {
+          provide: getRepositoryToken(Notifications),
+          useFactory: mockRepository,
+        },
       ],
     }).compile();
 
@@ -45,7 +47,11 @@ describe('NotificationsService', () => {
       repo.create.mockReturnValue(entity);
       repo.save.mockResolvedValue(entity);
 
-      const result = await service.create(5, NotificationType.TICKET_ISSUED, 'Your ticket is ready');
+      const result = await service.create(
+        5,
+        NotificationType.TICKET_ISSUED,
+        'Your ticket is ready',
+      );
 
       expect(repo.create).toHaveBeenCalledWith({
         user: { id: 5 },
@@ -61,7 +67,12 @@ describe('NotificationsService', () => {
       repo.create.mockReturnValue(entity);
       repo.save.mockResolvedValue(entity);
 
-      await service.create(5, NotificationType.REGISTRATION, 'Welcome email failed', NotificationStatus.FAILED);
+      await service.create(
+        5,
+        NotificationType.REGISTRATION,
+        'Welcome email failed',
+        NotificationStatus.FAILED,
+      );
 
       expect(repo.create).toHaveBeenCalledWith(
         expect.objectContaining({ status: NotificationStatus.FAILED }),

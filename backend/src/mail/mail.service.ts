@@ -7,17 +7,26 @@ export class MailService {
 
   constructor(private readonly mailerService: MailerService) {}
 
-  private async safeSend(options: { to: string; subject: string; text: string }): Promise<void> {
+  private async safeSend(options: {
+    to: string;
+    subject: string;
+    text: string;
+  }): Promise<void> {
     const TIMEOUT_MS = 8000;
     try {
       await Promise.race([
         this.mailerService.sendMail(options),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Mail send timed out')), TIMEOUT_MS),
+          setTimeout(
+            () => reject(new Error('Mail send timed out')),
+            TIMEOUT_MS,
+          ),
         ),
       ]);
     } catch (err) {
-      this.logger.warn(`Failed to send email to ${options.to}: ${(err as Error).message}`);
+      this.logger.warn(
+        `Failed to send email to ${options.to}: ${(err as Error).message}`,
+      );
     }
   }
 
@@ -37,7 +46,11 @@ export class MailService {
     });
   }
 
-  async sendTicketReadyEmail(to: string, ticketNumber: string, queueName: string) {
+  async sendTicketReadyEmail(
+    to: string,
+    ticketNumber: string,
+    queueName: string,
+  ) {
     await this.safeSend({
       to,
       subject: `Your Ticket is Ready – #${ticketNumber}`,

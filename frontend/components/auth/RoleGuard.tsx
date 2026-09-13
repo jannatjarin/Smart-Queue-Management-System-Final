@@ -1,12 +1,12 @@
 "use client";
 
 import {
-    useEffect,
-    useState,
+ useEffect,
+ useState,
 } from "react";
 
 import {
-    useRouter,
+ useRouter,
 } from "next/navigation";
 
 import api from "@/lib/axios";
@@ -14,174 +14,174 @@ import api from "@/lib/axios";
 
 interface UserData {
 
-    id: number;
-    email: string;
-    role: string;
+ id: number;
+ email: string;
+ role: string;
 
 }
 
 
 interface RoleGuardProps {
 
-    children: React.ReactNode;
-    allowedRole: string;
+ children: React.ReactNode;
+ allowedRole: string;
 
 }
 
 
 export default function RoleGuard(
-    {
-        children,
-        allowedRole,
-    }: RoleGuardProps
+ {
+ children,
+ allowedRole,
+ }: RoleGuardProps
 ) {
 
-    const router =
-        useRouter();
+ const router =
+ useRouter();
 
-    const [allowed, setAllowed] =
-        useState(false);
-
-
-    useEffect(
-        () => {
-
-            const checkRole =
-                async () => {
-
-                    const token =
-                        localStorage.getItem(
-                            "access_token"
-                        );
-
-                    if (!token) {
-
-                        router.replace(
-                            "/login"
-                        );
-
-                        return;
-
-                    }
-
-                    try {
-
-                        const response =
-                            await api.get<UserData>(
-                                "/users/me"
-                            );
-
-                        const role =
-                            response.data.role;
-
-                        if (
-                            role ==
-                            allowedRole
-                        ) {
-
-                            setAllowed(
-                                true
-                            );
-
-                            return;
-
-                        }
-
-                        setAllowed(
-                            false
-                        );
+ const [allowed, setAllowed] =
+ useState(false);
 
 
-                        if (
-                            role == "admin"
-                        ) {
+ useEffect(
+ () => {
 
-                            router.replace(
-                                "/admin/dashboard"
-                            );
+ const checkRole =
+ async () => {
 
-                        }
+ const token =
+ localStorage.getItem(
+ "access_token"
+ );
 
-                        else if (
-                            role == "staff"
-                        ) {
+ if (!token) {
 
-                            router.replace(
-                                "/staff/dashboard"
-                            );
+ router.replace(
+ "/login"
+ );
 
-                        }
+ return;
 
-                        else if (
-                            role == "customer"
-                        ) {
+ }
 
-                            router.replace(
-                                "/customer/dashboard"
-                            );
+ try {
 
-                        }
+ const response =
+ await api.get<UserData>(
+ "/users/me"
+ );
 
-                        else {
+ const role =
+ response.data.role;
 
-                            router.replace(
-                                "/login"
-                            );
+ if (
+ role ==
+ allowedRole
+ ) {
 
-                        }
+ setAllowed(
+ true
+ );
 
-                    }
+ return;
 
-                    catch {
+ }
 
-                        localStorage.removeItem(
-                            "access_token"
-                        );
-
-                        localStorage.removeItem(
-                            "refresh_token"
-                        );
-
-                        router.replace(
-                            "/login"
-                        );
-
-                    }
-
-                };
+ setAllowed(
+ false
+ );
 
 
-            checkRole();
+ if (
+ role == "admin"
+ ) {
 
-        },
-        [
-            allowedRole,
-            router,
-        ]
-    );
+ router.replace(
+ "/admin/dashboard"
+ );
+
+ }
+
+ else if (
+ role == "staff"
+ ) {
+
+ router.replace(
+ "/staff/dashboard"
+ );
+
+ }
+
+ else if (
+ role == "customer"
+ ) {
+
+ router.replace(
+ "/customer/dashboard"
+ );
+
+ }
+
+ else {
+
+ router.replace(
+ "/login"
+ );
+
+ }
+
+ }
+
+ catch {
+
+ localStorage.removeItem(
+ "access_token"
+ );
+
+ localStorage.removeItem(
+ "refresh_token"
+ );
+
+ router.replace(
+ "/login"
+ );
+
+ }
+
+ };
 
 
-    if (!allowed) {
+ checkRole();
 
-        return (
-            <div className="flex items-center justify-center p-8">
-
-                <span className="loading loading-spinner"></span>
-
-                <span className="ml-3">
-                    Checking access...
-                </span>
-
-            </div>
-        );
-
-    }
+ },
+ [
+ allowedRole,
+ router,
+ ]
+ );
 
 
-    return (
-        <>
-            {children}
-        </>
-    );
+ if (!allowed) {
+
+ return (
+ <div className="flex items-center justify-center p-8">
+
+ <span className="loading loading-spinner"></span>
+
+ <span className="ml-3">
+ Checking access...
+ </span>
+
+ </div>
+ );
+
+ }
+
+
+ return (
+ <>
+ {children}
+ </>
+ );
 
 }

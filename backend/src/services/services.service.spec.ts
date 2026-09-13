@@ -1,369 +1,169 @@
-import {
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
-import {
-  Test,
-  TestingModule,
-} from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 
-import {
-  getRepositoryToken,
-} from '@nestjs/typeorm';
+import { getRepositoryToken } from '@nestjs/typeorm';
 
-import {
-  ServicesService,
-} from './services.service';
+import { ServicesService } from './services.service';
 
-import {
-  Services,
-} from './services.entity';
+import { Services } from './services.entity';
 
-import {
-  Queues,
-} from '../queues/queues.entity';
+import { Queues } from '../queues/queues.entity';
 
-import {
-  Tickets,
-} from '../tickets/tickets.entity';
+import { Tickets } from '../tickets/tickets.entity';
 
-import {
-  QueueStatus,
-} from '../common/enums/queue-status.enum';
+import { QueueStatus } from '../common/enums/queue-status.enum';
 
-const mockRepository =
-  () => (
-    {
-      create:
-        jest.fn(),
+const mockRepository = () => ({
+  create: jest.fn(),
 
-      save:
-        jest.fn(),
+  save: jest.fn(),
 
-      find:
-        jest.fn(),
+  find: jest.fn(),
 
-      findOne:
-        jest.fn(),
+  findOne: jest.fn(),
 
-      remove:
-        jest.fn(),
+  remove: jest.fn(),
 
-      count:
-        jest.fn(),
-    }
-  );
+  count: jest.fn(),
+});
 
-describe(
-  'ServicesService',
-  () => {
+describe('ServicesService', () => {
+  let service: ServicesService;
 
-    let service:
-      ServicesService;
+  let servicesRepo: ReturnType<typeof mockRepository>;
 
-    let servicesRepo:
-      ReturnType<
-        typeof mockRepository
-      >;
+  let queuesRepo: ReturnType<typeof mockRepository>;
 
-    let queuesRepo:
-      ReturnType<
-        typeof mockRepository
-      >;
+  let ticketsRepo: ReturnType<typeof mockRepository>;
 
-    let ticketsRepo:
-      ReturnType<
-        typeof mockRepository
-      >;
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        ServicesService,
 
-    beforeEach(
-      async () => {
+        {
+          provide: getRepositoryToken(Services),
 
-        const module:
-          TestingModule =
-          await Test
-            .createTestingModule(
-              {
-                providers: [
-                  ServicesService,
+          useFactory: mockRepository,
+        },
 
-                  {
-                    provide:
-                      getRepositoryToken(
-                        Services,
-                      ),
+        {
+          provide: getRepositoryToken(Queues),
 
-                    useFactory:
-                      mockRepository,
-                  },
+          useFactory: mockRepository,
+        },
 
-                  {
-                    provide:
-                      getRepositoryToken(
-                        Queues,
-                      ),
+        {
+          provide: getRepositoryToken(Tickets),
 
-                    useFactory:
-                      mockRepository,
-                  },
+          useFactory: mockRepository,
+        },
+      ],
+    }).compile();
 
-                  {
-                    provide:
-                      getRepositoryToken(
-                        Tickets,
-                      ),
+    service = module.get<ServicesService>(ServicesService);
 
-                    useFactory:
-                      mockRepository,
-                  },
-                ],
-              },
-            )
-            .compile();
+    servicesRepo = module.get(getRepositoryToken(Services));
 
-        service =
-          module.get<ServicesService>(
-            ServicesService,
-          );
+    queuesRepo = module.get(getRepositoryToken(Queues));
 
-        servicesRepo =
-          module.get(
-            getRepositoryToken(
-              Services,
-            ),
-          );
+    ticketsRepo = module.get(getRepositoryToken(Tickets));
+  });
 
-        queuesRepo =
-          module.get(
-            getRepositoryToken(
-              Queues,
-            ),
-          );
+  it('should be defined', () => {
+    expect(service).toBeDefined();
+  });
 
-        ticketsRepo =
-          module.get(
-            getRepositoryToken(
-              Tickets,
-            ),
-          );
+  it('creates a service', async () => {
+    const dto = {
+      name: 'General Service',
 
+      description: 'General',
+
+      estimatedTime: 15,
+
+      department: 'Support',
+    };
+
+    servicesRepo.create.mockReturnValue(dto);
+
+    servicesRepo.save.mockResolvedValue(dto);
+
+    const result = await service.create(dto);
+
+    expect(result).toEqual(dto);
+  });
+
+  it('throws when service does not exist', async () => {
+    servicesRepo.findOne.mockResolvedValue(null);
+
+    await expect(service.findOne(99)).rejects.toThrow(NotFoundException);
+  });
+
+  it('deactivates service and closes its queues', async () => {
+    const serviceEntity = {
+      id: 1,
+      isActive: true,
+      queues: [],
+    };
+
+    const queues = [
+      {
+        id: 1,
+        status: QueueStatus.OPEN,
       },
-    );
+    ];
 
-    it(
-      'should be defined',
-      () => {
+    servicesRepo.findOne.mockResolvedValue(serviceEntity);
 
-        expect(
-          service,
-        ).toBeDefined();
+    /*
+     * This mock is harmless if your current
+     * deactivate() version does not yet call
+     * ticketsRepository.count().
+     */
+    ticketsRepo.count.mockResolvedValue(0);
 
-      },
-    );
+    servicesRepo.save.mockImplementation(async (value) => value);
 
-    it(
-      'creates a service',
-      async () => {
+    queuesRepo.find.mockResolvedValue(queues);
 
-        const dto = {
-          name:
-            'General Service',
+    queuesRepo.save.mockResolvedValue(queues);
 
-          description:
-            'General',
+    const result = await service.deactivate(1);
 
-          estimatedTime:
-            15,
+    expect(result.isActive).toBe(false);
 
-          department:
-            'Support',
-        };
+    expect(queues[0].status).toBe(QueueStatus.CLOSED);
+  });
 
-        servicesRepo.create
-          .mockReturnValue(
-            dto,
-          );
+  it('does not delete a service with queues', async () => {
+    servicesRepo.findOne.mockResolvedValue({
+      id: 1,
+      queues: [],
+    });
 
-        servicesRepo.save
-          .mockResolvedValue(
-            dto,
-          );
+    queuesRepo.count.mockResolvedValue(1);
 
-        const result =
-          await service.create(
-            dto,
-          );
+    ticketsRepo.count.mockResolvedValue(0);
 
-        expect(
-          result,
-        ).toEqual(
-          dto,
-        );
+    await expect(service.remove(1)).rejects.toThrow(BadRequestException);
+  });
 
-      },
-    );
+  it('deletes an unused service', async () => {
+    const serviceEntity = {
+      id: 1,
+      queues: [],
+    };
 
-    it(
-      'throws when service does not exist',
-      async () => {
+    servicesRepo.findOne.mockResolvedValue(serviceEntity);
 
-        servicesRepo.findOne
-          .mockResolvedValue(
-            null,
-          );
+    queuesRepo.count.mockResolvedValue(0);
 
-        await expect(
-          service.findOne(
-            99,
-          ),
-        ).rejects.toThrow(
-          NotFoundException,
-        );
+    ticketsRepo.count.mockResolvedValue(0);
 
-      },
-    );
+    await service.remove(1);
 
-    it(
-      'deactivates service and closes its queues',
-      async () => {
-
-        const serviceEntity = {
-          id: 1,
-          isActive: true,
-          queues: [],
-        };
-
-        const queues = [
-          {
-            id: 1,
-            status:
-              QueueStatus.OPEN,
-          },
-        ];
-
-        servicesRepo.findOne
-          .mockResolvedValue(
-            serviceEntity,
-          );
-
-        /*
-         * This mock is harmless if your current
-         * deactivate() version does not yet call
-         * ticketsRepository.count().
-         */
-        ticketsRepo.count
-          .mockResolvedValue(
-            0,
-          );
-
-        servicesRepo.save
-          .mockImplementation(
-            async (
-              value,
-            ) =>
-              value,
-          );
-
-        queuesRepo.find
-          .mockResolvedValue(
-            queues,
-          );
-
-        queuesRepo.save
-          .mockResolvedValue(
-            queues,
-          );
-
-        const result =
-          await service.deactivate(
-            1,
-          );
-
-        expect(
-          result.isActive,
-        ).toBe(
-          false,
-        );
-
-        expect(
-          queues[0].status,
-        ).toBe(
-          QueueStatus.CLOSED,
-        );
-
-      },
-    );
-
-    it(
-      'does not delete a service with queues',
-      async () => {
-
-        servicesRepo.findOne
-          .mockResolvedValue(
-            {
-              id: 1,
-              queues: [],
-            },
-          );
-
-        queuesRepo.count
-          .mockResolvedValue(
-            1,
-          );
-
-        ticketsRepo.count
-          .mockResolvedValue(
-            0,
-          );
-
-        await expect(
-          service.remove(
-            1,
-          ),
-        ).rejects.toThrow(
-          BadRequestException,
-        );
-
-      },
-    );
-
-    it(
-      'deletes an unused service',
-      async () => {
-
-        const serviceEntity = {
-          id: 1,
-          queues: [],
-        };
-
-        servicesRepo.findOne
-          .mockResolvedValue(
-            serviceEntity,
-          );
-
-        queuesRepo.count
-          .mockResolvedValue(
-            0,
-          );
-
-        ticketsRepo.count
-          .mockResolvedValue(
-            0,
-          );
-
-        await service.remove(
-          1,
-        );
-
-        expect(
-          servicesRepo.remove,
-        ).toHaveBeenCalledWith(
-          serviceEntity,
-        );
-
-      },
-    );
-
-  },
-);
+    expect(servicesRepo.remove).toHaveBeenCalledWith(serviceEntity);
+  });
+});

@@ -2,18 +2,20 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationsController } from './notifications.controller';
 import { NotificationsService } from './notifications.service';
 
- const mockNotificationsService = () => ({
+const mockNotificationsService = () => ({
   findMyNotifications: jest.fn(),
- });
+});
 
- describe('NotificationsController', () => {
+describe('NotificationsController', () => {
   let controller: NotificationsController;
   let service: ReturnType<typeof mockNotificationsService>;
 
- beforeEach(async () => {
+  beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [NotificationsController],
-      providers: [{ provide: NotificationsService, useFactory: mockNotificationsService }],
+      providers: [
+        { provide: NotificationsService, useFactory: mockNotificationsService },
+      ],
     }).compile();
 
     controller = module.get<NotificationsController>(NotificationsController);
@@ -28,5 +30,5 @@ import { NotificationsService } from './notifications.service';
     await controller.getMyNotifications(5);
 
     expect(service.findMyNotifications).toHaveBeenCalledWith(5);
-    });
   });
+});

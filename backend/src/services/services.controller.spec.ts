@@ -18,7 +18,9 @@ describe('ServicesController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ServicesController],
-      providers: [{ provide: ServicesService, useFactory: mockServicesService }],
+      providers: [
+        { provide: ServicesService, useFactory: mockServicesService },
+      ],
     }).compile();
 
     controller = module.get<ServicesController>(ServicesController);
@@ -30,8 +32,12 @@ describe('ServicesController', () => {
   });
 
   it('create delegates to the service', async () => {
-    const dto = { name: 'Passport Renewal', estimatedTime: 15, department: 'Immigration' };
-    await controller.create(dto as any);
+    const dto = {
+      name: 'Passport Renewal',
+      estimatedTime: 15,
+      department: 'Immigration',
+    };
+    await controller.create(dto);
     expect(service.create).toHaveBeenCalledWith(dto);
   });
 

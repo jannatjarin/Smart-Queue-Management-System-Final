@@ -10,53 +10,39 @@ import { NotificationStatus } from '../common/enums/notification-status.enum';
 export class NotificationsService {
   constructor(
     @InjectRepository(Notifications)
-    private readonly notificationsRepository:
-      Repository<Notifications>,
+    private readonly notificationsRepository: Repository<Notifications>,
   ) {}
 
   async create(
     userId: number,
     type: NotificationType,
     message: string,
-    status:
-      NotificationStatus =
-      NotificationStatus.SENT,
+    status: NotificationStatus = NotificationStatus.SENT,
   ): Promise<Notifications> {
+    const notification = this.notificationsRepository.create({
+      user: {
+        id: userId,
+      } as Users,
 
-    const notification =
-      this.notificationsRepository.create(
-        {
-          user: {
-            id: userId,
-          } as Users,
+      type,
+      message,
+      status,
+    });
 
-          type,
-          message,
-          status,
-        },
-      );
-
-    return this.notificationsRepository.save(
-      notification,
-    );
+    return this.notificationsRepository.save(notification);
   }
 
-  async findMyNotifications(
-    userId: number,
-  ): Promise<Notifications[]> {
-
-    return this.notificationsRepository.find(
-      {
-        where: {
-          user: {
-            id: userId,
-          },
-        },
-
-        order: {
-          sentAt: 'DESC',
+  async findMyNotifications(userId: number): Promise<Notifications[]> {
+    return this.notificationsRepository.find({
+      where: {
+        user: {
+          id: userId,
         },
       },
-    );
+
+      order: {
+        sentAt: 'DESC',
+      },
+    });
   }
 }

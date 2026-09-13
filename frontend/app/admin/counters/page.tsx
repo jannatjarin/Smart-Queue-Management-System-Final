@@ -1,10 +1,10 @@
 "use client";
 
 import {
-    ChangeEvent,
-    FormEvent,
-    useEffect,
-    useState,
+ ChangeEvent,
+ FormEvent,
+ useEffect,
+ useState,
 } from "react";
 
 import axios from "axios";
@@ -14,890 +14,891 @@ import api from "@/lib/axios";
 
 interface Service {
 
-    id: number;
-    name: string;
+ id: number;
+ name: string;
 
 }
 
 
 interface Staff {
 
-    id: number;
-    fullName: string;
-    email: string;
+ id: number;
+ fullName: string;
+ email: string;
 
 }
 
 
 interface UsersResponse {
 
-    data: Staff[];
-    total: number;
-    page: number;
-    limit: number;
+ data: Staff[];
+ total: number;
+ page: number;
+ limit: number;
 
 }
 
 
 interface Counter {
 
-    id: number;
-    name: string;
-    status: string;
-    staff: Staff | null;
-    services: Service[];
+ id: number;
+ name: string;
+ status: string;
+ staff: Staff | null;
+ services: Service[];
 
 }
 
 
 export default function AdminCountersPage() {
 
-    const [counters, setCounters] =
-        useState<Counter[]>([]);
-
-    const [services, setServices] =
-        useState<Service[]>([]);
-
-    const [staff, setStaff] =
-        useState<Staff[]>([]);
-
-    const [formData, setFormData] =
-        useState(
-            {
-                name: "",
-                serviceIds: [] as number[],
-            }
-        );
+ const [counters, setCounters] =
+ useState<Counter[]>([]);
+
+ const [services, setServices] =
+ useState<Service[]>([]);
+
+ const [staff, setStaff] =
+ useState<Staff[]>([]);
+
+ const [formData, setFormData] =
+ useState(
+ {
+ name: "",
+ serviceIds: [] as number[],
+ }
+ );
 
-    const [refresh, setRefresh] =
-        useState(0);
+ const [refresh, setRefresh] =
+ useState(0);
 
-    const [
-        responseMsg,
-        setResponseMsg
-    ] =
-        useState("");
+ const [
+ responseMsg,
+ setResponseMsg
+ ] =
+ useState("");
 
-    const [err, setErr] =
-        useState("");
+ const [err, setErr] =
+ useState("");
 
-    const [loading, setLoading] =
-        useState(true);
+ const [loading, setLoading] =
+ useState(true);
 
-    const [creating, setCreating] =
-        useState(false);
+ const [creating, setCreating] =
+ useState(false);
 
 
-    useEffect(
-        () => {
+ useEffect(
+ () => {
 
-            const getData =
-                async () => {
+ const getData =
+ async () => {
 
-                    try {
+ try {
 
-                        const countersResponse =
-                            await api.get<
-                                Counter[]
-                            >(
-                                "/counters"
-                            );
+ const countersResponse =
+ await api.get<
+ Counter[]
+ >(
+ "/counters"
+ );
 
-                        const servicesResponse =
-                            await api.get<
-                                Service[]
-                            >(
-                                "/services"
-                            );
+ const servicesResponse =
+ await api.get<
+ Service[]
+ >(
+ "/services"
+ );
 
-                        const staffResponse =
-                            await api.get<
-                                UsersResponse
-                            >(
-                                "/users?role=staff&limit=100"
-                            );
+ const staffResponse =
+ await api.get<
+ UsersResponse
+ >(
+ "/users?role=staff&limit=100"
+ );
 
 
-                        setCounters(
-                            countersResponse.data
-                        );
+ setCounters(
+ countersResponse.data
+ );
 
-                        setServices(
-                            servicesResponse.data
-                        );
+ setServices(
+ servicesResponse.data
+ );
 
-                        setStaff(
-                            staffResponse.data.data
-                        );
+ setStaff(
+ staffResponse.data.data
+ );
 
-                        setErr("");
+ setErr("");
 
-                    }
+ }
 
-                    catch (error) {
+ catch (error) {
 
-                        if (
-                            axios.isAxiosError(
-                                error
-                            ) &&
-                            error.response
-                                ?.data
-                                ?.message
-                        ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                            const message =
-                                error.response
-                                    .data
-                                    .message;
+ const message =
+ error.response
+ .data
+ .message;
 
-                            setErr(
-                                Array.isArray(
-                                    message
-                                )
-                                    ? message.join(
-                                        ", "
-                                    )
-                                    : message
-                            );
+ setErr(
+ Array.isArray(
+ message
+ )
+ ? message.join(
+ ", "
+ )
+ : message
+ );
 
-                        }
+ }
 
-                        else {
+ else {
 
-                            setErr(
-                                "Could not load counter information"
-                            );
+ setErr(
+ "Could not load counter information"
+ );
 
-                        }
+ }
 
-                    }
+ }
 
-                    finally {
+ finally {
 
-                        setLoading(
-                            false
-                        );
+ setLoading(
+ false
+ );
 
-                    }
+ }
 
-                };
+ };
 
 
-            getData();
+ getData();
 
-        },
-        [refresh]
-    );
+ },
+ [refresh]
+ );
 
 
-    const onChangeHandle = (
-        e:
-            ChangeEvent<
-                HTMLInputElement
-            >
-    ) => {
+ const onChangeHandle = (
+ e:
+ ChangeEvent<
+ HTMLInputElement
+ >
+ ) => {
 
-        const {
-            name,
-            value,
-        } = e.target;
+ const {
+ name,
+ value,
+ } = e.target;
 
-        setFormData(
-            {
-                ...formData,
-                [name]: value,
-            }
-        );
+ setFormData(
+ {
+ ...formData,
+ [name]: value,
+ }
+ );
 
-    };
+ };
 
 
-    const handleServiceChange = (
-        e:
-            ChangeEvent<
-                HTMLInputElement
-            >
-    ) => {
+ const handleServiceChange = (
+ e:
+ ChangeEvent<
+ HTMLInputElement
+ >
+ ) => {
 
-        const serviceId =
-            Number(
-                e.target.value
-            );
+ const serviceId =
+ Number(
+ e.target.value
+ );
 
-        const checked =
-            e.target.checked;
+ const checked =
+ e.target.checked;
 
 
-        if (checked) {
+ if (checked) {
 
-            setFormData(
-                {
-                    ...formData,
+ setFormData(
+ {
+ ...formData,
 
-                    serviceIds: [
-                        ...formData
-                            .serviceIds,
+ serviceIds: [
+ ...formData
+ .serviceIds,
 
-                        serviceId,
-                    ],
-                }
-            );
+ serviceId,
+ ],
+ }
+ );
 
-            return;
+ return;
 
-        }
+ }
 
 
-        setFormData(
-            {
-                ...formData,
+ setFormData(
+ {
+ ...formData,
 
-                serviceIds:
-                    formData
-                        .serviceIds
-                        .filter(
-                            (id) =>
-                                id !=
-                                serviceId
-                        ),
-            }
-        );
+ serviceIds:
+ formData
+ .serviceIds
+ .filter(
+ (id) =>
+ id !=
+ serviceId
+ ),
+ }
+ );
 
-    };
+ };
 
 
-    const onSubmitHandle =
-        async (
-            e:
-                FormEvent<
-                    HTMLFormElement
-                >
-        ) => {
+ const onSubmitHandle =
+ async (
+ e:
+ FormEvent<
+ HTMLFormElement
+ >
+ ) => {
 
-            e.preventDefault();
+ e.preventDefault();
 
-            setResponseMsg("");
-            setErr("");
+ setResponseMsg("");
+ setErr("");
 
 
-            if (
-                formData
-                    .serviceIds
-                    .length == 0
-            ) {
+ if (
+ formData
+ .serviceIds
+ .length == 0
+ ) {
 
-                setErr(
-                    "Select at least one service"
-                );
+ setErr(
+ "Select at least one service"
+ );
 
-                return;
+ return;
 
-            }
+ }
 
 
-            setCreating(
-                true
-            );
+ setCreating(
+ true
+ );
 
 
-            try {
+ try {
 
-                await api.post(
-                    "/counters",
-                    {
-                        name:
-                            formData.name,
+ await api.post(
+ "/counters",
+ {
+ name:
+ formData.name,
 
-                        serviceIds:
-                            formData
-                                .serviceIds,
-                    }
-                );
+ serviceIds:
+ formData
+ .serviceIds,
+ }
+ );
 
 
-                setResponseMsg(
-                    "Counter created successfully"
-                );
+ setResponseMsg(
+ "Counter created successfully"
+ );
 
 
-                setFormData(
-                    {
-                        name: "",
-                        serviceIds: [],
-                    }
-                );
+ setFormData(
+ {
+ name: "",
+ serviceIds: [],
+ }
+ );
 
 
-                setRefresh(
-                    (value) =>
-                        value + 1
-                );
+ setRefresh(
+ (value) =>
+ value + 1
+ );
 
-            }
+ }
 
-            catch (error) {
+ catch (error) {
 
-                if (
-                    axios.isAxiosError(
-                        error
-                    ) &&
-                    error.response
-                        ?.data
-                        ?.message
-                ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                    const message =
-                        error.response
-                            .data
-                            .message;
+ const message =
+ error.response
+ .data
+ .message;
 
-                    setErr(
-                        Array.isArray(
-                            message
-                        )
-                            ? message.join(
-                                ", "
-                            )
-                            : message
-                    );
+ setErr(
+ Array.isArray(
+ message
+ )
+ ? message.join(
+ ", "
+ )
+ : message
+ );
 
-                }
+ }
 
-                else {
+ else {
 
-                    setErr(
-                        "Could not create counter"
-                    );
+ setErr(
+ "Could not create counter"
+ );
 
-                }
+ }
 
-            }
+ }
 
-            finally {
+ finally {
 
-                setCreating(
-                    false
-                );
+ setCreating(
+ false
+ );
 
-            }
+ }
 
-        };
+ };
 
 
-    const assignStaff =
-        async (
-            counterId: number,
-            staffId: string
-        ) => {
+ const assignStaff =
+ async (
+ counterId: number,
+ staffId: string
+ ) => {
 
-            if (!staffId) {
+ if (!staffId) {
 
-                return;
+ return;
 
-            }
+ }
 
 
-            setResponseMsg("");
-            setErr("");
+ setResponseMsg("");
+ setErr("");
 
 
-            try {
+ try {
 
-                await api.patch(
-                    `/counters/${counterId}/assign-staff`,
-                    {
-                        staffId:
-                            Number(
-                                staffId
-                            ),
-                    }
-                );
+ await api.patch(
+ `/counters/${counterId}/assign-staff`,
+ {
+ staffId:
+ Number(
+ staffId
+ ),
+ }
+ );
 
 
-                setResponseMsg(
-                    "Staff assigned successfully"
-                );
+ setResponseMsg(
+ "Staff assigned successfully"
+ );
 
 
-                setRefresh(
-                    (value) =>
-                        value + 1
-                );
+ setRefresh(
+ (value) =>
+ value + 1
+ );
 
-            }
+ }
 
-            catch (error) {
+ catch (error) {
 
-                if (
-                    axios.isAxiosError(
-                        error
-                    ) &&
-                    error.response
-                        ?.data
-                        ?.message
-                ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                    setErr(
-                        error.response
-                            .data
-                            .message
-                    );
+ setErr(
+ error.response
+ .data
+ .message
+ );
 
-                }
+ }
 
-                else {
+ else {
 
-                    setErr(
-                        "Could not assign staff"
-                    );
+ setErr(
+ "Could not assign staff"
+ );
 
-                }
+ }
 
-            }
+ }
 
-        };
+ };
 
 
-    const updateStatus =
-        async (
-            counterId: number,
-            status: string
-        ) => {
+ const updateStatus =
+ async (
+ counterId: number,
+ status: string
+ ) => {
 
-            setResponseMsg("");
-            setErr("");
+ setResponseMsg("");
+ setErr("");
 
 
-            try {
+ try {
 
-                await api.patch(
-                    `/counters/${counterId}/status`,
-                    {
-                        status,
-                    }
-                );
+ await api.patch(
+ `/counters/${counterId}/status`,
+ {
+ status,
+ }
+ );
 
 
-                setResponseMsg(
-                    "Counter status updated successfully"
-                );
+ setResponseMsg(
+ "Counter status updated successfully"
+ );
 
 
-                setRefresh(
-                    (value) =>
-                        value + 1
-                );
+ setRefresh(
+ (value) =>
+ value + 1
+ );
 
-            }
+ }
 
-            catch (error) {
+ catch (error) {
 
-                if (
-                    axios.isAxiosError(
-                        error
-                    ) &&
-                    error.response
-                        ?.data
-                        ?.message
-                ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                    setErr(
-                        error.response
-                            .data
-                            .message
-                    );
+ setErr(
+ error.response
+ .data
+ .message
+ );
 
-                }
+ }
 
-                else {
+ else {
 
-                    setErr(
-                        "Could not update counter status"
-                    );
+ setErr(
+ "Could not update counter status"
+ );
 
-                }
+ }
 
-            }
+ }
 
-        };
+ };
 
 
-    if (loading) {
+ if (loading) {
 
-        return (
-            <div className="flex items-center justify-center p-10">
+ return (
+ <div className="flex items-center justify-center p-10">
 
-                <span className="loading loading-spinner"></span>
+ <span className="loading loading-spinner"></span>
 
-                <span className="ml-3">
-                    Loading counters...
-                </span>
+ <span className="ml-3">
+ Loading counters...
+ </span>
 
-            </div>
-        );
+ </div>
+ );
 
-    }
+ }
 
 
-    return (
-        <div className="max-w-7xl mx-auto py-8">
+ return (
+ <div className="max-w-7xl mx-auto py-8">
 
-            <h1 className="text-3xl font-bold mb-2">
-                Counter Management
-            </h1>
+ <h1 className="text-3xl font-bold mb-2">
+ Counter Management
+ </h1>
 
 
-            <p className="mb-6">
-                Create counters, assign Staff and manage counter status.
-            </p>
+ <p className="mb-6">
+ Create counters, assign Staff and manage counter status.
+ </p>
 
 
-            {
-                responseMsg &&
-                <div className="alert alert-success mb-4">
+ {
+ responseMsg &&
+ <div className="alert alert-success mb-4">
 
-                    <span>
-                        {responseMsg}
-                    </span>
+ <span>
+ {responseMsg}
+ </span>
 
-                </div>
-            }
+ </div>
+ }
 
 
-            {
-                err &&
-                <div className="alert alert-error mb-4">
+ {
+ err &&
+ <div className="alert alert-error mb-4">
 
-                    <span>
-                        {err}
-                    </span>
+ <span>
+ {err}
+ </span>
 
-                </div>
-            }
+ </div>
+ }
 
 
-            <div className="card bg-base-100 shadow border mb-8">
+ <div className="card bg-white shadow border mb-8">
 
-                <div className="card-body">
+ <div className="card-body">
 
-                    <h2 className="card-title">
-                        Create Counter
-                    </h2>
+ <h2 className="card-title">
+ Create Counter
+ </h2>
 
 
-                    <form
-                        onSubmit={
-                            onSubmitHandle
-                        }
-                    >
+ <form
+ onSubmit={
+ onSubmitHandle
+ }
+ >
 
-                        <label className="label">
-                            Counter Name
-                        </label>
+ <label className="label">
+ Counter Name
+ </label>
 
 
-                        <input
-                            type="text"
-                            name="name"
-                            className="input input-bordered w-full"
-                            value={
-                                formData.name
-                            }
-                            onChange={
-                                onChangeHandle
-                            }
-                            required
-                        />
+ <input
+ type="text"
+ name="name"
+ className="input input-bordered w-full"
+ value={
+ formData.name
+ }
+ onChange={
+ onChangeHandle
+ }
+ required
+ />
 
 
-                        <h3 className="font-semibold mt-5 mb-2">
-                            Services
-                        </h3>
+ <h3 className="font-semibold mt-5 mb-2">
+ Services
+ </h3>
 
 
-                        <div className="grid md:grid-cols-3 gap-3">
+ <div className="grid md:grid-cols-3 gap-3">
 
-                            {
-                                services.map(
-                                    (
-                                        service
-                                    ) => (
+ {
+ services.map(
+ (
+ service
+ ) => (
 
-                                        <label
-                                            key={
-                                                service.id
-                                            }
-                                            className="flex items-center gap-2"
-                                        >
+ <label
+ key={
+ service.id
+ }
+ className="flex items-center gap-2"
+ >
 
-                                            <input
-                                                type="checkbox"
-                                                className="checkbox"
-                                                value={
-                                                    service.id
-                                                }
-                                                checked={
-                                                    formData
-                                                        .serviceIds
-                                                        .includes(
-                                                            service.id
-                                                        )
-                                                }
-                                                onChange={
-                                                    handleServiceChange
-                                                }
-                                            />
+ <input
+ type="checkbox"
+ className="checkbox"
+ value={
+ service.id
+ }
+ checked={
+ formData
+ .serviceIds
+ .includes(
+ service.id
+ )
+ }
+ onChange={
+ handleServiceChange
+ }
+ />
 
-                                            {
-                                                service.name
-                                            }
+ {
+ service.name
+ }
 
-                                        </label>
+ </label>
 
-                                    )
-                                )
-                            }
+ )
+ )
+ }
 
-                        </div>
+ </div>
 
 
-                        <button
-                            type="submit"
-                            className="btn btn-primary mt-6"
-                            disabled={
-                                creating
-                            }
-                        >
+ <button
+ type="submit"
+ className="btn btn-primary mt-6"
+ disabled={
+ creating
+ }
+ >
 
-                            {
-                                creating
-                                    ? "Creating..."
-                                    : "Create Counter"
-                            }
+ {
+ creating
+ ? "Creating..."
+ : "Create Counter"
+ }
 
-                        </button>
+ </button>
 
-                    </form>
+ </form>
 
-                </div>
+ </div>
 
-            </div>
+ </div>
 
 
-            {
-                counters.length == 0
-                    ? (
-                        <div className="alert">
+ {
+ counters.length == 0
+ ? (
+ <div className="alert">
 
-                            <span>
-                                No counters found.
-                            </span>
+ <span>
+ No counters found.
+ </span>
 
-                        </div>
-                    )
-                    : (
-                        <div className="overflow-x-auto">
+ </div>
+ )
+ : (
+ <div className="overflow-x-auto">
 
-                            <table className="table table-zebra">
+ <table className="table ">
 
-                                <thead>
+ <thead>
 
-                                    <tr>
-                                        <th>
-                                            ID
-                                        </th>
+ <tr>
+ <th>
+ ID
+ </th>
 
-                                        <th>
-                                            Name
-                                        </th>
+ <th>
+ Name
+ </th>
 
-                                        <th>
-                                            Services
-                                        </th>
+ <th>
+ Services
+ </th>
 
-                                        <th>
-                                            Staff
-                                        </th>
+ <th>
+ Staff
+ </th>
 
-                                        <th>
-                                            Status
-                                        </th>
-                                    </tr>
+ <th>
+ Status
+ </th>
+ </tr>
 
-                                </thead>
+ </thead>
 
 
-                                <tbody>
+ <tbody>
 
-                                    {
-                                        counters.map(
-                                            (
-                                                counter
-                                            ) => (
+ {
+ counters.map(
+ (
+ counter
+ ) => (
 
-                                                <tr
-                                                    key={
-                                                        counter.id
-                                                    }
-                                                >
+ <tr
+ key={
+ counter.id
+ }
+ >
 
-                                                    <td>
-                                                        {
-                                                            counter.id
-                                                        }
-                                                    </td>
+ <td>
+ {
+ counter.id
+ }
+ </td>
 
 
-                                                    <td>
-                                                        {
-                                                            counter.name
-                                                        }
-                                                    </td>
+ <td>
+ {
+ counter.name
+ }
+ </td>
 
 
-                                                    <td>
+ <td>
 
-                                                        {
-                                                            counter
-                                                                .services
-                                                                .map(
-                                                                    (
-                                                                        service
-                                                                    ) => (
+ {
+ counter
+ .services
+ .map(
+ (
+ service
+ ) => (
 
-                                                                        <div
-                                                                            key={
-                                                                                service.id
-                                                                            }
-                                                                        >
-                                                                            {
-                                                                                service.name
-                                                                            }
-                                                                        </div>
+ <div
+ key={
+ service.id
+ }
+ >
+ {
+ service.name
+ }
+ </div>
 
-                                                                    )
-                                                                )
-                                                        }
+ )
+ )
+ }
 
-                                                    </td>
+ </td>
 
 
-                                                    <td>
+ <td>
 
-                                                        <select
-                                                            className="select select-bordered select-sm"
-                                                            value={
-                                                                counter
-                                                                    .staff
-                                                                    ?.id ||
-                                                                ""
-                                                            }
-                                                            disabled={
-                                                                counter.status !=
-                                                                "closed"
-                                                            }
-                                                            onChange={
-                                                                (
-                                                                    e
-                                                                ) =>
-                                                                    assignStaff(
-                                                                        counter.id,
-                                                                        e.target.value
-                                                                    )
-                                                            }
-                                                        >
+ <select
+ className="select select-bordered select-sm"
+ value={
+ counter
+ .staff
+ ?.id ||
+ ""
+ }
+ disabled={
+ counter.status !=
+ "closed"
+ }
+ onChange={
+ (
+ e
+ ) =>
+ assignStaff(
+ counter.id,
+ e.target.value
+ )
+ }
+ >
 
-                                                            <option value="">
-                                                                Select Staff
-                                                            </option>
+ <option value="">
+ Select Staff
+ </option>
 
 
-                                                            {
-                                                                staff.map(
-                                                                    (
-                                                                        user
-                                                                    ) => (
+ {
+ staff.map(
+ (
+ user
+ ) => (
 
-                                                                        <option
-                                                                            key={
-                                                                                user.id
-                                                                            }
-                                                                            value={
-                                                                                user.id
-                                                                            }
-                                                                        >
-                                                                            {
-                                                                                user.fullName
-                                                                            }
-                                                                        </option>
+ <option
+ key={
+ user.id
+ }
+ value={
+ user.id
+ }
+ >
+ {
+ user.fullName
+ }
+ </option>
 
-                                                                    )
-                                                                )
-                                                            }
+ )
+ )
+ }
 
-                                                        </select>
+ </select>
 
 
-                                                        {
-                                                            counter.status !=
-                                                                "closed" &&
-                                                            <p className="text-xs mt-1 opacity-70">
-                                                                Close counter to change Staff
-                                                            </p>
-                                                        }
+ {
+ counter.status !=
+ "closed" &&
+ <p className="text-xs mt-1 opacity-70">
+ Close counter to change Staff
+ </p>
+ }
 
-                                                    </td>
+ </td>
 
 
-                                                    <td>
+ <td>
 
-                                                        <select
-                                                            className="select select-bordered select-sm"
-                                                            value={
-                                                                counter.status
-                                                            }
-                                                            onChange={
-                                                                (
-                                                                    e
-                                                                ) =>
-                                                                    updateStatus(
-                                                                        counter.id,
-                                                                        e.target.value
-                                                                    )
-                                                            }
-                                                        >
+ <select
+ className="select select-bordered select-sm"
+ value={
+ counter.status
+ }
+ onChange={
+ (
+ e
+ ) =>
+ updateStatus(
+ counter.id,
+ e.target.value
+ )
+ }
+ >
 
-                                                            <option value="open">
-                                                                Open
-                                                            </option>
+ <option value="open">
+ Open
+ </option>
 
-                                                            <option value="closed">
-                                                                Closed
-                                                            </option>
+ <option value="closed">
+ Closed
+ </option>
 
-                                                            <option value="on_break">
-                                                                On Break
-                                                            </option>
+ <option value="on_break">
+ On Break
+ </option>
 
-                                                        </select>
+ </select>
 
-                                                    </td>
+ </td>
 
-                                                </tr>
+ </tr>
 
-                                            )
-                                        )
-                                    }
+ )
+ )
+ }
 
-                                </tbody>
+ </tbody>
 
-                            </table>
+ </table>
 
-                        </div>
-                    )
-            }
+ </div>
+ )
+ }
 
-        </div>
-    );
+ </div>
+ );
 
 }
+

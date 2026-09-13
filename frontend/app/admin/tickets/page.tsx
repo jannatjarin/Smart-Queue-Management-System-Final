@@ -1,8 +1,8 @@
 "use client";
 
 import {
-    useEffect,
-    useState,
+ useEffect,
+ useState,
 } from "react";
 
 import axios from "axios";
@@ -12,828 +12,829 @@ import api from "@/lib/axios";
 
 interface Queue {
 
-    id: number;
-    name: string;
+ id: number;
+ name: string;
 
 }
 
 
 interface Ticket {
 
-    id: number;
-    ticketNumber: string;
-    status: string;
-    priority: string;
-    issuedAt: string;
-    calledAt: string | null;
-    completedAt: string | null;
+ id: number;
+ ticketNumber: string;
+ status: string;
+ priority: string;
+ issuedAt: string;
+ calledAt: string | null;
+ completedAt: string | null;
 
-    user: {
-        id: number;
-        fullName: string;
-        email: string;
-    };
+ user: {
+ id: number;
+ fullName: string;
+ email: string;
+ };
 
-    service: {
-        id: number;
-        name: string;
-    };
+ service: {
+ id: number;
+ name: string;
+ };
 
-    queue: {
-        id: number;
-        name: string;
-    };
+ queue: {
+ id: number;
+ name: string;
+ };
 
-    counter: {
-        id: number;
-        name: string;
-    } | null;
+ counter: {
+ id: number;
+ name: string;
+ } | null;
 
 }
 
 
 export default function AdminTicketsPage() {
 
-    const [tickets, setTickets] =
-        useState<Ticket[]>([]);
+ const [tickets, setTickets] =
+ useState<Ticket[]>([]);
 
-    const [queues, setQueues] =
-        useState<Queue[]>([]);
+ const [queues, setQueues] =
+ useState<Queue[]>([]);
 
-    const [status, setStatus] =
-        useState("");
+ const [status, setStatus] =
+ useState("");
 
-    const [queueId, setQueueId] =
-        useState("");
+ const [queueId, setQueueId] =
+ useState("");
 
-    const [sort, setSort] =
-        useState("DESC");
+ const [sort, setSort] =
+ useState("DESC");
 
-    const [refresh, setRefresh] =
-        useState(0);
+ const [refresh, setRefresh] =
+ useState(0);
 
-    const [
-        responseMsg,
-        setResponseMsg
-    ] =
-        useState("");
+ const [
+ responseMsg,
+ setResponseMsg
+ ] =
+ useState("");
 
-    const [err, setErr] =
-        useState("");
+ const [err, setErr] =
+ useState("");
 
-    const [loading, setLoading] =
-        useState(true);
+ const [loading, setLoading] =
+ useState(true);
 
-    const [
-        actionTicketId,
-        setActionTicketId
-    ] =
-        useState<number | null>(
-            null
-        );
+ const [
+ actionTicketId,
+ setActionTicketId
+ ] =
+ useState<number | null>(
+ null
+ );
 
 
-    useEffect(
-        () => {
+ useEffect(
+ () => {
 
-            const getQueues =
-                async () => {
+ const getQueues =
+ async () => {
 
-                    try {
+ try {
 
-                        const response =
-                            await api.get<Queue[]>(
-                                "/queues"
-                            );
+ const response =
+ await api.get<Queue[]>(
+ "/queues"
+ );
 
 
-                        setQueues(
-                            response.data
-                        );
+ setQueues(
+ response.data
+ );
 
-                    }
+ }
 
-                    catch (error) {
+ catch (error) {
 
-                        if (
-                            axios.isAxiosError(
-                                error
-                            ) &&
-                            error.response
-                                ?.data
-                                ?.message
-                        ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                            setErr(
-                                error.response
-                                    .data
-                                    .message
-                            );
+ setErr(
+ error.response
+ .data
+ .message
+ );
 
-                        }
+ }
 
-                        else {
+ else {
 
-                            setErr(
-                                "Could not load queues"
-                            );
+ setErr(
+ "Could not load queues"
+ );
 
-                        }
+ }
 
-                    }
+ }
 
-                };
+ };
 
 
-            getQueues();
+ getQueues();
 
-        },
-        []
-    );
+ },
+ []
+ );
 
 
-    useEffect(
-        () => {
+ useEffect(
+ () => {
 
-            const getTickets =
-                async () => {
+ const getTickets =
+ async () => {
 
-                    setLoading(
-                        true
-                    );
+ setLoading(
+ true
+ );
 
 
-                    try {
+ try {
 
-                        let url =
-                            "/tickets?";
+ let url =
+ "/tickets?";
 
 
-                        if (status) {
+ if (status) {
 
-                            url =
-                                url +
-                                `status=${status}&`;
+ url =
+ url +
+ `status=${status}&`;
 
-                        }
+ }
 
 
-                        if (queueId) {
+ if (queueId) {
 
-                            url =
-                                url +
-                                `queueId=${queueId}&`;
+ url =
+ url +
+ `queueId=${queueId}&`;
 
-                        }
+ }
 
 
-                        url =
-                            url +
-                            `sort=${sort}`;
+ url =
+ url +
+ `sort=${sort}`;
 
 
-                        const response =
-                            await api.get<Ticket[]>(
-                                url
-                            );
+ const response =
+ await api.get<Ticket[]>(
+ url
+ );
 
 
-                        setTickets(
-                            response.data
-                        );
+ setTickets(
+ response.data
+ );
 
-                        setErr("");
+ setErr("");
 
-                    }
+ }
 
-                    catch (error) {
+ catch (error) {
 
-                        if (
-                            axios.isAxiosError(
-                                error
-                            ) &&
-                            error.response
-                                ?.data
-                                ?.message
-                        ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                            const message =
-                                error.response
-                                    .data
-                                    .message;
+ const message =
+ error.response
+ .data
+ .message;
 
 
-                            setErr(
-                                Array.isArray(
-                                    message
-                                )
-                                    ? message.join(
-                                        ", "
-                                    )
-                                    : message
-                            );
+ setErr(
+ Array.isArray(
+ message
+ )
+ ? message.join(
+ ", "
+ )
+ : message
+ );
 
-                        }
+ }
 
-                        else {
+ else {
 
-                            setErr(
-                                "Could not load tickets"
-                            );
+ setErr(
+ "Could not load tickets"
+ );
 
-                        }
+ }
 
-                    }
+ }
 
-                    finally {
+ finally {
 
-                        setLoading(
-                            false
-                        );
+ setLoading(
+ false
+ );
 
-                    }
+ }
 
-                };
+ };
 
 
-            getTickets();
+ getTickets();
 
-        },
-        [
-            status,
-            queueId,
-            sort,
-            refresh,
-        ]
-    );
+ },
+ [
+ status,
+ queueId,
+ sort,
+ refresh,
+ ]
+ );
 
 
-    const cancelTicket =
-        async (
-            id: number
-        ) => {
+ const cancelTicket =
+ async (
+ id: number
+ ) => {
 
-            setResponseMsg("");
-            setErr("");
+ setResponseMsg("");
+ setErr("");
 
-            setActionTicketId(
-                id
-            );
+ setActionTicketId(
+ id
+ );
 
 
-            try {
+ try {
 
-                await api.patch(
-                    `/tickets/${id}/cancel`,
-                    {}
-                );
+ await api.patch(
+ `/tickets/${id}/cancel`,
+ {}
+ );
 
 
-                setResponseMsg(
-                    "Ticket cancelled successfully"
-                );
+ setResponseMsg(
+ "Ticket cancelled successfully"
+ );
 
 
-                setRefresh(
-                    (value) =>
-                        value + 1
-                );
+ setRefresh(
+ (value) =>
+ value + 1
+ );
 
-            }
+ }
 
-            catch (error) {
+ catch (error) {
 
-                if (
-                    axios.isAxiosError(
-                        error
-                    ) &&
-                    error.response
-                        ?.data
-                        ?.message
-                ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                    const message =
-                        error.response
-                            .data
-                            .message;
+ const message =
+ error.response
+ .data
+ .message;
 
 
-                    setErr(
-                        Array.isArray(
-                            message
-                        )
-                            ? message.join(
-                                ", "
-                            )
-                            : message
-                    );
+ setErr(
+ Array.isArray(
+ message
+ )
+ ? message.join(
+ ", "
+ )
+ : message
+ );
 
-                }
+ }
 
-                else {
+ else {
 
-                    setErr(
-                        "Could not cancel ticket"
-                    );
+ setErr(
+ "Could not cancel ticket"
+ );
 
-                }
+ }
 
-            }
+ }
 
-            finally {
+ finally {
 
-                setActionTicketId(
-                    null
-                );
+ setActionTicketId(
+ null
+ );
 
-            }
+ }
 
-        };
+ };
 
 
-    const completeTicket =
-        async (
-            id: number
-        ) => {
+ const completeTicket =
+ async (
+ id: number
+ ) => {
 
-            setResponseMsg("");
-            setErr("");
+ setResponseMsg("");
+ setErr("");
 
-            setActionTicketId(
-                id
-            );
+ setActionTicketId(
+ id
+ );
 
 
-            try {
+ try {
 
-                await api.patch(
-                    `/tickets/${id}/complete`,
-                    {}
-                );
+ await api.patch(
+ `/tickets/${id}/complete`,
+ {}
+ );
 
 
-                setResponseMsg(
-                    "Ticket completed successfully"
-                );
+ setResponseMsg(
+ "Ticket completed successfully"
+ );
 
 
-                setRefresh(
-                    (value) =>
-                        value + 1
-                );
+ setRefresh(
+ (value) =>
+ value + 1
+ );
 
-            }
+ }
 
-            catch (error) {
+ catch (error) {
 
-                if (
-                    axios.isAxiosError(
-                        error
-                    ) &&
-                    error.response
-                        ?.data
-                        ?.message
-                ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                    const message =
-                        error.response
-                            .data
-                            .message;
+ const message =
+ error.response
+ .data
+ .message;
 
 
-                    setErr(
-                        Array.isArray(
-                            message
-                        )
-                            ? message.join(
-                                ", "
-                            )
-                            : message
-                    );
+ setErr(
+ Array.isArray(
+ message
+ )
+ ? message.join(
+ ", "
+ )
+ : message
+ );
 
-                }
+ }
 
-                else {
+ else {
 
-                    setErr(
-                        "Could not complete ticket"
-                    );
+ setErr(
+ "Could not complete ticket"
+ );
 
-                }
+ }
 
-            }
+ }
 
-            finally {
+ finally {
 
-                setActionTicketId(
-                    null
-                );
+ setActionTicketId(
+ null
+ );
 
-            }
+ }
 
-        };
+ };
 
 
-    return (
-        <div className="max-w-7xl mx-auto py-8">
+ return (
+ <div className="max-w-7xl mx-auto py-8">
 
-            <h1 className="text-3xl font-bold mb-2">
-                Ticket Management
-            </h1>
+ <h1 className="text-3xl font-bold mb-2">
+ Ticket Management
+ </h1>
 
 
-            <p className="mb-6">
-                View, filter and manage system tickets.
-            </p>
+ <p className="mb-6">
+ View, filter and manage system tickets.
+ </p>
 
 
-            {
-                responseMsg &&
-                <div className="alert alert-success mb-4">
+ {
+ responseMsg &&
+ <div className="alert alert-success mb-4">
 
-                    <span>
-                        {responseMsg}
-                    </span>
+ <span>
+ {responseMsg}
+ </span>
 
-                </div>
-            }
+ </div>
+ }
 
 
-            {
-                err &&
-                <div className="alert alert-error mb-4">
+ {
+ err &&
+ <div className="alert alert-error mb-4">
 
-                    <span>
-                        {err}
-                    </span>
+ <span>
+ {err}
+ </span>
 
-                </div>
-            }
+ </div>
+ }
 
 
-            <div className="card bg-base-100 shadow border mb-6">
+ <div className="card bg-white shadow border mb-6">
 
-                <div className="card-body">
+ <div className="card-body">
 
-                    <h2 className="font-bold">
-                        Ticket Filters
-                    </h2>
+ <h2 className="font-bold">
+ Ticket Filters
+ </h2>
 
 
-                    <div className="grid md:grid-cols-3 gap-4">
+ <div className="grid md:grid-cols-3 gap-4">
 
-                        <div>
+ <div>
 
-                            <label className="label">
-                                Status
-                            </label>
+ <label className="label">
+ Status
+ </label>
 
-                            <select
-                                className="select select-bordered w-full"
-                                value={
-                                    status
-                                }
-                                onChange={
-                                    (e) =>
-                                        setStatus(
-                                            e.target.value
-                                        )
-                                }
-                            >
+ <select
+ className="select select-bordered w-full"
+ value={
+ status
+ }
+ onChange={
+ (e) =>
+ setStatus(
+ e.target.value
+ )
+ }
+ >
 
-                                <option value="">
-                                    All Statuses
-                                </option>
+ <option value="">
+ All Statuses
+ </option>
 
-                                <option value="waiting">
-                                    Waiting
-                                </option>
+ <option value="waiting">
+ Waiting
+ </option>
 
-                                <option value="called">
-                                    Called
-                                </option>
+ <option value="called">
+ Called
+ </option>
 
-                                <option value="completed">
-                                    Completed
-                                </option>
+ <option value="completed">
+ Completed
+ </option>
 
-                                <option value="cancelled">
-                                    Cancelled
-                                </option>
+ <option value="cancelled">
+ Cancelled
+ </option>
 
-                            </select>
+ </select>
 
-                        </div>
+ </div>
 
 
-                        <div>
+ <div>
 
-                            <label className="label">
-                                Queue
-                            </label>
+ <label className="label">
+ Queue
+ </label>
 
-                            <select
-                                className="select select-bordered w-full"
-                                value={
-                                    queueId
-                                }
-                                onChange={
-                                    (e) =>
-                                        setQueueId(
-                                            e.target.value
-                                        )
-                                }
-                            >
+ <select
+ className="select select-bordered w-full"
+ value={
+ queueId
+ }
+ onChange={
+ (e) =>
+ setQueueId(
+ e.target.value
+ )
+ }
+ >
 
-                                <option value="">
-                                    All Queues
-                                </option>
+ <option value="">
+ All Queues
+ </option>
 
 
-                                {
-                                    queues.map(
-                                        (queue) => (
+ {
+ queues.map(
+ (queue) => (
 
-                                            <option
-                                                key={
-                                                    queue.id
-                                                }
-                                                value={
-                                                    queue.id
-                                                }
-                                            >
-                                                {
-                                                    queue.name
-                                                }
-                                            </option>
+ <option
+ key={
+ queue.id
+ }
+ value={
+ queue.id
+ }
+ >
+ {
+ queue.name
+ }
+ </option>
 
-                                        )
-                                    )
-                                }
+ )
+ )
+ }
 
-                            </select>
+ </select>
 
-                        </div>
+ </div>
 
 
-                        <div>
+ <div>
 
-                            <label className="label">
-                                Sort
-                            </label>
+ <label className="label">
+ Sort
+ </label>
 
-                            <select
-                                className="select select-bordered w-full"
-                                value={
-                                    sort
-                                }
-                                onChange={
-                                    (e) =>
-                                        setSort(
-                                            e.target.value
-                                        )
-                                }
-                            >
+ <select
+ className="select select-bordered w-full"
+ value={
+ sort
+ }
+ onChange={
+ (e) =>
+ setSort(
+ e.target.value
+ )
+ }
+ >
 
-                                <option value="DESC">
-                                    Newest First
-                                </option>
+ <option value="DESC">
+ Newest First
+ </option>
 
-                                <option value="ASC">
-                                    Oldest First
-                                </option>
+ <option value="ASC">
+ Oldest First
+ </option>
 
-                            </select>
+ </select>
 
-                        </div>
+ </div>
 
-                    </div>
+ </div>
 
-                </div>
+ </div>
 
-            </div>
+ </div>
 
 
-            {
-                loading
-                    ? (
-                        <div className="flex items-center justify-center p-10">
+ {
+ loading
+ ? (
+ <div className="flex items-center justify-center p-10">
 
-                            <span className="loading loading-spinner"></span>
+ <span className="loading loading-spinner"></span>
 
-                            <span className="ml-3">
-                                Loading tickets...
-                            </span>
+ <span className="ml-3">
+ Loading tickets...
+ </span>
 
-                        </div>
-                    )
-                    : (
-                        <div className="overflow-x-auto">
+ </div>
+ )
+ : (
+ <div className="overflow-x-auto">
 
-                            <table className="table table-zebra">
+ <table className="table ">
 
-                                <thead>
+ <thead>
 
-                                    <tr>
-                                        <th>Ticket</th>
-                                        <th>Customer</th>
-                                        <th>Service</th>
-                                        <th>Queue</th>
-                                        <th>Priority</th>
-                                        <th>Status</th>
-                                        <th>Counter</th>
-                                        <th>Issued</th>
-                                        <th>Actions</th>
-                                    </tr>
+ <tr>
+ <th>Ticket</th>
+ <th>Customer</th>
+ <th>Service</th>
+ <th>Queue</th>
+ <th>Priority</th>
+ <th>Status</th>
+ <th>Counter</th>
+ <th>Issued</th>
+ <th>Actions</th>
+ </tr>
 
-                                </thead>
+ </thead>
 
 
-                                <tbody>
+ <tbody>
 
-                                    {
-                                        tickets.map(
-                                            (ticket) => (
+ {
+ tickets.map(
+ (ticket) => (
 
-                                                <tr
-                                                    key={
-                                                        ticket.id
-                                                    }
-                                                >
+ <tr
+ key={
+ ticket.id
+ }
+ >
 
-                                                    <td className="font-semibold">
-                                                        {
-                                                            ticket.ticketNumber
-                                                        }
-                                                    </td>
+ <td className="font-semibold">
+ {
+ ticket.ticketNumber
+ }
+ </td>
 
 
-                                                    <td>
+ <td>
 
-                                                        <div>
-                                                            {
-                                                                ticket
-                                                                    .user
-                                                                    .fullName
-                                                            }
-                                                        </div>
+ <div>
+ {
+ ticket
+ .user
+ .fullName
+ }
+ </div>
 
-                                                        <div className="text-xs opacity-70">
-                                                            {
-                                                                ticket
-                                                                    .user
-                                                                    .email
-                                                            }
-                                                        </div>
+ <div className="text-xs opacity-70">
+ {
+ ticket
+ .user
+ .email
+ }
+ </div>
 
-                                                    </td>
+ </td>
 
 
-                                                    <td>
-                                                        {
-                                                            ticket
-                                                                .service
-                                                                .name
-                                                        }
-                                                    </td>
+ <td>
+ {
+ ticket
+ .service
+ .name
+ }
+ </td>
 
 
-                                                    <td>
-                                                        {
-                                                            ticket
-                                                                .queue
-                                                                .name
-                                                        }
-                                                    </td>
+ <td>
+ {
+ ticket
+ .queue
+ .name
+ }
+ </td>
 
 
-                                                    <td>
-                                                        {
-                                                            ticket.priority
-                                                        }
-                                                    </td>
+ <td>
+ {
+ ticket.priority
+ }
+ </td>
 
 
-                                                    <td>
+ <td>
 
-                                                        <span className="badge badge-outline">
-                                                            {
-                                                                ticket.status
-                                                            }
-                                                        </span>
+ <span className="badge badge-outline">
+ {
+ ticket.status
+ }
+ </span>
 
-                                                    </td>
+ </td>
 
 
-                                                    <td>
-                                                        {
-                                                            ticket
-                                                                .counter
-                                                                ?.name ||
-                                                            "-"
-                                                        }
-                                                    </td>
+ <td>
+ {
+ ticket
+ .counter
+ ?.name ||
+ "-"
+ }
+ </td>
 
 
-                                                    <td>
-                                                        {
-                                                            new Date(
-                                                                ticket.issuedAt
-                                                            )
-                                                                .toLocaleString()
-                                                        }
-                                                    </td>
+ <td>
+ {
+ new Date(
+ ticket.issuedAt
+ )
+ .toLocaleString()
+ }
+ </td>
 
 
-                                                    <td>
+ <td>
 
-                                                        <div className="flex flex-col gap-2">
+ <div className="flex flex-col gap-2">
 
-                                                            {
-                                                                ticket.status ==
-                                                                    "called" &&
-                                                                <button
-                                                                    className="btn btn-success btn-sm"
-                                                                    disabled={
-                                                                        actionTicketId ==
-                                                                        ticket.id
-                                                                    }
-                                                                    onClick={
-                                                                        () =>
-                                                                            completeTicket(
-                                                                                ticket.id
-                                                                            )
-                                                                    }
-                                                                >
-                                                                    Complete
-                                                                </button>
-                                                            }
+ {
+ ticket.status ==
+ "called" &&
+ <button
+ className="btn btn-success btn-sm"
+ disabled={
+ actionTicketId ==
+ ticket.id
+ }
+ onClick={
+ () =>
+ completeTicket(
+ ticket.id
+ )
+ }
+ >
+ Complete
+ </button>
+ }
 
 
-                                                            {
-                                                                (
-                                                                    ticket.status ==
-                                                                        "waiting" ||
-                                                                    ticket.status ==
-                                                                        "called"
-                                                                ) &&
-                                                                <button
-                                                                    className="btn btn-error btn-sm"
-                                                                    disabled={
-                                                                        actionTicketId ==
-                                                                        ticket.id
-                                                                    }
-                                                                    onClick={
-                                                                        () =>
-                                                                            cancelTicket(
-                                                                                ticket.id
-                                                                            )
-                                                                    }
-                                                                >
-                                                                    Cancel
-                                                                </button>
-                                                            }
+ {
+ (
+ ticket.status ==
+ "waiting" ||
+ ticket.status ==
+ "called"
+ ) &&
+ <button
+ className="btn btn-error btn-sm"
+ disabled={
+ actionTicketId ==
+ ticket.id
+ }
+ onClick={
+ () =>
+ cancelTicket(
+ ticket.id
+ )
+ }
+ >
+ Cancel
+ </button>
+ }
 
 
-                                                            {
-                                                                (
-                                                                    ticket.status ==
-                                                                        "completed" ||
-                                                                    ticket.status ==
-                                                                        "cancelled"
-                                                                ) &&
-                                                                <span className="text-xs opacity-70">
-                                                                    Finalized
-                                                                </span>
-                                                            }
+ {
+ (
+ ticket.status ==
+ "completed" ||
+ ticket.status ==
+ "cancelled"
+ ) &&
+ <span className="text-xs opacity-70">
+ Finalized
+ </span>
+ }
 
-                                                        </div>
+ </div>
 
-                                                    </td>
+ </td>
 
-                                                </tr>
+ </tr>
 
-                                            )
-                                        )
-                                    }
+ )
+ )
+ }
 
-                                </tbody>
+ </tbody>
 
-                            </table>
+ </table>
 
 
-                            {
-                                tickets.length == 0 &&
-                                <p className="mt-4">
-                                    No tickets found.
-                                </p>
-                            }
+ {
+ tickets.length == 0 &&
+ <p className="mt-4">
+ No tickets found.
+ </p>
+ }
 
-                        </div>
-                    )
-            }
+ </div>
+ )
+ }
 
-        </div>
-    );
+ </div>
+ );
 
 }
+

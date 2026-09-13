@@ -4,101 +4,55 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import {
-  InjectRepository,
-} from '@nestjs/typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
-import {
-  Repository,
-} from 'typeorm';
+import { Repository } from 'typeorm';
 
-import {
-  Users,
-} from './users.entity';
+import { Users } from './users.entity';
 
-import {
-  Counters,
-} from '../counters/counters.entity';
+import { Counters } from '../counters/counters.entity';
 
-import {
-  Role,
-} from 'src/common/enums/role.enum';
+import { Role } from 'src/common/enums/role.enum';
 
-import {
-  CounterStatus,
-} from '../common/enums/counter-status.enum';
+import { CounterStatus } from '../common/enums/counter-status.enum';
 
-import {
-  TicketStatus,
-} from '../common/enums/ticket-status.enum';
+import { TicketStatus } from '../common/enums/ticket-status.enum';
 
 @Injectable()
 export class UsersService {
-
   constructor(
     @InjectRepository(Users)
-    private readonly usersRepo:
-      Repository<Users>,
+    private readonly usersRepo: Repository<Users>,
 
     @InjectRepository(Counters)
-    private readonly countersRepo:
-      Repository<Counters>,
-  ) { }
+    private readonly countersRepo: Repository<Counters>,
+  ) {}
 
-  async createUser(
-    data: Partial<Users>,
-  ): Promise<Users> {
+  async createUser(data: Partial<Users>): Promise<Users> {
+    const user = this.usersRepo.create(data);
 
-    const user =
-      this.usersRepo.create(
-        data,
-      );
-
-    return this.usersRepo.save(
-      user,
-    );
+    return this.usersRepo.save(user);
   }
 
-  async getUserByEmail(
-    email: string,
-  ): Promise<Users | null> {
-
+  async getUserByEmail(email: string): Promise<Users | null> {
     return this.usersRepo
-      .createQueryBuilder(
-        'user',
-      )
-      .addSelect(
-        'user.password',
-      )
-      .where(
-        'user.email = :email',
-        {
-          email,
-        },
-      )
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .where('user.email = :email', {
+        email,
+      })
       .getOne();
   }
 
-  async getUserById(
-    id: number,
-  ): Promise<Users> {
-
-    const user =
-      await this.usersRepo
-        .findOne(
-          {
-            where: {
-              id,
-            },
-          },
-        );
+  async getUserById(id: number): Promise<Users> {
+    const user = await this.usersRepo.findOne({
+      where: {
+        id,
+      },
+    });
 
     if (!user) {
-
-      throw new NotFoundException(
-        'User not found',
-      );
-
+      throw new NotFoundException('User not found');
     }
 
     return user;
@@ -112,47 +66,23 @@ export class UsersService {
       phone?: string;
     },
   ): Promise<Users> {
+    await this.getUserById(id);
 
-    await this.getUserById(
-      id,
-    );
+    await this.usersRepo.update(id, data);
 
-    await this.usersRepo.update(
-      id,
-      data,
-    );
-
-    return this.getUserById(
-      id,
-    );
+    return this.getUserById(id);
   }
 
-  async updatePassword(
-    id: number,
-    hashedPassword: string,
-  ): Promise<void> {
-
-    await this.usersRepo.update(
-      id,
-      {
-        password:
-          hashedPassword,
-      },
-    );
+  async updatePassword(id: number, hashedPassword: string): Promise<void> {
+    await this.usersRepo.update(id, {
+      password: hashedPassword,
+    });
   }
 
-  async updateResetTokenVersion(
-    id: number,
-    version: number,
-  ): Promise<void> {
-
-    await this.usersRepo.update(
-      id,
-      {
-        resetTokenVersion:
-          version,
-      },
-    );
+  async updateResetTokenVersion(id: number, version: number): Promise<void> {
+    await this.usersRepo.update(id, {
+      resetTokenVersion: version,
+    });
   }
 
   async updateRole(
@@ -160,89 +90,49 @@ export class UsersService {
     role: Role,
     currentAdminId: number,
   ): Promise<Users> {
+    const user = await this.getUserById(id);
 
-    const user =
-      await this.getUserById(
-        id,
-      );
-
-    if (
-      id == currentAdminId &&
-      role != Role.ADMIN
-    ) {
-
-      throw new BadRequestException(
-        'You cannot remove your own admin role',
-      );
-
+    if (id == currentAdminId && role != Role.ADMIN) {
+      throw new BadRequestException('You cannot remove your own admin role');
     }
 
-    if (
-      role != Role.STAFF
-    ) {
+    if (role != Role.STAFF) {
+      const counter = await this.countersRepo.findOne({
+        where: {
+          staff: {
+            id,
+          },
+        },
 
-      const counter =
-        await this.countersRepo
-          .findOne(
-            {
-              where: {
-                staff: {
-                  id,
-                },
-              },
-
-              relations: [
-                'staff',
-                'tickets',
-              ],
-            },
-          );
+        relations: ['staff', 'tickets'],
+      });
 
       if (counter) {
-
-        const hasCalledTicket =
-          counter.tickets?.some(
-            (ticket) =>
-              ticket.status ==
-              TicketStatus.CALLED,
-          );
+        const hasCalledTicket = counter.tickets?.some(
+          (ticket) => ticket.status == TicketStatus.CALLED,
+        );
 
         if (hasCalledTicket) {
-
           throw new BadRequestException(
             'Complete the currently called ticket before changing this staff role',
           );
-
         }
 
-        counter.status =
-          CounterStatus.CLOSED;
+        counter.status = CounterStatus.CLOSED;
 
-        counter.staff =
-          null;
+        counter.staff = null;
 
-        await this.countersRepo.save(
-          counter,
-        );
+        await this.countersRepo.save(counter);
       }
     }
 
-    if (
-      user.role != role
-    ) {
-
-      await this.usersRepo.update(
-        id,
-        {
-          role,
-        },
-      );
-
+    if (user.role != role) {
+      await this.usersRepo.update(id, {
+        role,
+      });
     }
 
-    return this.getUserById(
-      id,
-    );
+    return this.getUserById(id);
   }
 
   async findAll(
@@ -252,28 +142,19 @@ export class UsersService {
     page = 1,
     limit = 10,
   ) {
-
-    const qb =
-      this.usersRepo
-        .createQueryBuilder(
-          'user',
-        );
+    const qb = this.usersRepo.createQueryBuilder('user');
 
     if (search) {
-
       qb.andWhere(
         '(user.fullName ILIKE :search OR user.email ILIKE :search)',
 
         {
-          search:
-            `%${search}%`,
+          search: `%${search}%`,
         },
       );
-
     }
 
     if (role) {
-
       qb.andWhere(
         'user.role = :role',
 
@@ -281,53 +162,28 @@ export class UsersService {
           role,
         },
       );
-
     }
 
     qb.orderBy(
       'user.createDate',
 
-      sort == 'ASC'
-        ? 'ASC'
-        : 'DESC',
+      sort == 'ASC' ? 'ASC' : 'DESC',
     );
 
-    const safePage =
-      page > 0
-        ? page
-        : 1;
+    const safePage = page > 0 ? page : 1;
 
-    const safeLimit =
-      limit > 0
-        ? Math.min(
-          limit,
-          100,
-        )
-        : 10;
+    const safeLimit = limit > 0 ? Math.min(limit, 100) : 10;
 
-    qb.skip(
-      (safePage - 1) *
-      safeLimit,
-    )
-      .take(
-        safeLimit,
-      );
+    qb.skip((safePage - 1) * safeLimit).take(safeLimit);
 
-    const [
-      data,
-      total,
-    ] =
-      await qb
-        .getManyAndCount();
+    const [data, total] = await qb.getManyAndCount();
 
     return {
       data,
       total,
-      page:
-        safePage,
+      page: safePage,
 
-      limit:
-        safeLimit,
+      limit: safeLimit,
     };
   }
 }

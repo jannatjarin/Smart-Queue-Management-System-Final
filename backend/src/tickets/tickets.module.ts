@@ -1,65 +1,34 @@
-import {
-  Module,
-} from '@nestjs/common';
+import { Module } from '@nestjs/common';
 
-import {
-  TypeOrmModule,
-} from '@nestjs/typeorm';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
-import {
-  TicketsController,
-} from './tickets.controller';
+import { TicketsController } from './tickets.controller';
 
-import {
-  TicketsService,
-} from './tickets.service';
+import { TicketsService } from './tickets.service';
 
-import {
-  Tickets,
-} from './tickets.entity';
+import { Tickets } from './tickets.entity';
 
-import {
-  Services,
-} from '../services/services.entity';
+import { Services } from '../services/services.entity';
 
-import {
-  Queues,
-} from '../queues/queues.entity';
+import { Queues } from '../queues/queues.entity';
 
-import {
-  Counters,
-} from '../counters/counters.entity';
+import { Counters } from '../counters/counters.entity';
 
-import {
-  MailModule,
-} from '../mail/mail.module';
+import { MailModule } from '../mail/mail.module';
 
-import {
-  NotificationsModule,
-} from '../notifications/notifications.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature(
-      [
-        Tickets,
-        Services,
-        Queues,
-        Counters,
-      ],
-    ),
+    TypeOrmModule.forFeature([Tickets, Services, Queues, Counters]),
 
     MailModule,
 
     NotificationsModule,
   ],
 
-  controllers: [
-    TicketsController,
-  ],
+  controllers: [TicketsController],
 
-  providers: [
-    TicketsService,
-  ],
+  providers: [TicketsService],
 })
-export class TicketsModule { }
+export class TicketsModule {}

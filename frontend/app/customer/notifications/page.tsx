@@ -1,8 +1,8 @@
 "use client";
 
 import {
-    useEffect,
-    useState,
+ useEffect,
+ useState,
 } from "react";
 
 import axios from "axios";
@@ -12,227 +12,228 @@ import api from "@/lib/axios";
 
 interface Notification {
 
-    id: number;
-    type: string;
-    message: string;
-    status: string;
-    sentAt: string;
+ id: number;
+ type: string;
+ message: string;
+ status: string;
+ sentAt: string;
 
 }
 
 
 export default function NotificationsPage() {
 
-    const [
-        notifications,
-        setNotifications
-    ] =
-        useState<Notification[]>(
-            []
-        );
+ const [
+ notifications,
+ setNotifications
+ ] =
+ useState<Notification[]>(
+ []
+ );
 
-    const [err, setErr] =
-        useState("");
+ const [err, setErr] =
+ useState("");
 
-    const [loading, setLoading] =
-        useState(true);
+ const [loading, setLoading] =
+ useState(true);
 
 
-    useEffect(
-        () => {
+ useEffect(
+ () => {
 
-            const getNotifications =
-                async () => {
+ const getNotifications =
+ async () => {
 
-                    try {
+ try {
 
-                        const response =
-                            await api.get<
-                                Notification[]
-                            >(
-                                "/notifications/me"
-                            );
+ const response =
+ await api.get<
+ Notification[]
+ >(
+ "/notifications/me"
+ );
 
-                        setNotifications(
-                            response.data
-                        );
+ setNotifications(
+ response.data
+ );
 
-                        setErr("");
+ setErr("");
 
-                    }
+ }
 
-                    catch (error) {
+ catch (error) {
 
-                        if (
-                            axios.isAxiosError(
-                                error
-                            ) &&
-                            error.response
-                                ?.data
-                                ?.message
-                        ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                            setErr(
-                                error.response
-                                    .data
-                                    .message
-                            );
+ setErr(
+ error.response
+ .data
+ .message
+ );
 
-                        }
+ }
 
-                        else {
+ else {
 
-                            setErr(
-                                "Could not load notifications"
-                            );
+ setErr(
+ "Could not load notifications"
+ );
 
-                        }
+ }
 
-                    }
+ }
 
-                    finally {
+ finally {
 
-                        setLoading(
-                            false
-                        );
+ setLoading(
+ false
+ );
 
-                    }
+ }
 
-                };
+ };
 
 
-            getNotifications();
+ getNotifications();
 
-        },
-        []
-    );
+ },
+ []
+ );
 
 
-    if (loading) {
+ if (loading) {
 
-        return (
-            <div className="flex items-center justify-center p-10">
+ return (
+ <div className="flex items-center justify-center p-10">
 
-                <span className="loading loading-spinner"></span>
+ <span className="loading loading-spinner"></span>
 
-                <span className="ml-3">
-                    Loading notifications...
-                </span>
+ <span className="ml-3">
+ Loading notifications...
+ </span>
 
-            </div>
-        );
+ </div>
+ );
 
-    }
+ }
 
 
-    return (
-        <div className="max-w-4xl mx-auto py-8">
+ return (
+ <div className="max-w-4xl mx-auto py-8">
 
-            <div className="mb-6">
+ <div className="mb-6">
 
-                <h1 className="text-3xl font-bold">
-                    My Notifications
-                </h1>
+ <h1 className="text-3xl font-bold">
+ My Notifications
+ </h1>
 
-                <p>
-                    View updates related to your account and tickets.
-                </p>
+ <p>
+ View updates related to your account and tickets.
+ </p>
 
-            </div>
+ </div>
 
 
-            {
-                err &&
-                <div className="alert alert-error mb-4">
+ {
+ err &&
+ <div className="alert alert-error mb-4">
 
-                    <span>
-                        {err}
-                    </span>
+ <span>
+ {err}
+ </span>
 
-                </div>
-            }
+ </div>
+ }
 
 
-            {
-                notifications.length ==
-                    0 &&
-                !err &&
-                <div className="alert">
+ {
+ notifications.length ==
+ 0 &&
+ !err &&
+ <div className="alert">
 
-                    <span>
-                        You have no notifications yet.
-                    </span>
+ <span>
+ You have no notifications yet.
+ </span>
 
-                </div>
-            }
+ </div>
+ }
 
 
-            <div className="flex flex-col gap-4">
+ <div className="flex flex-col gap-4">
 
-                {
-                    notifications.map(
-                        (
-                            notification
-                        ) => (
+ {
+ notifications.map(
+ (
+ notification
+ ) => (
 
-                            <div
-                                key={
-                                    notification.id
-                                }
-                                className="card bg-base-100 shadow border"
-                            >
+ <div
+ key={
+ notification.id
+ }
+ className="card bg-white shadow border"
+ >
 
-                                <div className="card-body">
+ <div className="card-body">
 
-                                    <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
+ <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
 
-                                        <h2 className="font-bold">
-                                            {
-                                                notification
-                                                    .type
-                                            }
-                                        </h2>
+ <h2 className="font-bold">
+ {
+ notification
+ .type
+ }
+ </h2>
 
 
-                                        <span className="badge badge-outline">
-                                            {
-                                                notification
-                                                    .status
-                                            }
-                                        </span>
+ <span className="badge badge-outline">
+ {
+ notification
+ .status
+ }
+ </span>
 
-                                    </div>
+ </div>
 
 
-                                    <p>
-                                        {
-                                            notification
-                                                .message
-                                        }
-                                    </p>
+ <p>
+ {
+ notification
+ .message
+ }
+ </p>
 
 
-                                    <p className="text-sm opacity-70">
-                                        {
-                                            new Date(
-                                                notification
-                                                    .sentAt
-                                            )
-                                                .toLocaleString()
-                                        }
-                                    </p>
+ <p className="text-sm opacity-70">
+ {
+ new Date(
+ notification
+ .sentAt
+ )
+ .toLocaleString()
+ }
+ </p>
 
-                                </div>
+ </div>
 
-                            </div>
+ </div>
 
-                        )
-                    )
-                }
+ )
+ )
+ }
 
-            </div>
+ </div>
 
-        </div>
-    );
+ </div>
+ );
 
 }
+

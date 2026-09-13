@@ -1,14 +1,14 @@
 import type {
-    Metadata,
+ Metadata,
 } from "next";
 
 import type {
-    ReactNode,
+ ReactNode,
 } from "react";
 
 import {
-    Geist,
-    Geist_Mono,
+ Inter,
+ Outfit,
 } from "next/font/google";
 
 import "./globals.css";
@@ -17,74 +17,75 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
 
-const geistSans =
-    Geist(
-        {
-            variable:
-                "--font-geist-sans",
+const inter =
+ Inter(
+ {
+ variable:
+ "--font-inter",
 
-            subsets: [
-                "latin",
-            ],
-        }
-    );
+ subsets: [
+ "latin",
+ ],
+ }
+ );
 
 
-const geistMono =
-    Geist_Mono(
-        {
-            variable:
-                "--font-geist-mono",
+const outfit =
+ Outfit(
+ {
+ variable:
+ "--font-outfit",
 
-            subsets: [
-                "latin",
-            ],
-        }
-    );
+ subsets: [
+ "latin",
+ ],
+ }
+ );
 
 
 export const metadata:
-    Metadata =
-    {
-        title:
-            "SQMS",
+ Metadata =
+ {
+ title:
+ "SQMS",
 
-        description:
-            "Smart Queue Management System",
-    };
+ description:
+ "Smart Queue Management System",
+ };
 
 
 export default function RootLayout(
-    {
-        children,
-    }: Readonly<{
-        children: ReactNode;
-    }>
+ {
+ children,
+ }: Readonly<{
+ children: ReactNode;
+ }>
 ) {
 
-    return (
-        <html
-            lang="en"
-            className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-        >
+ return (
+ <html
+ lang="en"
+ data-theme="light"
+ className={`${inter.variable} ${outfit.variable} font-sans h-full antialiased`}
+ >
 
-            <body className="min-h-full flex flex-col">
+ <body className="min-h-full flex flex-col bg-slate-50 text-slate-900">
 
-                <Navbar />
-
-
-                <main className="flex-1 px-5">
-
-                    {children}
-
-                </main>
+ <Navbar />
 
 
-                <Footer />
+ <main className="flex-1 px-5">
 
-            </body>
+ {children}
 
-        </html>
-    );
+ </main>
+
+
+ <Footer />
+
+ </body>
+
+ </html>
+ );
 
 }

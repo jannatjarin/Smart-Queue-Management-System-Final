@@ -10,7 +10,6 @@ import {
 } from 'class-validator';
 
 export class CreateCounterDto {
-
   @IsString()
   @IsNotEmpty()
   @MaxLength(128)

@@ -1,18 +1,18 @@
 import RoleGuard from "@/components/auth/RoleGuard";
 
 export default function CustomerLayout(
-    {
-        children
-    }: {
-        children: React.ReactNode
-    }
+ {
+ children
+ }: {
+ children: React.ReactNode
+ }
 ) {
 
-    return (
-        <RoleGuard allowedRole="customer">
+ return (
+ <RoleGuard allowedRole="customer">
 
-            {children}
+ {children}
 
-        </RoleGuard>
-    );
+ </RoleGuard>
+ );
 }

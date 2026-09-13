@@ -26,7 +26,11 @@ export class Notifications {
   @Column({ type: 'text' })
   message: string;
 
-  @Column({ type: 'enum', enum: NotificationStatus, default: NotificationStatus.PENDING })
+  @Column({
+    type: 'enum',
+    enum: NotificationStatus,
+    default: NotificationStatus.PENDING,
+  })
   status: NotificationStatus;
 
   @CreateDateColumn()

@@ -1,10 +1,10 @@
 "use client";
 
 import {
-    ChangeEvent,
-    FormEvent,
-    useEffect,
-    useState,
+ ChangeEvent,
+ FormEvent,
+ useEffect,
+ useState,
 } from "react";
 
 import axios from "axios";
@@ -14,426 +14,427 @@ import api from "@/lib/axios";
 
 interface StaffProfile {
 
-    id: number;
-    fullName: string;
-    email: string;
-    phone: string | null;
-    role: string;
+ id: number;
+ fullName: string;
+ email: string;
+ phone: string | null;
+ role: string;
 
 }
 
 
 export default function StaffProfilePage() {
 
-    const [formData, setFormData] =
-        useState(
-            {
-                fullName: "",
-                email: "",
-                phone: "",
-                role: "",
-            }
-        );
+ const [formData, setFormData] =
+ useState(
+ {
+ fullName: "",
+ email: "",
+ phone: "",
+ role: "",
+ }
+ );
 
-    const [err, setErr] =
-        useState("");
+ const [err, setErr] =
+ useState("");
 
-    const [
-        responseMsg,
-        setResponseMsg
-    ] =
-        useState("");
+ const [
+ responseMsg,
+ setResponseMsg
+ ] =
+ useState("");
 
-    const [loading, setLoading] =
-        useState(true);
+ const [loading, setLoading] =
+ useState(true);
 
-    const [saving, setSaving] =
-        useState(false);
+ const [saving, setSaving] =
+ useState(false);
 
 
-    useEffect(
-        () => {
+ useEffect(
+ () => {
 
-            const getProfile =
-                async () => {
+ const getProfile =
+ async () => {
 
-                    try {
+ try {
 
-                        const response =
-                            await api.get<StaffProfile>(
-                                "/users/me"
-                            );
+ const response =
+ await api.get<StaffProfile>(
+ "/users/me"
+ );
 
-                        setFormData(
-                            {
-                                fullName:
-                                    response.data.fullName,
+ setFormData(
+ {
+ fullName:
+ response.data.fullName,
 
-                                email:
-                                    response.data.email,
+ email:
+ response.data.email,
 
-                                phone:
-                                    response.data.phone ||
-                                    "",
+ phone:
+ response.data.phone ||
+ "",
 
-                                role:
-                                    response.data.role,
-                            }
-                        );
+ role:
+ response.data.role,
+ }
+ );
 
-                        setErr("");
+ setErr("");
 
-                    }
+ }
 
-                    catch (error) {
+ catch (error) {
 
-                        if (
-                            axios.isAxiosError(
-                                error
-                            ) &&
-                            error.response
-                                ?.data
-                                ?.message
-                        ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                            const message =
-                                error.response
-                                    .data
-                                    .message;
+ const message =
+ error.response
+ .data
+ .message;
 
-                            setErr(
-                                Array.isArray(
-                                    message
-                                )
-                                    ? message.join(
-                                        ", "
-                                    )
-                                    : message
-                            );
+ setErr(
+ Array.isArray(
+ message
+ )
+ ? message.join(
+ ", "
+ )
+ : message
+ );
 
-                        }
+ }
 
-                        else {
+ else {
 
-                            setErr(
-                                "Could not load profile"
-                            );
+ setErr(
+ "Could not load profile"
+ );
 
-                        }
+ }
 
-                    }
+ }
 
-                    finally {
+ finally {
 
-                        setLoading(
-                            false
-                        );
+ setLoading(
+ false
+ );
 
-                    }
+ }
 
-                };
+ };
 
 
-            getProfile();
+ getProfile();
 
-        },
-        []
-    );
+ },
+ []
+ );
 
 
-    const onChangeHandle = (
-        e:
-            ChangeEvent<
-                HTMLInputElement
-            >
-    ) => {
+ const onChangeHandle = (
+ e:
+ ChangeEvent<
+ HTMLInputElement
+ >
+ ) => {
 
-        const {
-            name,
-            value,
-        } = e.target;
+ const {
+ name,
+ value,
+ } = e.target;
 
-        setFormData(
-            {
-                ...formData,
-                [name]: value,
-            }
-        );
+ setFormData(
+ {
+ ...formData,
+ [name]: value,
+ }
+ );
 
-    };
+ };
 
 
-    const onSubmitHandle =
-        async (
-            e:
-                FormEvent<
-                    HTMLFormElement
-                >
-        ) => {
+ const onSubmitHandle =
+ async (
+ e:
+ FormEvent<
+ HTMLFormElement
+ >
+ ) => {
 
-            e.preventDefault();
+ e.preventDefault();
 
-            setResponseMsg("");
-            setErr("");
+ setResponseMsg("");
+ setErr("");
 
 
-            if (
-                !formData.fullName.trim()
-            ) {
+ if (
+ !formData.fullName.trim()
+ ) {
 
-                setErr(
-                    "Full name is required"
-                );
+ setErr(
+ "Full name is required"
+ );
 
-                return;
+ return;
 
-            }
+ }
 
 
-            setSaving(
-                true
-            );
+ setSaving(
+ true
+ );
 
 
-            try {
+ try {
 
-                const response =
-                    await api.patch<StaffProfile>(
-                        "/users/me",
-                        {
-                            fullName:
-                                formData.fullName,
+ const response =
+ await api.patch<StaffProfile>(
+ "/users/me",
+ {
+ fullName:
+ formData.fullName,
 
-                            phone:
-                                formData.phone,
-                        }
-                    );
+ phone:
+ formData.phone,
+ }
+ );
 
 
-                setFormData(
-                    {
-                        fullName:
-                            response.data.fullName,
+ setFormData(
+ {
+ fullName:
+ response.data.fullName,
 
-                        email:
-                            response.data.email,
+ email:
+ response.data.email,
 
-                        phone:
-                            response.data.phone ||
-                            "",
+ phone:
+ response.data.phone ||
+ "",
 
-                        role:
-                            response.data.role,
-                    }
-                );
+ role:
+ response.data.role,
+ }
+ );
 
 
-                setResponseMsg(
-                    "Profile updated successfully"
-                );
+ setResponseMsg(
+ "Profile updated successfully"
+ );
 
-            }
+ }
 
-            catch (error) {
+ catch (error) {
 
-                if (
-                    axios.isAxiosError(
-                        error
-                    ) &&
-                    error.response
-                        ?.data
-                        ?.message
-                ) {
+ if (
+ axios.isAxiosError(
+ error
+ ) &&
+ error.response
+ ?.data
+ ?.message
+ ) {
 
-                    const message =
-                        error.response
-                            .data
-                            .message;
+ const message =
+ error.response
+ .data
+ .message;
 
-                    setErr(
-                        Array.isArray(
-                            message
-                        )
-                            ? message.join(
-                                ", "
-                            )
-                            : message
-                    );
+ setErr(
+ Array.isArray(
+ message
+ )
+ ? message.join(
+ ", "
+ )
+ : message
+ );
 
-                }
+ }
 
-                else {
+ else {
 
-                    setErr(
-                        "Could not update profile"
-                    );
+ setErr(
+ "Could not update profile"
+ );
 
-                }
+ }
 
-            }
+ }
 
-            finally {
+ finally {
 
-                setSaving(
-                    false
-                );
+ setSaving(
+ false
+ );
 
-            }
+ }
 
-        };
+ };
 
 
-    if (loading) {
+ if (loading) {
 
-        return (
-            <div className="flex items-center justify-center p-10">
+ return (
+ <div className="flex items-center justify-center p-10">
 
-                <span className="loading loading-spinner"></span>
+ <span className="loading loading-spinner"></span>
 
-                <span className="ml-3">
-                    Loading profile...
-                </span>
+ <span className="ml-3">
+ Loading profile...
+ </span>
 
-            </div>
-        );
+ </div>
+ );
 
-    }
+ }
 
 
-    return (
-        <div className="max-w-3xl mx-auto py-8">
+ return (
+ <div className="max-w-3xl mx-auto py-8">
 
-            <h1 className="text-3xl font-bold mb-2">
-                Staff Profile
-            </h1>
+ <h1 className="text-3xl font-bold mb-2">
+ Staff Profile
+ </h1>
 
-            <p className="mb-6">
-                View and update your account information.
-            </p>
+ <p className="mb-6">
+ View and update your account information.
+ </p>
 
 
-            {
-                responseMsg &&
-                <div className="alert alert-success mb-4">
+ {
+ responseMsg &&
+ <div className="alert alert-success mb-4">
 
-                    <span>
-                        {responseMsg}
-                    </span>
+ <span>
+ {responseMsg}
+ </span>
 
-                </div>
-            }
+ </div>
+ }
 
 
-            {
-                err &&
-                <div className="alert alert-error mb-4">
+ {
+ err &&
+ <div className="alert alert-error mb-4">
 
-                    <span>
-                        {err}
-                    </span>
+ <span>
+ {err}
+ </span>
 
-                </div>
-            }
+ </div>
+ }
 
 
-            <div className="card bg-base-100 shadow border">
+ <div className="card bg-white shadow border">
 
-                <div className="card-body">
+ <div className="card-body">
 
-                    <form
-                        onSubmit={
-                            onSubmitHandle
-                        }
-                    >
+ <form
+ onSubmit={
+ onSubmitHandle
+ }
+ >
 
-                        <label className="label">
-                            Full Name
-                        </label>
+ <label className="label">
+ Full Name
+ </label>
 
-                        <input
-                            type="text"
-                            name="fullName"
-                            className="input input-bordered w-full"
-                            value={
-                                formData.fullName
-                            }
-                            onChange={
-                                onChangeHandle
-                            }
-                            required
-                        />
+ <input
+ type="text"
+ name="fullName"
+ className="input input-bordered w-full"
+ value={
+ formData.fullName
+ }
+ onChange={
+ onChangeHandle
+ }
+ required
+ />
 
 
-                        <label className="label mt-4">
-                            Email
-                        </label>
+ <label className="label mt-4">
+ Email
+ </label>
 
-                        <input
-                            type="email"
-                            name="email"
-                            className="input input-bordered w-full"
-                            value={
-                                formData.email
-                            }
-                            disabled
-                        />
+ <input
+ type="email"
+ name="email"
+ className="input input-bordered w-full"
+ value={
+ formData.email
+ }
+ disabled
+ />
 
 
-                        <label className="label mt-4">
-                            Phone
-                        </label>
+ <label className="label mt-4">
+ Phone
+ </label>
 
-                        <input
-                            type="text"
-                            name="phone"
-                            className="input input-bordered w-full"
-                            value={
-                                formData.phone
-                            }
-                            onChange={
-                                onChangeHandle
-                            }
-                        />
+ <input
+ type="text"
+ name="phone"
+ className="input input-bordered w-full"
+ value={
+ formData.phone
+ }
+ onChange={
+ onChangeHandle
+ }
+ />
 
 
-                        <label className="label mt-4">
-                            Role
-                        </label>
+ <label className="label mt-4">
+ Role
+ </label>
 
-                        <input
-                            type="text"
-                            name="role"
-                            className="input input-bordered w-full"
-                            value={
-                                formData.role
-                            }
-                            disabled
-                        />
+ <input
+ type="text"
+ name="role"
+ className="input input-bordered w-full"
+ value={
+ formData.role
+ }
+ disabled
+ />
 
 
-                        <button
-                            type="submit"
-                            className="btn btn-primary mt-6"
-                            disabled={
-                                saving
-                            }
-                        >
+ <button
+ type="submit"
+ className="btn btn-primary mt-6"
+ disabled={
+ saving
+ }
+ >
 
-                            {
-                                saving
-                                    ? "Updating..."
-                                    : "Update Profile"
-                            }
+ {
+ saving
+ ? "Updating..."
+ : "Update Profile"
+ }
 
-                        </button>
+ </button>
 
-                    </form>
+ </form>
 
-                </div>
+ </div>
 
-            </div>
+ </div>
 
-        </div>
-    );
+ </div>
+ );
 
 }
+

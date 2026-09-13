@@ -15,27 +15,19 @@ describe('AuthController', () => {
   };
 
   beforeEach(async () => {
-    const module: TestingModule =
-      await Test.createTestingModule({
-        controllers: [
-          AuthController,
-        ],
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [AuthController],
 
-        providers: [
-          {
-            provide:
-              AuthService,
+      providers: [
+        {
+          provide: AuthService,
 
-            useValue:
-              authService,
-          },
-        ],
-      }).compile();
+          useValue: authService,
+        },
+      ],
+    }).compile();
 
-    controller =
-      module.get<AuthController>(
-        AuthController,
-      );
+    controller = module.get<AuthController>(AuthController);
   });
 
   it('should be defined', () => {
@@ -50,19 +42,13 @@ describe('AuthController', () => {
       phone: '01700000000',
     };
 
-    authService.register.mockResolvedValue(
-      {
-        id: 1,
-      },
-    );
+    authService.register.mockResolvedValue({
+      id: 1,
+    });
 
     await controller.register(dto);
 
-    expect(
-      authService.register,
-    ).toHaveBeenCalledWith(
-      dto,
-    );
+    expect(authService.register).toHaveBeenCalledWith(dto);
   });
 
   it('login delegates to authService.login', async () => {
@@ -71,19 +57,13 @@ describe('AuthController', () => {
       password: 'password123',
     };
 
-    authService.login.mockResolvedValue(
-      {
-        access_token: 'access',
-        refresh_token: 'refresh',
-      },
-    );
+    authService.login.mockResolvedValue({
+      access_token: 'access',
+      refresh_token: 'refresh',
+    });
 
     await controller.login(dto);
 
-    expect(
-      authService.login,
-    ).toHaveBeenCalledWith(
-      dto,
-    );
+    expect(authService.login).toHaveBeenCalledWith(dto);
   });
 });
