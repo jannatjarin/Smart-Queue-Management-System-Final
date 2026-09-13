@@ -63,7 +63,17 @@ async function bootstrap() {
       .setVersion(
         '1.0',
       )
-      .addBearerAuth()
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+        'bearer',
+      )
+      .addSecurityRequirements(
+        'bearer',
+      )
       .build();
 
   const swaggerDocument =
