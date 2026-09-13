@@ -1,144 +1,188 @@
 "use client";
 
-import { useState } from "react";
-import axios from "axios";
-import { jwtDecode } from "jwt-decode";
-import { useRouter } from "next/navigation";
+import {
+    ChangeEvent,
+    FormEvent,
+    useState,
+} from "react";
 
-interface TokenData {
-    id: number,
-    email: string,
-    role: string
+import axios from "axios";
+
+import {
+    useRouter,
+} from "next/navigation";
+
+import api from "@/lib/axios";
+
+
+interface UserData {
+
+    role: string;
+
 }
+
 
 export default function LoginPage() {
 
-    const router = useRouter();
+    const router =
+        useRouter();
 
-    const [formData, setFormData] = useState(
-        {
-            email: "",
-            pass: ""
-        }
-    )
+    const [formData, setFormData] =
+        useState(
+            {
+                email: "",
+                pass: "",
+            }
+        );
 
-    const [user, setUser] = useState(
-        {
-            id: 0,
-            email: "",
-            role: ""
-        }
-    )
+    const [
+        responseMsg,
+        setResponseMsg
+    ] =
+        useState("");
 
-    const [responseMsg, setResponseMsg] = useState("");
 
-    const onChangeHandle = (e: any) => {
+    const onChangeHandle = (
+        e: ChangeEvent<HTMLInputElement>
+    ) => {
 
-        const { name, value } = e.target;
+        const {
+            name,
+            value,
+        } = e.target;
 
         setFormData(
             {
                 ...formData,
                 [name]: value,
             }
-        )
+        );
 
-    }
+    };
 
-    const onSubmitHandle = (e: any) => {
+
+    const onSubmitHandle = async (
+        e: FormEvent<HTMLFormElement>
+    ) => {
 
         e.preventDefault();
 
-        const fetchData = async () => {
+        setResponseMsg("");
 
-            try {
 
-                const response = await axios.post(
-                    "http://localhost:3000/auth/login",
+        try {
+
+            const response =
+                await api.post(
+                    "/auth/login",
                     {
-                        email: formData.email,
-                        password: formData.pass,
+                        email:
+                            formData.email,
+
+                        password:
+                            formData.pass,
                     }
-                )
-
-                localStorage.setItem(
-                    "access_token",
-                    response.data.access_token
                 );
 
-                localStorage.setItem(
-                    "refresh_token",
-                    response.data.refresh_token
+
+            localStorage.setItem(
+                "access_token",
+                response.data.access_token
+            );
+
+
+            localStorage.setItem(
+                "refresh_token",
+                response.data.refresh_token
+            );
+
+
+            const userResponse =
+                await api.get<UserData>(
+                    "/users/me"
                 );
 
-                const { id, email, role } =
-                    jwtDecode<TokenData>(
-                        response.data.access_token
-                    );
 
-                setUser(
-                    {
-                        id,
-                        email,
-                        role
-                    }
-                )
+            const role =
+                userResponse.data.role;
 
-                setResponseMsg(
-                    "Login successful"
+
+            setResponseMsg(
+                "Login successful"
+            );
+
+
+            if (role == "admin") {
+
+                router.push(
+                    "/admin/dashboard"
                 );
-
-                if (role == "admin") {
-
-                    router.push(
-                        "../admin/dashboard"
-                    );
-
-                }
-
-                else if (role == "staff") {
-
-                    router.push(
-                        "../staff/dashboard"
-                    );
-
-                }
-
-                else if (role == "customer") {
-
-                    router.push(
-                        "../customer/dashboard"
-                    );
-
-                }
 
             }
 
-            catch (error: any) {
+            else if (
+                role == "staff"
+            ) {
 
-                if (error.response?.data?.message) {
+                router.push(
+                    "/staff/dashboard"
+                );
 
-                    setResponseMsg(
-                        error.response.data.message
-                    );
+            }
 
-                }
+            else if (
+                role == "customer"
+            ) {
 
-                else {
+                router.push(
+                    "/customer/dashboard"
+                );
 
-                    setResponseMsg(
-                        "Login failed"
-                    );
+            }
 
-                }
+            else {
+
+                localStorage.removeItem(
+                    "access_token"
+                );
+
+                localStorage.removeItem(
+                    "refresh_token"
+                );
+
+                setResponseMsg(
+                    "Invalid user role"
+                );
 
             }
 
         }
 
-        fetchData();
+        catch (error) {
 
-    }
+            if (
+                axios.isAxiosError(error) &&
+                error.response?.data?.message
+            ) {
+
+                setResponseMsg(
+                    error.response.data.message
+                );
+
+            }
+
+            else {
+
+                setResponseMsg(
+                    "Login failed"
+                );
+
+            }
+
+        }
+
+    };
+
 
     return (
         <div className="min-h-[80vh] flex items-center justify-center">
@@ -150,6 +194,7 @@ export default function LoginPage() {
                     <h1 className="text-2xl font-bold text-center mb-4">
                         Login
                     </h1>
+
 
                     <form onSubmit={onSubmitHandle}>
 
@@ -167,7 +212,9 @@ export default function LoginPage() {
                                 className="input input-bordered w-full"
                                 onChange={onChangeHandle}
                                 value={formData.email}
+                                required
                             />
+
 
                             <label className="label mt-3">
                                 Password
@@ -181,7 +228,9 @@ export default function LoginPage() {
                                 className="input input-bordered w-full"
                                 onChange={onChangeHandle}
                                 value={formData.pass}
+                                required
                             />
+
 
                             <input
                                 type="submit"
@@ -193,6 +242,7 @@ export default function LoginPage() {
                         </fieldset>
 
                     </form>
+
 
                     {
                         responseMsg &&
@@ -210,5 +260,6 @@ export default function LoginPage() {
             </div>
 
         </div>
-    )
+    );
+
 }
