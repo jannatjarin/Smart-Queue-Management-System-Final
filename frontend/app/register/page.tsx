@@ -1,107 +1,155 @@
 "use client";
 
-import { useState } from "react";
+import {
+    ChangeEvent,
+    FormEvent,
+    useState,
+} from "react";
+
 import axios from "axios";
-import { useRouter } from "next/navigation";
+
+import {
+    useRouter,
+} from "next/navigation";
+
+import api from "@/lib/axios";
+
 
 export default function RegisterPage() {
 
-    const router = useRouter();
+    const router =
+        useRouter();
 
-    const [formData, setFormData] = useState(
-        {
-            fullName: "",
-            email: "",
-            phone: "",
-            password: "",
-            confirmPassword: ""
-        }
-    )
+    const [formData, setFormData] =
+        useState(
+            {
+                fullName: "",
+                email: "",
+                phone: "",
+                password: "",
+                confirmPassword: "",
+            }
+        );
 
-    const [responseMsg, setResponseMsg] = useState("");
+    const [
+        responseMsg,
+        setResponseMsg
+    ] =
+        useState("");
 
-    const onChangeHandle = (e: any) => {
 
-        const { name, value } = e.target;
+    const onChangeHandle = (
+        e: ChangeEvent<HTMLInputElement>
+    ) => {
+
+        const {
+            name,
+            value,
+        } = e.target;
 
         setFormData(
             {
                 ...formData,
                 [name]: value,
             }
-        )
+        );
 
-    }
+    };
 
-    const onSubmitHandle = (e: any) => {
+
+    const onSubmitHandle = async (
+        e: FormEvent<HTMLFormElement>
+    ) => {
 
         e.preventDefault();
 
-        if (formData.password !== formData.confirmPassword) {
+        setResponseMsg("");
 
-            setResponseMsg("Passwords do not match");
+
+        if (
+            formData.password.length < 6
+        ) {
+
+            setResponseMsg(
+                "Password must be at least 6 characters"
+            );
 
             return;
 
         }
 
-        const fetchData = async () => {
 
-            try {
+        if (
+            formData.password !==
+            formData.confirmPassword
+        ) {
 
-                const response = await axios.post(
-                    "http://localhost:3000/auth/register",
-                    {
-                        fullName: formData.fullName,
-                        email: formData.email,
-                        phone: formData.phone,
-                        password: formData.password
-                    }
-                )
+            setResponseMsg(
+                "Passwords do not match"
+            );
 
-                setResponseMsg("Registration successful");
+            return;
 
-                router.push("../login");
+        }
+
+
+        try {
+
+            await api.post(
+                "/auth/register",
+                {
+                    fullName:
+                        formData.fullName,
+
+                    email:
+                        formData.email,
+
+                    phone:
+                        formData.phone ||
+                        undefined,
+
+                    password:
+                        formData.password,
+                }
+            );
+
+
+            setResponseMsg(
+                "Registration successful"
+            );
+
+
+            router.push(
+                "/login"
+            );
+
+        }
+
+        catch (error) {
+
+            if (
+                axios.isAxiosError(error) &&
+                error.response?.data?.message
+            ) {
+
+                setResponseMsg(
+                    error.response.data.message
+                );
 
             }
 
-            catch (error: any) {
+            else {
 
-                if (error.response?.data?.message) {
-
-                    if (Array.isArray(error.response.data.message)) {
-
-                        setResponseMsg(
-                            error.response.data.message.join(", ")
-                        );
-
-                    }
-
-                    else {
-
-                        setResponseMsg(
-                            error.response.data.message
-                        );
-
-                    }
-
-                }
-
-                else {
-
-                    setResponseMsg(
-                        "Registration failed"
-                    );
-
-                }
+                setResponseMsg(
+                    "Registration failed"
+                );
 
             }
 
         }
 
-        fetchData();
+    };
 
-    }
 
     return (
         <div className="min-h-[80vh] flex items-center justify-center py-10">
@@ -113,6 +161,7 @@ export default function RegisterPage() {
                     <h1 className="text-2xl font-bold text-center mb-4">
                         Create Account
                     </h1>
+
 
                     <form onSubmit={onSubmitHandle}>
 
@@ -129,7 +178,9 @@ export default function RegisterPage() {
                                 className="input input-bordered w-full"
                                 onChange={onChangeHandle}
                                 value={formData.fullName}
+                                required
                             />
+
 
                             <label className="label mt-2">
                                 Email
@@ -142,7 +193,9 @@ export default function RegisterPage() {
                                 className="input input-bordered w-full"
                                 onChange={onChangeHandle}
                                 value={formData.email}
+                                required
                             />
+
 
                             <label className="label mt-2">
                                 Phone
@@ -151,11 +204,12 @@ export default function RegisterPage() {
                             <input
                                 type="text"
                                 name="phone"
-                                placeholder="Enter phone number"
+                                placeholder="Enter your phone number"
                                 className="input input-bordered w-full"
                                 onChange={onChangeHandle}
                                 value={formData.phone}
                             />
+
 
                             <label className="label mt-2">
                                 Password
@@ -168,7 +222,9 @@ export default function RegisterPage() {
                                 className="input input-bordered w-full"
                                 onChange={onChangeHandle}
                                 value={formData.password}
+                                required
                             />
+
 
                             <label className="label mt-2">
                                 Confirm Password
@@ -181,7 +237,9 @@ export default function RegisterPage() {
                                 className="input input-bordered w-full"
                                 onChange={onChangeHandle}
                                 value={formData.confirmPassword}
+                                required
                             />
+
 
                             <input
                                 type="submit"
@@ -192,6 +250,7 @@ export default function RegisterPage() {
                         </fieldset>
 
                     </form>
+
 
                     {
                         responseMsg &&
@@ -209,5 +268,6 @@ export default function RegisterPage() {
             </div>
 
         </div>
-    )
+    );
+
 }
