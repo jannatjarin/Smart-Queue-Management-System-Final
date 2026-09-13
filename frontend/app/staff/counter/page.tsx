@@ -1,36 +1,49 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import {
+    useEffect,
+    useState,
+} from "react";
+
 import axios from "axios";
 
-interface Staff {
-    id: number,
-    fullName: string,
-    email: string
-}
+import api from "@/lib/axios";
+
 
 interface Service {
-    id: number,
-    name: string
+
+    id: number;
+    name: string;
+
 }
 
-interface Counter {
-    id: number,
-    name: string,
-    status: string,
-    staff: Staff | null,
-    services: Service[]
+
+interface Staff {
+
+    id: number;
+    fullName: string;
+    email: string;
+
 }
+
+
+interface Counter {
+
+    id: number;
+    name: string;
+    status: string;
+    staff: Staff | null;
+    services: Service[];
+
+}
+
 
 export default function StaffCounterPage() {
 
-    const [staff, setStaff] =
-        useState<Staff | null>(
+    const [counter, setCounter] =
+        useState<Counter | null>(
             null
         );
-
-    const [counters, setCounters] =
-        useState<Counter[]>([]);
 
     const [refresh, setRefresh] =
         useState(0);
@@ -41,114 +54,96 @@ export default function StaffCounterPage() {
     const [err, setErr] =
         useState("");
 
-    useEffect(() => {
+    const [loading, setLoading] =
+        useState(true);
 
-        const getData = async () => {
 
-            const token =
-                localStorage.getItem(
-                    "access_token"
-                );
+    useEffect(
+        () => {
+
+            const getCounter =
+                async () => {
+
+                    try {
+
+                        const response =
+                            await api.get<Counter[]>(
+                                "/counters"
+                            );
+
+                        setCounter(
+                            response.data.length > 0
+                                ? response.data[0]
+                                : null
+                        );
+
+                        setErr("");
+
+                    }
+
+                    catch (error) {
+
+                        if (
+                            axios.isAxiosError(
+                                error
+                            ) &&
+                            error.response
+                                ?.data
+                                ?.message
+                        ) {
+
+                            setErr(
+                                error.response
+                                    .data
+                                    .message
+                            );
+
+                        }
+
+                        else {
+
+                            setErr(
+                                "Could not load counter"
+                            );
+
+                        }
+
+                    }
+
+                    finally {
+
+                        setLoading(
+                            false
+                        );
+
+                    }
+
+                };
+
+
+            getCounter();
+
+        },
+        [refresh]
+    );
+
+
+    const updateCounterStatus =
+        async (
+            id: number,
+            status: string
+        ) => {
+
+            setResponseMsg("");
+            setErr("");
+
 
             try {
 
-                const staffResponse =
-                    await axios.get<Staff>(
-                        "http://localhost:3000/users/me",
-                        {
-                            headers: {
-                                Authorization:
-                                    `Bearer ${token}`
-                            }
-                        }
-                    );
-
-                const countersResponse =
-                    await axios.get<Counter[]>(
-                        "http://localhost:3000/counters",
-                        {
-                            headers: {
-                                Authorization:
-                                    `Bearer ${token}`
-                            }
-                        }
-                    );
-
-                setStaff(
-                    staffResponse.data
-                );
-
-                setCounters(
-                    countersResponse.data
-                );
-
-                setErr("");
-
-            }
-
-            catch (error) {
-
-                if (
-                    axios.isAxiosError(error) &&
-                    error.response?.data?.message
-                ) {
-
-                    setErr(
-                        error.response.data.message
-                    );
-
-                }
-
-                else {
-
-                    setErr(
-                        "Could not load counter"
-                    );
-
-                }
-
-            }
-
-        }
-
-        getData();
-
-    }, [refresh]);
-
-    const assignedCounter =
-        staff
-            ? counters.find(
-                (counter: Counter) =>
-                    counter.staff?.id ==
-                    staff.id
-            )
-            : undefined;
-
-    const updateCounterStatus = (
-        id: number,
-        status: string
-    ) => {
-
-        const updateData = async () => {
-
-            const token =
-                localStorage.getItem(
-                    "access_token"
-                );
-
-            try {
-
-                await axios.patch(
-                    `http://localhost:3000/counters/${id}/status`,
+                await api.patch(
+                    `/counters/${id}/status`,
                     {
-                        status:
-                            status
-                    },
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`
-                        }
+                        status,
                     }
                 );
 
@@ -156,10 +151,9 @@ export default function StaffCounterPage() {
                     "Counter status updated successfully"
                 );
 
-                setErr("");
-
                 setRefresh(
-                    refresh + 1
+                    (value) =>
+                        value + 1
                 );
 
             }
@@ -167,12 +161,18 @@ export default function StaffCounterPage() {
             catch (error) {
 
                 if (
-                    axios.isAxiosError(error) &&
-                    error.response?.data?.message
+                    axios.isAxiosError(
+                        error
+                    ) &&
+                    error.response
+                        ?.data
+                        ?.message
                 ) {
 
                     setErr(
-                        error.response.data.message
+                        error.response
+                            .data
+                            .message
                     );
 
                 }
@@ -187,11 +187,25 @@ export default function StaffCounterPage() {
 
             }
 
-        }
+        };
 
-        updateData();
+
+    if (loading) {
+
+        return (
+            <div className="flex items-center justify-center p-10">
+
+                <span className="loading loading-spinner"></span>
+
+                <span className="ml-3">
+                    Loading counter...
+                </span>
+
+            </div>
+        );
 
     }
+
 
     return (
         <div className="max-w-4xl mx-auto py-8">
@@ -201,12 +215,12 @@ export default function StaffCounterPage() {
             </h1>
 
             <p className="mb-6">
-                View your assigned counter
+                View your assigned counter and manage its status.
             </p>
+
 
             {
                 responseMsg &&
-
                 <div className="alert alert-success mb-4">
 
                     <span>
@@ -216,9 +230,9 @@ export default function StaffCounterPage() {
                 </div>
             }
 
+
             {
                 err &&
-
                 <div className="alert alert-error mb-4">
 
                     <span>
@@ -228,28 +242,31 @@ export default function StaffCounterPage() {
                 </div>
             }
 
+
             {
-                assignedCounter
+                counter
                     ? (
                         <div className="card bg-base-100 shadow border">
 
                             <div className="card-body">
 
                                 <h2 className="card-title">
-                                    {assignedCounter.name}
+                                    {counter.name}
                                 </h2>
 
                                 <p>
-                                    Staff:{" "}
+                                    <b>Staff:</b>{" "}
                                     {
-                                        assignedCounter.staff?.fullName
+                                        counter.staff?.fullName ||
+                                        "Not Assigned"
                                     }
                                 </p>
 
                                 <p>
-                                    Status:{" "}
-                                    {assignedCounter.status}
+                                    <b>Status:</b>{" "}
+                                    {counter.status}
                                 </p>
+
 
                                 <label className="label mt-4">
                                     Change Status
@@ -257,11 +274,11 @@ export default function StaffCounterPage() {
 
                                 <select
                                     className="select select-bordered max-w-sm"
-                                    value={assignedCounter.status}
+                                    value={counter.status}
                                     onChange={
                                         (e) =>
                                             updateCounterStatus(
-                                                assignedCounter.id,
+                                                counter.id,
                                                 e.target.value
                                             )
                                     }
@@ -281,25 +298,27 @@ export default function StaffCounterPage() {
 
                                 </select>
 
-                                <h3 className="font-bold mt-4">
+
+                                <h3 className="font-bold mt-6">
                                     Assigned Services
                                 </h3>
 
+
                                 {
-                                    assignedCounter.services &&
-                                    assignedCounter.services.length > 0
+                                    counter.services.length > 0
                                         ? (
-                                            <div className="flex flex-col gap-2">
+                                            <div className="flex flex-wrap gap-2 mt-2">
 
                                                 {
-                                                    assignedCounter.services.map(
-                                                        (
-                                                            service: Service
-                                                        ) => (
+                                                    counter.services.map(
+                                                        (service) => (
 
-                                                            <p key={service.id}>
+                                                            <span
+                                                                key={service.id}
+                                                                className="badge badge-outline"
+                                                            >
                                                                 {service.name}
-                                                            </p>
+                                                            </span>
 
                                                         )
                                                     )
@@ -319,12 +338,17 @@ export default function StaffCounterPage() {
                         </div>
                     )
                     : (
-                        <p>
-                            No counter assigned
-                        </p>
+                        <div className="alert">
+
+                            <span>
+                                No counter assigned. Ask an Admin to assign you to a counter.
+                            </span>
+
+                        </div>
                     )
             }
 
         </div>
-    )
+    );
+
 }

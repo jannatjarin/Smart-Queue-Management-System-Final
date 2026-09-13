@@ -1,34 +1,58 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import {
+    useEffect,
+    useState,
+} from "react";
+
 import axios from "axios";
 import Link from "next/link";
 
+import api from "@/lib/axios";
+
+
 interface Staff {
-    id: number,
-    fullName: string,
-    email: string,
-    phone?: string,
-    role: string
+
+    id: number;
+    fullName: string;
+    email: string;
+    phone: string | null;
+    role: string;
+
 }
+
 
 interface Service {
-    id: number,
-    name: string
+
+    id: number;
+    name: string;
+
 }
+
 
 interface Counter {
-    id: number,
-    name: string,
-    status: string,
-    staff: Staff | null,
-    services: Service[]
+
+    id: number;
+    name: string;
+    status: string;
+    staff: Staff | null;
+    services: Service[];
+
 }
 
+
 interface Ticket {
-    id: number,
-    status: string
+
+    id: number;
+    status: string;
+
+    counter: {
+        id: number;
+        name: string;
+    } | null;
+
 }
+
 
 export default function StaffDashboard() {
 
@@ -37,128 +61,147 @@ export default function StaffDashboard() {
             null
         );
 
-    const [err, setErr] =
-    useState("")
-
     const [counters, setCounters] =
-    useState<Counter[]>([]);
+        useState<Counter[]>([]);
 
     const [tickets, setTickets] =
-    useState<Ticket[]>([]);
+        useState<Ticket[]>([]);
 
-    useEffect(() => {
+    const [err, setErr] =
+        useState("");
 
-    const getStaff = async () => {
+    const [loading, setLoading] =
+        useState(true);
 
-        const token =
-            localStorage.getItem(
-                "access_token"
-            );
 
-        try {
+    useEffect(
+        () => {
 
-            const response =
-                await axios.get<Staff>(
-                    "http://localhost:3000/users/me",
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`
+            const loadDashboard =
+                async () => {
+
+                    try {
+
+                        const staffResponse =
+                            await api.get<Staff>(
+                                "/users/me"
+                            );
+
+                        const countersResponse =
+                            await api.get<Counter[]>(
+                                "/counters"
+                            );
+
+                        const ticketsResponse =
+                            await api.get<Ticket[]>(
+                                "/tickets"
+                            );
+
+                        setStaff(
+                            staffResponse.data
+                        );
+
+                        setCounters(
+                            countersResponse.data
+                        );
+
+                        setTickets(
+                            ticketsResponse.data
+                        );
+
+                        setErr("");
+
+                    }
+
+                    catch (error) {
+
+                        if (
+                            axios.isAxiosError(
+                                error
+                            ) &&
+                            error.response
+                                ?.data
+                                ?.message
+                        ) {
+
+                            setErr(
+                                error.response
+                                    .data
+                                    .message
+                            );
+
                         }
-                    }
-                );
 
-            const countersResponse =
-                await axios.get<Counter[]>(
-                    "http://localhost:3000/counters",
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`
+                        else {
+
+                            setErr(
+                                "Could not load staff information"
+                            );
+
                         }
+
                     }
-                );
 
-            const ticketsResponse =
-                await axios.get<Ticket[]>(
-                    "http://localhost:3000/tickets",
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`                            }
+                    finally {
+
+                        setLoading(
+                            false
+                        );
+
                     }
-                );
 
-            setStaff(
-                response.data
-            );
+                };
 
-            setCounters(
-                countersResponse.data
-            );
 
-            setTickets(
-                ticketsResponse.data
-            );
+            loadDashboard();
 
-            setErr("");
+        },
+        []
+    );
 
-        }
 
-        catch (error) {
+    const assignedCounter =
+        counters.length > 0
+            ? counters[0]
+            : null;
 
-            if (
-                axios.isAxiosError(error) &&
-                error.response?.data?.message
-            ) {
 
-                setErr(
-                    error.response.data.message
-                );
+    const waitingTickets =
+        tickets.filter(
+            (ticket) =>
+                ticket.status ==
+                "waiting"
+        ).length;
 
-            }
 
-            else {
+    const calledTickets =
+        assignedCounter
+            ? tickets.filter(
+                (ticket) =>
+                    ticket.status ==
+                    "called" &&
+                    ticket.counter?.id ==
+                    assignedCounter.id
+            ).length
+            : 0;
 
-                setErr(
-                    "Could not load staff information"
-                );
 
-            }
+    if (loading) {
 
-        }
+        return (
+            <div className="flex items-center justify-center p-10">
+
+                <span className="loading loading-spinner"></span>
+
+                <span className="ml-3">
+                    Loading dashboard...
+                </span>
+
+            </div>
+        );
 
     }
 
-    getStaff();
-
-}, []);
-
-const assignedCounter =
-    staff
-        ? counters.find(
-            (counter: Counter) => {
-
-                return (
-                    counter.staff?.id ==
-                    staff.id
-                );
-
-            }
-        )
-        : undefined;
-
-const waitingTickets =
-    tickets.filter(
-        (ticket: Ticket) =>
-            ticket.status == "waiting"
-    ).length;
-
-const calledTickets =
-    tickets.filter(
-        (ticket: Ticket) =>
-            ticket.status == "called"
-    ).length;
 
     return (
         <div className="max-w-6xl mx-auto py-8">
@@ -171,28 +214,44 @@ const calledTickets =
                 Smart Queue Management System
             </p>
 
+
             {
                 err &&
-
                 <div className="alert alert-error mb-4">
-                
-                <span>
-                    {err}
-                </span>
+
+                    <span>
+                        {err}
+                    </span>
 
                 </div>
             }
+
+
             {
                 staff &&
+                <div className="card bg-base-100 shadow border mb-8">
 
-                <p>
-                    Welcome, {staff.fullName}
-                </p>
+                    <div className="card-body">
+
+                        <h2 className="card-title">
+                            Welcome, {staff.fullName}
+                        </h2>
+
+                        <p>
+                            <b>Email:</b>{" "}
+                            {staff.email}
+                        </p>
+
+                    </div>
+
+                </div>
             }
 
-            <h2 className="text-2xl font-bold mt-8 mb-4">
+
+            <h2 className="text-2xl font-bold mb-4">
                 Assigned Counter
             </h2>
+
 
             {
                 assignedCounter
@@ -206,66 +265,90 @@ const calledTickets =
                                 </h2>
 
                                 <p>
-                                    Status:{" "}
+                                    <b>Status:</b>{" "}
                                     {assignedCounter.status}
                                 </p>
+
+                                <div>
+                                    <b>Services:</b>
+
+                                    <div className="flex flex-wrap gap-2 mt-2">
+
+                                        {
+                                            assignedCounter.services.map(
+                                                (service) => (
+
+                                                    <span
+                                                        key={service.id}
+                                                        className="badge badge-outline"
+                                                    >
+                                                        {service.name}
+                                                    </span>
+
+                                                )
+                                            )
+                                        }
+
+                                    </div>
+
+                                </div>
 
                             </div>
 
                         </div>
                     )
                     : (
-                        <p>
-                            No counter assigned
-                        </p>
+                        <div className="alert">
+
+                            <span>
+                                No counter assigned. Ask an Admin to assign you to a counter.
+                            </span>
+
+                        </div>
                     )
             }
 
+
             <div className="grid md:grid-cols-2 gap-5 mt-8">
 
-                <div className="card bg-base-100 shadow border">
+                <div className="stat bg-base-100 shadow border rounded-box">
 
-                    <div className="card-body">
+                    <div className="stat-title">
+                        Waiting Tickets
+                    </div>
 
-                        <h2 className="card-title">
-                            Waiting Tickets
-                        </h2>
-
-                        <p className="text-3xl font-bold">
-                            {waitingTickets}
-                        </p>
-
+                    <div className="stat-value text-3xl">
+                        {waitingTickets}
                     </div>
 
                 </div>
 
-                <div className="card bg-base-100 shadow border">
 
-                    <div className="card-body">
+                <div className="stat bg-base-100 shadow border rounded-box">
 
-                        <h2 className="card-title">
-                            Called Tickets
-                        </h2>
+                    <div className="stat-title">
+                        Called At My Counter
+                    </div>
 
-                        <p className="text-3xl font-bold">
-                            {calledTickets}
-                        </p>
-
+                    <div className="stat-value text-3xl">
+                        {calledTickets}
                     </div>
 
                 </div>
 
             </div>
 
+
             <h2 className="text-2xl font-bold mt-8 mb-4">
                 Staff Actions
             </h2>
+
 
             <div className="grid md:grid-cols-3 gap-4">
 
                 <Link
                     href="/staff/queue"
-                    className="card bg-base-100 shadow border"
+                    className="card bg-base-100 shadow border hover:shadow-md"
                 >
 
                     <div className="card-body">
@@ -275,16 +358,17 @@ const calledTickets =
                         </h2>
 
                         <p>
-                            Manage queue tickets
+                            Call and complete queue tickets
                         </p>
 
                     </div>
 
                 </Link>
 
+
                 <Link
                     href="/staff/counter"
-                    className="card bg-base-100 shadow border"
+                    className="card bg-base-100 shadow border hover:shadow-md"
                 >
 
                     <div className="card-body">
@@ -294,16 +378,17 @@ const calledTickets =
                         </h2>
 
                         <p>
-                            Manage your counter
+                            Manage your counter status
                         </p>
 
                     </div>
 
                 </Link>
 
+
                 <Link
                     href="/staff/profile"
-                    className="card bg-base-100 shadow border"
+                    className="card bg-base-100 shadow border hover:shadow-md"
                 >
 
                     <div className="card-body">
@@ -313,7 +398,7 @@ const calledTickets =
                         </h2>
 
                         <p>
-                            View your profile
+                            View and update your profile
                         </p>
 
                     </div>
@@ -323,7 +408,6 @@ const calledTickets =
             </div>
 
         </div>
+    );
 
-        
-    )
 }

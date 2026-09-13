@@ -1,20 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import type {
+import {
     ChangeEvent,
-    FormEvent
+    FormEvent,
+    useEffect,
+    useState,
 } from "react";
+
 import axios from "axios";
 
+import api from "@/lib/axios";
+
+
 interface Service {
-    id: number,
-    name: string,
-    description: string,
-    estimatedTime: number,
-    department: string,
-    isActive: boolean
+
+    id: number;
+    name: string;
+    description: string | null;
+    estimatedTime: number;
+    department: string;
+    isActive: boolean;
+
 }
+
 
 export default function AdminServicesPage() {
 
@@ -27,7 +35,7 @@ export default function AdminServicesPage() {
                 name: "",
                 description: "",
                 estimatedTime: "",
-                department: ""
+                department: "",
             }
         );
 
@@ -39,80 +47,148 @@ export default function AdminServicesPage() {
     const [refresh, setRefresh] =
         useState(0);
 
-    const [responseMsg, setResponseMsg] =
+    const [
+        responseMsg,
+        setResponseMsg
+    ] =
         useState("");
 
     const [err, setErr] =
         useState("");
 
-    useEffect(() => {
+    const [loading, setLoading] =
+        useState(true);
 
-        const getServices = async () => {
+    const [saving, setSaving] =
+        useState(false);
 
-            try {
 
-                const response =
-                    await axios.get<Service[]>(
-                        "http://localhost:3000/services?includeInactive=true"
+    useEffect(
+        () => {
+
+            const getServices =
+                async () => {
+
+                    setLoading(
+                        true
                     );
 
-                setServices(
-                    response.data
-                );
 
-                setErr("");
+                    try {
 
-            }
+                        const response =
+                            await api.get<Service[]>(
+                                "/services?includeInactive=true"
+                            );
 
-            catch (error) {
 
-                if (
-                    axios.isAxiosError(error) &&
-                    error.response?.data?.message
-                ) {
+                        setServices(
+                            response.data
+                        );
 
-                    setErr(
-                        error.response.data.message
-                    );
+                        setErr("");
 
-                }
+                    }
 
-                else {
+                    catch (error) {
 
-                    setErr(
-                        "Could not load services"
-                    );
+                        if (
+                            axios.isAxiosError(
+                                error
+                            ) &&
+                            error.response
+                                ?.data
+                                ?.message
+                        ) {
 
-                }
+                            const message =
+                                error.response
+                                    .data
+                                    .message;
 
-            }
+                            setErr(
+                                Array.isArray(
+                                    message
+                                )
+                                    ? message.join(
+                                        ", "
+                                    )
+                                    : message
+                            );
 
-        }
+                        }
 
-        getServices();
+                        else {
 
-    }, [refresh]);
+                            setErr(
+                                "Could not load services"
+                            );
+
+                        }
+
+                    }
+
+                    finally {
+
+                        setLoading(
+                            false
+                        );
+
+                    }
+
+                };
+
+
+            getServices();
+
+        },
+        [refresh]
+    );
+
 
     const onChangeHandle = (
-        e: ChangeEvent<
-            HTMLInputElement |
-            HTMLTextAreaElement
-        >
+        e:
+            ChangeEvent<
+                HTMLInputElement |
+                HTMLTextAreaElement
+            >
     ) => {
 
         const {
             name,
-            value
+            value,
         } = e.target;
+
 
         setFormData(
             {
                 ...formData,
-                [name]: value
+                [name]: value,
             }
         );
 
-    }
+    };
+
+
+    const resetForm =
+        () => {
+
+            setEditId(
+                null
+            );
+
+
+            setFormData(
+                {
+                    name: "",
+                    description: "",
+                    estimatedTime: "",
+                    department: "",
+                }
+            );
+
+        };
+
 
     const editService = (
         service: Service
@@ -122,13 +198,15 @@ export default function AdminServicesPage() {
             service.id
         );
 
+
         setFormData(
             {
                 name:
                     service.name,
 
                 description:
-                    service.description || "",
+                    service.description ||
+                    "",
 
                 estimatedTime:
                     String(
@@ -136,36 +214,80 @@ export default function AdminServicesPage() {
                     ),
 
                 department:
-                    service.department
+                    service.department,
             }
         );
 
 
         setResponseMsg("");
-
         setErr("");
 
-    }
+    };
 
-    const onSubmitHandle = (
-        e: FormEvent<HTMLFormElement>
-    ) => {
 
-        e.preventDefault();
+    const onSubmitHandle =
+        async (
+            e:
+                FormEvent<
+                    HTMLFormElement
+                >
+        ) => {
 
-        const createService = async () => {
+            e.preventDefault();
 
-            const token =
-                localStorage.getItem(
-                    "access_token"
+            setResponseMsg("");
+            setErr("");
+
+
+            if (
+                !formData.name.trim() ||
+                !formData.department.trim()
+            ) {
+
+                setErr(
+                    "Name and department are required"
                 );
+
+                return;
+
+            }
+
+
+            const estimatedTime =
+                Number(
+                    formData.estimatedTime
+                );
+
+
+            if (
+                !Number.isInteger(
+                    estimatedTime
+                ) ||
+                estimatedTime <= 0
+            ) {
+
+                setErr(
+                    "Estimated time must be a positive whole number"
+                );
+
+                return;
+
+            }
+
+
+            setSaving(
+                true
+            );
+
 
             try {
 
-                if (editId == null) {
+                if (
+                    editId == null
+                ) {
 
-                    await axios.post(
-                        "http://localhost:3000/services",
+                    await api.post(
+                        "/services",
                         {
                             name:
                                 formData.name,
@@ -173,21 +295,13 @@ export default function AdminServicesPage() {
                             description:
                                 formData.description,
 
-                            estimatedTime:
-                                Number(
-                                    formData.estimatedTime
-                                ),
+                            estimatedTime,
 
                             department:
-                                formData.department
-                        },
-                        {
-                            headers: {
-                                Authorization:
-                                    `Bearer ${token}`
-                            }
+                                formData.department,
                         }
                     );
+
 
                     setResponseMsg(
                         "Service created successfully"
@@ -197,8 +311,8 @@ export default function AdminServicesPage() {
 
                 else {
 
-                    await axios.patch(
-                        `http://localhost:3000/services/${editId}`,
+                    await api.patch(
+                        `/services/${editId}`,
                         {
                             name:
                                 formData.name,
@@ -206,21 +320,13 @@ export default function AdminServicesPage() {
                             description:
                                 formData.description,
 
-                            estimatedTime:
-                                Number(
-                                    formData.estimatedTime
-                                ),
+                            estimatedTime,
 
                             department:
-                                formData.department
-                        },
-                        {
-                            headers: {
-                                Authorization:
-                                    `Bearer ${token}`
-                            }
+                                formData.department,
                         }
                     );
+
 
                     setResponseMsg(
                         "Service updated successfully"
@@ -228,21 +334,13 @@ export default function AdminServicesPage() {
 
                 }
 
-                setErr("");
 
-                setEditId(null);
+                resetForm();
 
-                setFormData(
-                    {
-                        name: "",
-                        description: "",
-                        estimatedTime: "",
-                        department: ""
-                    }
-                );
 
                 setRefresh(
-                    refresh + 1
+                    (value) =>
+                        value + 1
                 );
 
             }
@@ -250,81 +348,80 @@ export default function AdminServicesPage() {
             catch (error) {
 
                 if (
-                    axios.isAxiosError(error) &&
-                    error.response?.data?.message
+                    axios.isAxiosError(
+                        error
+                    ) &&
+                    error.response
+                        ?.data
+                        ?.message
                 ) {
 
-                    if (
-                        Array.isArray(
-                            error.response.data.message
-                        )
-                    ) {
+                    const message =
+                        error.response
+                            .data
+                            .message;
 
-                        setErr(
-                            error.response.data.message.join(
+
+                    setErr(
+                        Array.isArray(
+                            message
+                        )
+                            ? message.join(
                                 ", "
                             )
-                        );
-
-                    }
-
-                    else {
-
-                        setErr(
-                            error.response.data.message
-                        );
-
-                    }
+                            : message
+                    );
 
                 }
 
                 else {
 
                     setErr(
-                        "Could not create service"
+                        editId == null
+                            ? "Could not create service"
+                            : "Could not update service"
                     );
 
                 }
 
             }
 
-        }
+            finally {
 
-        createService();
-
-    }
-    const deactivateService = (
-        id: number
-    ) => {
-
-        const updateService = async () => {
-
-            const token =
-                localStorage.getItem(
-                    "access_token"
+                setSaving(
+                    false
                 );
+
+            }
+
+        };
+
+
+    const deactivateService =
+        async (
+            id: number
+        ) => {
+
+            setResponseMsg("");
+            setErr("");
+
 
             try {
 
-                await axios.patch(
-                    `http://localhost:3000/services/${id}/deactivate`,
-                    {},
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`
-                        }
-                    }
+                await api.patch(
+                    `/services/${id}/deactivate`,
+                    {}
                 );
+
 
                 setResponseMsg(
                     "Service deactivated successfully"
                 );
 
-                setErr("");
 
                 setRefresh(
-                    refresh + 1
+                    (value) =>
+                        value + 1
                 );
 
             }
@@ -332,12 +429,28 @@ export default function AdminServicesPage() {
             catch (error) {
 
                 if (
-                    axios.isAxiosError(error) &&
-                    error.response?.data?.message
+                    axios.isAxiosError(
+                        error
+                    ) &&
+                    error.response
+                        ?.data
+                        ?.message
                 ) {
 
+                    const message =
+                        error.response
+                            .data
+                            .message;
+
+
                     setErr(
-                        error.response.data.message
+                        Array.isArray(
+                            message
+                        )
+                            ? message.join(
+                                ", "
+                            )
+                            : message
                     );
 
                 }
@@ -352,43 +465,42 @@ export default function AdminServicesPage() {
 
             }
 
-        }
+        };
 
-        updateService();
 
-    }
+    const deleteService =
+        async (
+            id: number
+        ) => {
 
-    const deleteService = (
-        id: number
-    ) => {
+            setResponseMsg("");
+            setErr("");
 
-        const removeService = async () => {
-
-            const token =
-                localStorage.getItem(
-                    "access_token"
-                );
 
             try {
 
-                await axios.delete(
-                    `http://localhost:3000/services/${id}`,
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`
-                        }
-                    }
+                await api.delete(
+                    `/services/${id}`
                 );
+
 
                 setResponseMsg(
                     "Service deleted successfully"
                 );
 
-                setErr("");
+
+                if (
+                    editId == id
+                ) {
+
+                    resetForm();
+
+                }
+
 
                 setRefresh(
-                    refresh + 1
+                    (value) =>
+                        value + 1
                 );
 
             }
@@ -396,12 +508,28 @@ export default function AdminServicesPage() {
             catch (error) {
 
                 if (
-                    axios.isAxiosError(error) &&
-                    error.response?.data?.message
+                    axios.isAxiosError(
+                        error
+                    ) &&
+                    error.response
+                        ?.data
+                        ?.message
                 ) {
 
+                    const message =
+                        error.response
+                            .data
+                            .message;
+
+
                     setErr(
-                        error.response.data.message
+                        Array.isArray(
+                            message
+                        )
+                            ? message.join(
+                                ", "
+                            )
+                            : message
                     );
 
                 }
@@ -416,11 +544,8 @@ export default function AdminServicesPage() {
 
             }
 
-        }
+        };
 
-        removeService();
-
-    }
 
     return (
         <div className="max-w-7xl mx-auto py-8">
@@ -430,57 +555,76 @@ export default function AdminServicesPage() {
             </h1>
 
             <p className="mb-6">
-                Create and manage services
+                Create and manage queue services.
             </p>
+
 
             {
                 responseMsg &&
                 <div className="alert alert-success mb-4">
-                    {responseMsg}
+
+                    <span>
+                        {responseMsg}
+                    </span>
+
                 </div>
             }
+
 
             {
                 err &&
                 <div className="alert alert-error mb-4">
-                    {err}
+
+                    <span>
+                        {err}
+                    </span>
+
                 </div>
             }
+
 
             <div className="card bg-base-100 shadow border mb-8">
 
                 <div className="card-body">
 
                     <h2 className="card-title">
-
                         {
                             editId == null
                                 ? "Create Service"
                                 : "Edit Service"
                         }
-
                     </h2>
 
-                    <form onSubmit={onSubmitHandle}>
+
+                    <form
+                        onSubmit={
+                            onSubmitHandle
+                        }
+                    >
 
                         <div className="grid md:grid-cols-2 gap-4">
 
                             <div>
 
                                 <label className="label">
-                                    Name
+                                    Service Name
                                 </label>
 
                                 <input
                                     type="text"
                                     name="name"
                                     className="input input-bordered w-full"
-                                    value={formData.name}
-                                    onChange={onChangeHandle}
+                                    value={
+                                        formData.name
+                                    }
+                                    onChange={
+                                        onChangeHandle
+                                    }
                                     required
                                 />
 
                             </div>
+
 
                             <div>
 
@@ -492,57 +636,96 @@ export default function AdminServicesPage() {
                                     type="text"
                                     name="department"
                                     className="input input-bordered w-full"
-                                    value={formData.department}
-                                    onChange={onChangeHandle}
+                                    value={
+                                        formData.department
+                                    }
+                                    onChange={
+                                        onChangeHandle
+                                    }
                                     required
                                 />
 
                             </div>
+
 
                             <div>
 
                                 <label className="label">
                                     Estimated Time
+                                    (minutes)
                                 </label>
 
                                 <input
                                     type="number"
                                     name="estimatedTime"
-                                    className="input input-bordered w-full"
-                                    value={formData.estimatedTime}
-                                    onChange={onChangeHandle}
                                     min="1"
+                                    step="1"
+                                    className="input input-bordered w-full"
+                                    value={
+                                        formData.estimatedTime
+                                    }
+                                    onChange={
+                                        onChangeHandle
+                                    }
                                     required
-                                />
-
-                            </div>
-
-                            <div>
-
-                                <label className="label">
-                                    Description
-                                </label>
-
-                                <textarea
-                                    name="description"
-                                    className="textarea textarea-bordered w-full"
-                                    value={formData.description}
-                                    onChange={onChangeHandle}
                                 />
 
                             </div>
 
                         </div>
 
-                        <input
-                            type="submit"
+
+                        <label className="label mt-4">
+                            Description
+                        </label>
+
+                        <textarea
+                            name="description"
+                            className="textarea textarea-bordered w-full"
                             value={
-                                editId == null
-                                    ? "Create Service"
-                                    : "Update Service"
+                                formData.description
                             }
-                            className="btn btn-primary mt-6"
+                            onChange={
+                                onChangeHandle
+                            }
                         />
+
+
+                        <div className="flex gap-3 mt-6">
+
+                            <button
+                                type="submit"
+                                className="btn btn-primary"
+                                disabled={
+                                    saving
+                                }
+                            >
+
+                                {
+                                    saving
+                                        ? "Saving..."
+                                        : editId == null
+                                            ? "Create Service"
+                                            : "Update Service"
+                                }
+
+                            </button>
+
+
+                            {
+                                editId != null &&
+                                <button
+                                    type="button"
+                                    className="btn btn-outline"
+                                    onClick={
+                                        resetForm
+                                    }
+                                >
+                                    Cancel Edit
+                                </button>
+                            }
+
+                        </div>
 
                     </form>
 
@@ -550,115 +733,181 @@ export default function AdminServicesPage() {
 
             </div>
 
-            <div className="overflow-x-auto">
 
-                <table className="table table-zebra">
+            {
+                loading
+                    ? (
+                        <div className="flex items-center justify-center p-10">
 
-                    <thead>
+                            <span className="loading loading-spinner"></span>
 
-                        <tr>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th>Department</th>
-                            <th>Estimated Time</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
+                            <span className="ml-3">
+                                Loading services...
+                            </span>
 
-                    </thead>
+                        </div>
+                    )
+                    : (
+                        <div className="overflow-x-auto">
 
-                    <tbody>
+                            <table className="table table-zebra">
 
-                        {
-                            services &&
-                            services.map(
-                                (service: Service) => (
+                                <thead>
 
-                                    <tr key={service.id}>
-
-                                        <td>
-                                            {service.name}
-                                        </td>
-
-                                        <td>
-                                            {service.description}
-                                        </td>
-
-                                        <td>
-                                            {service.department}
-                                        </td>
-
-                                        <td>
-                                            {service.estimatedTime} minutes
-                                        </td>
-
-                                        <td>
-                                            {
-                                                service.isActive
-                                                    ? "Active"
-                                                    : "Inactive"
-                                            }
-                                        </td>
-
-                                        <td>
-
-                                            <button
-                                                className="btn btn-sm btn-outline"
-                                                onClick={
-                                                    () =>
-                                                        editService(
-                                                            service
-                                                        )
-                                                }
-                                            >
-                                                Edit
-                                            </button>
-
-                                            {
-                                                service.isActive &&
-
-                                                <button
-                                                    className="btn btn-sm btn-warning ml-2"
-                                                    onClick={
-                                                        () =>
-                                                            deactivateService(
-                                                                service.id
-                                                            )
-                                                    }
-                                                >
-                                                    Deactivate
-                                                </button>
-
-
-                                            }
-
-                                            <button
-                                                className="btn btn-sm btn-error ml-2"
-                                                onClick={
-                                                    () =>
-                                                        deleteService(
-                                                            service.id
-                                                        )
-                                                }
-                                            >
-                                                Delete
-                                            </button>
-
-                                        </td>
-
-
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Department</th>
+                                        <th>Estimated Time</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
                                     </tr>
 
-                                )
-                            )
-                        }
+                                </thead>
 
-                    </tbody>
 
-                </table>
+                                <tbody>
 
-            </div>
+                                    {
+                                        services.map(
+                                            (
+                                                service
+                                            ) => (
+
+                                                <tr
+                                                    key={
+                                                        service.id
+                                                    }
+                                                >
+
+                                                    <td>
+                                                        {service.id}
+                                                    </td>
+
+
+                                                    <td>
+
+                                                        <div className="font-semibold">
+                                                            {service.name}
+                                                        </div>
+
+                                                        {
+                                                            service.description &&
+                                                            <div className="text-sm opacity-70">
+                                                                {
+                                                                    service.description
+                                                                }
+                                                            </div>
+                                                        }
+
+                                                    </td>
+
+
+                                                    <td>
+                                                        {service.department}
+                                                    </td>
+
+
+                                                    <td>
+                                                        {
+                                                            service.estimatedTime
+                                                        } minutes
+                                                    </td>
+
+
+                                                    <td>
+
+                                                        <span
+                                                            className={
+                                                                service.isActive
+                                                                    ? "badge badge-success"
+                                                                    : "badge badge-error"
+                                                            }
+                                                        >
+
+                                                            {
+                                                                service.isActive
+                                                                    ? "Active"
+                                                                    : "Inactive"
+                                                            }
+
+                                                        </span>
+
+                                                    </td>
+
+
+                                                    <td>
+
+                                                        <div className="flex flex-wrap gap-2">
+
+                                                            <button
+                                                                className="btn btn-outline btn-sm"
+                                                                onClick={
+                                                                    () =>
+                                                                        editService(
+                                                                            service
+                                                                        )
+                                                                }
+                                                            >
+                                                                Edit
+                                                            </button>
+
+
+                                                            {
+                                                                service.isActive &&
+                                                                <button
+                                                                    className="btn btn-warning btn-sm"
+                                                                    onClick={
+                                                                        () =>
+                                                                            deactivateService(
+                                                                                service.id
+                                                                            )
+                                                                    }
+                                                                >
+                                                                    Deactivate
+                                                                </button>
+                                                            }
+
+
+                                                            <button
+                                                                className="btn btn-error btn-sm"
+                                                                onClick={
+                                                                    () =>
+                                                                        deleteService(
+                                                                            service.id
+                                                                        )
+                                                                }
+                                                            >
+                                                                Delete
+                                                            </button>
+
+                                                        </div>
+
+                                                    </td>
+
+                                                </tr>
+
+                                            )
+                                        )
+                                    }
+
+                                </tbody>
+
+                            </table>
+
+
+                            {
+                                services.length == 0 &&
+                                <p className="mt-4">
+                                    No services found.
+                                </p>
+                            }
+
+                        </div>
+                    )
+            }
 
         </div>
-    )
+    );
+
 }

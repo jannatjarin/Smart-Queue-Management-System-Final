@@ -1,25 +1,36 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import type {
+import {
     ChangeEvent,
-    FormEvent
+    FormEvent,
+    useEffect,
+    useState,
 } from "react";
+
 import axios from "axios";
 
+import api from "@/lib/axios";
+
+
 interface Service {
-    id: number,
-    name: string
+
+    id: number;
+    name: string;
+
 }
 
+
 interface Queue {
-    id: number,
-    name: string,
-    location: string,
-    status: string,
-    currentTicketNumber: number,
-    service: Service
+
+    id: number;
+    name: string;
+    location: string;
+    status: string;
+    currentTicketNumber: number;
+    service: Service;
+
 }
+
 
 export default function AdminQueuesPage() {
 
@@ -34,7 +45,7 @@ export default function AdminQueuesPage() {
             {
                 name: "",
                 location: "",
-                serviceId: ""
+                serviceId: "",
             }
         );
 
@@ -46,105 +57,157 @@ export default function AdminQueuesPage() {
     const [refresh, setRefresh] =
         useState(0);
 
-    const [responseMsg, setResponseMsg] =
+    const [
+        responseMsg,
+        setResponseMsg
+    ] =
         useState("");
 
     const [err, setErr] =
         useState("");
 
-    useEffect(() => {
+    const [loading, setLoading] =
+        useState(true);
 
-        const getData = async () => {
+    const [saving, setSaving] =
+        useState(false);
 
-            try {
 
-                const queuesResponse =
-                    await axios.get<Queue[]>(
-                        "http://localhost:3000/queues"
+    useEffect(
+        () => {
+
+            const getData =
+                async () => {
+
+                    setLoading(
+                        true
                     );
 
-                const servicesResponse =
-                    await axios.get<Service[]>(
-                        "http://localhost:3000/services"
-                    );
 
-                setQueues(
-                    queuesResponse.data
-                );
+                    try {
 
-                setServices(
-                    servicesResponse.data
-                );
+                        const queuesResponse =
+                            await api.get<Queue[]>(
+                                "/queues"
+                            );
 
-                setErr("");
 
-            }
+                        const servicesResponse =
+                            await api.get<Service[]>(
+                                "/services"
+                            );
 
-            catch (error) {
 
-                if (
-                    axios.isAxiosError(error) &&
-                    error.response?.data?.message
-                ) {
+                        setQueues(
+                            queuesResponse.data
+                        );
 
-                    setErr(
-                        error.response.data.message
-                    );
+                        setServices(
+                            servicesResponse.data
+                        );
 
-                }
+                        setErr("");
 
-                else {
+                    }
 
-                    setErr(
-                        "Could not load queue information"
-                    );
+                    catch (error) {
 
-                }
+                        if (
+                            axios.isAxiosError(
+                                error
+                            ) &&
+                            error.response
+                                ?.data
+                                ?.message
+                        ) {
 
-            }
+                            const message =
+                                error.response
+                                    .data
+                                    .message;
 
-        }
 
-        getData();
+                            setErr(
+                                Array.isArray(
+                                    message
+                                )
+                                    ? message.join(
+                                        ", "
+                                    )
+                                    : message
+                            );
 
-    }, [refresh]);
+                        }
+
+                        else {
+
+                            setErr(
+                                "Could not load queue information"
+                            );
+
+                        }
+
+                    }
+
+                    finally {
+
+                        setLoading(
+                            false
+                        );
+
+                    }
+
+                };
+
+
+            getData();
+
+        },
+        [refresh]
+    );
+
 
     const onChangeHandle = (
-        e: ChangeEvent<
-            HTMLInputElement |
-            HTMLSelectElement
-        >
+        e:
+            ChangeEvent<
+                HTMLInputElement |
+                HTMLSelectElement
+            >
     ) => {
 
         const {
             name,
-            value
+            value,
         } = e.target;
+
 
         setFormData(
             {
                 ...formData,
-                [name]: value
+                [name]: value,
             }
         );
 
-    }
+    };
 
-    const clearForm = () => {
 
-        setFormData(
-            {
-                name: "",
-                location: "",
-                serviceId: ""
-            }
-        );
+    const clearForm =
+        () => {
 
-        setEditId(
-            null
-        );
+            setFormData(
+                {
+                    name: "",
+                    location: "",
+                    serviceId: "",
+                }
+            );
 
-    }
+            setEditId(
+                null
+            );
+
+        };
+
 
     const editQueue = (
         queue: Queue
@@ -153,6 +216,7 @@ export default function AdminQueuesPage() {
         setEditId(
             queue.id
         );
+
 
         setFormData(
             {
@@ -164,36 +228,73 @@ export default function AdminQueuesPage() {
 
                 serviceId:
                     String(
-                        queue.service?.id || ""
-                    )
+                        queue.service.id
+                    ),
             }
         );
 
-        setResponseMsg("");
 
+        setResponseMsg("");
         setErr("");
 
-    }
+    };
 
-    const onSubmitHandle = (
-        e: FormEvent<HTMLFormElement>
-    ) => {
 
-        e.preventDefault();
+    const onSubmitHandle =
+        async (
+            e:
+                FormEvent<
+                    HTMLFormElement
+                >
+        ) => {
 
-        const saveQueue = async () => {
+            e.preventDefault();
 
-            const token =
-                localStorage.getItem(
-                    "access_token"
+            setResponseMsg("");
+            setErr("");
+
+
+            if (
+                !formData.name.trim() ||
+                !formData.location.trim()
+            ) {
+
+                setErr(
+                    "Queue name and location are required"
                 );
+
+                return;
+
+            }
+
+
+            if (
+                editId == null &&
+                !formData.serviceId
+            ) {
+
+                setErr(
+                    "Please select a service"
+                );
+
+                return;
+
+            }
+
+
+            setSaving(
+                true
+            );
+
 
             try {
 
-                if (editId == null) {
+                if (
+                    editId == null
+                ) {
 
-                    await axios.post(
-                        "http://localhost:3000/queues",
+                    await api.post(
+                        "/queues",
                         {
                             name:
                                 formData.name,
@@ -204,15 +305,10 @@ export default function AdminQueuesPage() {
                             serviceId:
                                 Number(
                                     formData.serviceId
-                                )
-                        },
-                        {
-                            headers: {
-                                Authorization:
-                                    `Bearer ${token}`
-                            }
+                                ),
                         }
                     );
+
 
                     setResponseMsg(
                         "Queue created successfully"
@@ -222,22 +318,17 @@ export default function AdminQueuesPage() {
 
                 else {
 
-                    await axios.patch(
-                        `http://localhost:3000/queues/${editId}`,
+                    await api.patch(
+                        `/queues/${editId}`,
                         {
                             name:
                                 formData.name,
 
                             location:
-                                formData.location
-                        },
-                        {
-                            headers: {
-                                Authorization:
-                                    `Bearer ${token}`
-                            }
+                                formData.location,
                         }
                     );
+
 
                     setResponseMsg(
                         "Queue updated successfully"
@@ -245,12 +336,13 @@ export default function AdminQueuesPage() {
 
                 }
 
-                setErr("");
 
                 clearForm();
 
+
                 setRefresh(
-                    refresh + 1
+                    (value) =>
+                        value + 1
                 );
 
             }
@@ -258,31 +350,29 @@ export default function AdminQueuesPage() {
             catch (error) {
 
                 if (
-                    axios.isAxiosError(error) &&
-                    error.response?.data?.message
+                    axios.isAxiosError(
+                        error
+                    ) &&
+                    error.response
+                        ?.data
+                        ?.message
                 ) {
 
-                    if (
-                        Array.isArray(
-                            error.response.data.message
-                        )
-                    ) {
+                    const message =
+                        error.response
+                            .data
+                            .message;
 
-                        setErr(
-                            error.response.data.message.join(
+
+                    setErr(
+                        Array.isArray(
+                            message
+                        )
+                            ? message.join(
                                 ", "
                             )
-                        );
-
-                    }
-
-                    else {
-
-                        setErr(
-                            error.response.data.message
-                        );
-
-                    }
+                            : message
+                    );
 
                 }
 
@@ -296,48 +386,45 @@ export default function AdminQueuesPage() {
 
             }
 
-        }
+            finally {
 
-        saveQueue();
-
-    }
-
-    const updateQueueStatus = (
-        id: number,
-        status: string
-    ) => {
-
-        const updateData = async () => {
-
-            const token =
-                localStorage.getItem(
-                    "access_token"
+                setSaving(
+                    false
                 );
+
+            }
+
+        };
+
+
+    const updateQueueStatus =
+        async (
+            id: number,
+            status: string
+        ) => {
+
+            setResponseMsg("");
+            setErr("");
+
 
             try {
 
-                await axios.patch(
-                    `http://localhost:3000/queues/${id}/status`,
+                await api.patch(
+                    `/queues/${id}/status`,
                     {
-                        status:
-                            status
-                    },
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`
-                        }
+                        status,
                     }
                 );
+
 
                 setResponseMsg(
                     "Queue status updated successfully"
                 );
 
-                setErr("");
 
                 setRefresh(
-                    refresh + 1
+                    (value) =>
+                        value + 1
                 );
 
             }
@@ -345,12 +432,28 @@ export default function AdminQueuesPage() {
             catch (error) {
 
                 if (
-                    axios.isAxiosError(error) &&
-                    error.response?.data?.message
+                    axios.isAxiosError(
+                        error
+                    ) &&
+                    error.response
+                        ?.data
+                        ?.message
                 ) {
 
+                    const message =
+                        error.response
+                            .data
+                            .message;
+
+
                     setErr(
-                        error.response.data.message
+                        Array.isArray(
+                            message
+                        )
+                            ? message.join(
+                                ", "
+                            )
+                            : message
                     );
 
                 }
@@ -365,43 +468,42 @@ export default function AdminQueuesPage() {
 
             }
 
-        }
+        };
 
-        updateData();
 
-    }
+    const deleteQueue =
+        async (
+            id: number
+        ) => {
 
-    const deleteQueue = (
-        id: number
-    ) => {
+            setResponseMsg("");
+            setErr("");
 
-        const removeQueue = async () => {
-
-            const token =
-                localStorage.getItem(
-                    "access_token"
-                );
 
             try {
 
-                await axios.delete(
-                    `http://localhost:3000/queues/${id}`,
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`
-                        }
-                    }
+                await api.delete(
+                    `/queues/${id}`
                 );
+
 
                 setResponseMsg(
                     "Queue deleted successfully"
                 );
 
-                setErr("");
+
+                if (
+                    editId == id
+                ) {
+
+                    clearForm();
+
+                }
+
 
                 setRefresh(
-                    refresh + 1
+                    (value) =>
+                        value + 1
                 );
 
             }
@@ -409,12 +511,28 @@ export default function AdminQueuesPage() {
             catch (error) {
 
                 if (
-                    axios.isAxiosError(error) &&
-                    error.response?.data?.message
+                    axios.isAxiosError(
+                        error
+                    ) &&
+                    error.response
+                        ?.data
+                        ?.message
                 ) {
 
+                    const message =
+                        error.response
+                            .data
+                            .message;
+
+
                     setErr(
-                        error.response.data.message
+                        Array.isArray(
+                            message
+                        )
+                            ? message.join(
+                                ", "
+                            )
+                            : message
                     );
 
                 }
@@ -429,11 +547,8 @@ export default function AdminQueuesPage() {
 
             }
 
-        }
+        };
 
-        removeQueue();
-
-    }
 
     return (
         <div className="max-w-7xl mx-auto py-8">
@@ -442,13 +557,14 @@ export default function AdminQueuesPage() {
                 Queue Management
             </h1>
 
+
             <p className="mb-6">
-                Create and manage queues
+                Create and manage queues.
             </p>
+
 
             {
                 responseMsg &&
-
                 <div className="alert alert-success mb-4">
 
                     <span>
@@ -458,9 +574,9 @@ export default function AdminQueuesPage() {
                 </div>
             }
 
+
             {
                 err &&
-
                 <div className="alert alert-error mb-4">
 
                     <span>
@@ -469,6 +585,7 @@ export default function AdminQueuesPage() {
 
                 </div>
             }
+
 
             <div className="card bg-base-100 shadow border mb-8">
 
@@ -484,7 +601,12 @@ export default function AdminQueuesPage() {
 
                     </h2>
 
-                    <form onSubmit={onSubmitHandle}>
+
+                    <form
+                        onSubmit={
+                            onSubmitHandle
+                        }
+                    >
 
                         <div className="grid md:grid-cols-3 gap-4">
 
@@ -498,12 +620,17 @@ export default function AdminQueuesPage() {
                                     type="text"
                                     name="name"
                                     className="input input-bordered w-full"
-                                    value={formData.name}
-                                    onChange={onChangeHandle}
+                                    value={
+                                        formData.name
+                                    }
+                                    onChange={
+                                        onChangeHandle
+                                    }
                                     required
                                 />
 
                             </div>
+
 
                             <div>
 
@@ -515,12 +642,17 @@ export default function AdminQueuesPage() {
                                     type="text"
                                     name="location"
                                     className="input input-bordered w-full"
-                                    value={formData.location}
-                                    onChange={onChangeHandle}
+                                    value={
+                                        formData.location
+                                    }
+                                    onChange={
+                                        onChangeHandle
+                                    }
                                     required
                                 />
 
                             </div>
+
 
                             <div>
 
@@ -531,28 +663,40 @@ export default function AdminQueuesPage() {
                                 <select
                                     name="serviceId"
                                     className="select select-bordered w-full"
-                                    value={formData.serviceId}
-                                    onChange={onChangeHandle}
-                                    required={editId == null}
-                                    disabled={editId != null}
+                                    value={
+                                        formData.serviceId
+                                    }
+                                    onChange={
+                                        onChangeHandle
+                                    }
+                                    disabled={
+                                        editId != null
+                                    }
+                                    required={
+                                        editId == null
+                                    }
                                 >
 
                                     <option value="">
                                         Select Service
                                     </option>
 
+
                                     {
-                                        services &&
                                         services.map(
-                                            (
-                                                service: Service
-                                            ) => (
+                                            (service) => (
 
                                                 <option
-                                                    key={service.id}
-                                                    value={service.id}
+                                                    key={
+                                                        service.id
+                                                    }
+                                                    value={
+                                                        service.id
+                                                    }
                                                 >
-                                                    {service.name}
+                                                    {
+                                                        service.name
+                                                    }
                                                 </option>
 
                                             )
@@ -561,32 +705,48 @@ export default function AdminQueuesPage() {
 
                                 </select>
 
+
+                                {
+                                    editId != null &&
+                                    <p className="text-xs opacity-70 mt-1">
+                                        Service cannot be changed while editing a queue.
+                                    </p>
+                                }
+
                             </div>
 
                         </div>
+
 
                         <div className="flex gap-3 mt-6">
 
                             <button
                                 type="submit"
                                 className="btn btn-primary"
+                                disabled={
+                                    saving
+                                }
                             >
 
                                 {
-                                    editId == null
-                                        ? "Create Queue"
-                                        : "Update Queue"
+                                    saving
+                                        ? "Saving..."
+                                        : editId == null
+                                            ? "Create Queue"
+                                            : "Update Queue"
                                 }
 
                             </button>
 
+
                             {
                                 editId != null &&
-
                                 <button
                                     type="button"
                                     className="btn btn-outline"
-                                    onClick={clearForm}
+                                    onClick={
+                                        clearForm
+                                    }
                                 >
                                     Cancel Edit
                                 </button>
@@ -600,116 +760,174 @@ export default function AdminQueuesPage() {
 
             </div>
 
-            <div className="overflow-x-auto">
 
-                <table className="table table-zebra">
+            {
+                loading
+                    ? (
+                        <div className="flex items-center justify-center p-10">
 
-                    <thead>
+                            <span className="loading loading-spinner"></span>
 
-                        <tr>
-                            <th>Name</th>
-                            <th>Service</th>
-                            <th>Location</th>
-                            <th>Current Ticket</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
+                            <span className="ml-3">
+                                Loading queues...
+                            </span>
 
-                    </thead>
+                        </div>
+                    )
+                    : (
+                        <div className="overflow-x-auto">
 
-                    <tbody>
+                            <table className="table table-zebra">
 
-                        {
-                            queues &&
-                            queues.map(
-                                (queue: Queue) => (
+                                <thead>
 
-                                    <tr key={queue.id}>
-
-                                        <td>
-                                            {queue.name}
-                                        </td>
-
-                                        <td>
-                                            {queue.service?.name}
-                                        </td>
-
-                                        <td>
-                                            {queue.location}
-                                        </td>
-
-                                        <td>
-                                            {queue.currentTicketNumber}
-                                        </td>
-
-                                        <td>
-                                             <select
-                                                className="select select-bordered select-sm"
-                                                value={queue.status}
-                                                onChange={
-                                                    (e) =>
-                                                        updateQueueStatus(
-                                                            queue.id,
-                                                            e.target.value
-                                                        )
-                                                }
-                                            >
-
-                                                <option value="open">
-                                                    Open
-                                                </option>
-
-                                                <option value="closed">
-                                                    Closed
-                                                </option>
-
-                                            </select>
-                                        </td>
-
-                                        <td>
-
-                                            <div className="flex gap-2">
-
-                                                <button
-                                                    className="btn btn-sm btn-outline"
-                                                    onClick={
-                                                        () =>
-                                                            editQueue(
-                                                                queue
-                                                            )
-                                                    }
-                                                >
-                                                    Edit
-                                                </button>
-
-                                                <button
-                                                    className="btn btn-sm btn-error"
-                                                    onClick={
-                                                        () =>
-                                                            deleteQueue(
-                                                                queue.id
-                                                            )
-                                                    }
-                                                >
-                                                    Delete
-                                                </button>
-
-                                            </div>
-
-                                        </td>
-
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Service</th>
+                                        <th>Location</th>
+                                        <th>Status</th>
+                                        <th>Current Number</th>
+                                        <th>Actions</th>
                                     </tr>
 
-                                )
-                            )
-                        }
+                                </thead>
 
-                    </tbody>
 
-                </table>
+                                <tbody>
 
-            </div>
+                                    {
+                                        queues.map(
+                                            (queue) => (
+
+                                                <tr
+                                                    key={
+                                                        queue.id
+                                                    }
+                                                >
+
+                                                    <td>
+                                                        {
+                                                            queue.id
+                                                        }
+                                                    </td>
+
+
+                                                    <td>
+                                                        {
+                                                            queue.name
+                                                        }
+                                                    </td>
+
+
+                                                    <td>
+                                                        {
+                                                            queue
+                                                                .service
+                                                                .name
+                                                        }
+                                                    </td>
+
+
+                                                    <td>
+                                                        {
+                                                            queue.location
+                                                        }
+                                                    </td>
+
+
+                                                    <td>
+
+                                                        <select
+                                                            className="select select-bordered select-sm"
+                                                            value={
+                                                                queue.status
+                                                            }
+                                                            onChange={
+                                                                (e) =>
+                                                                    updateQueueStatus(
+                                                                        queue.id,
+                                                                        e.target.value
+                                                                    )
+                                                            }
+                                                        >
+
+                                                            <option value="open">
+                                                                Open
+                                                            </option>
+
+                                                            <option value="closed">
+                                                                Closed
+                                                            </option>
+
+                                                        </select>
+
+                                                    </td>
+
+
+                                                    <td>
+                                                        {
+                                                            queue.currentTicketNumber
+                                                        }
+                                                    </td>
+
+
+                                                    <td>
+
+                                                        <div className="flex flex-wrap gap-2">
+
+                                                            <button
+                                                                className="btn btn-outline btn-sm"
+                                                                onClick={
+                                                                    () =>
+                                                                        editQueue(
+                                                                            queue
+                                                                        )
+                                                                }
+                                                            >
+                                                                Edit
+                                                            </button>
+
+
+                                                            <button
+                                                                className="btn btn-error btn-sm"
+                                                                onClick={
+                                                                    () =>
+                                                                        deleteQueue(
+                                                                            queue.id
+                                                                        )
+                                                                }
+                                                            >
+                                                                Delete
+                                                            </button>
+
+                                                        </div>
+
+                                                    </td>
+
+                                                </tr>
+
+                                            )
+                                        )
+                                    }
+
+                                </tbody>
+
+                            </table>
+
+
+                            {
+                                queues.length == 0 &&
+                                <p className="mt-4">
+                                    No queues found.
+                                </p>
+                            }
+
+                        </div>
+                    )
+            }
 
         </div>
-    )
+    );
+
 }

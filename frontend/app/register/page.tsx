@@ -12,13 +12,70 @@ import {
     useRouter,
 } from "next/navigation";
 
+import {
+    z,
+} from "zod";
+
 import api from "@/lib/axios";
+
+import ToastMessage from "@/components/ui/ToastMessage";
+
+
+const registerSchema =
+    z.object(
+        {
+            fullName:
+                z.string()
+                    .min(
+                        2,
+                        "Full name must be at least 2 characters"
+                    ),
+
+            email:
+                z.string()
+                    .email(
+                        "Enter a valid email address"
+                    ),
+
+            phone:
+                z.string(),
+
+            password:
+                z.string()
+                    .min(
+                        6,
+                        "Password must be at least 6 characters"
+                    ),
+
+            confirmPassword:
+                z.string()
+                    .min(
+                        6,
+                        "Confirm password is required"
+                    ),
+        }
+    )
+        .refine(
+            (data) =>
+                data.password ==
+                data.confirmPassword,
+
+            {
+                message:
+                    "Passwords do not match",
+
+                path: [
+                    "confirmPassword",
+                ],
+            }
+        );
 
 
 export default function RegisterPage() {
 
     const router =
         useRouter();
+
 
     const [formData, setFormData] =
         useState(
@@ -31,6 +88,7 @@ export default function RegisterPage() {
             }
         );
 
+
     const [
         responseMsg,
         setResponseMsg
@@ -38,14 +96,26 @@ export default function RegisterPage() {
         useState("");
 
 
+    const [err, setErr] =
+        useState("");
+
+
+    const [loading, setLoading] =
+        useState(false);
+
+
     const onChangeHandle = (
-        e: ChangeEvent<HTMLInputElement>
+        e:
+            ChangeEvent<
+                HTMLInputElement
+            >
     ) => {
 
         const {
             name,
             value,
         } = e.target;
+
 
         setFormData(
             {
@@ -57,102 +127,154 @@ export default function RegisterPage() {
     };
 
 
-    const onSubmitHandle = async (
-        e: FormEvent<HTMLFormElement>
-    ) => {
+    const onSubmitHandle =
+        async (
+            e:
+                FormEvent<
+                    HTMLFormElement
+                >
+        ) => {
 
-        e.preventDefault();
+            e.preventDefault();
 
-        setResponseMsg("");
-
-
-        if (
-            formData.password.length < 6
-        ) {
-
-            setResponseMsg(
-                "Password must be at least 6 characters"
-            );
-
-            return;
-
-        }
+            setResponseMsg("");
+            setErr("");
 
 
-        if (
-            formData.password !==
-            formData.confirmPassword
-        ) {
+            const validationResult =
+                registerSchema.safeParse(
+                    formData
+                );
 
-            setResponseMsg(
-                "Passwords do not match"
-            );
-
-            return;
-
-        }
-
-
-        try {
-
-            await api.post(
-                "/auth/register",
-                {
-                    fullName:
-                        formData.fullName,
-
-                    email:
-                        formData.email,
-
-                    phone:
-                        formData.phone ||
-                        undefined,
-
-                    password:
-                        formData.password,
-                }
-            );
-
-
-            setResponseMsg(
-                "Registration successful"
-            );
-
-
-            router.push(
-                "/login"
-            );
-
-        }
-
-        catch (error) {
 
             if (
-                axios.isAxiosError(error) &&
-                error.response?.data?.message
+                !validationResult.success
             ) {
 
+                setErr(
+                    validationResult
+                        .error
+                        .issues[0]
+                        .message
+                );
+
+                return;
+
+            }
+
+
+            setLoading(
+                true
+            );
+
+
+            try {
+
+                await api.post(
+                    "/auth/register",
+                    {
+                        fullName:
+                            formData.fullName,
+
+                        email:
+                            formData.email,
+
+                        phone:
+                            formData.phone ||
+                            undefined,
+
+                        password:
+                            formData.password,
+                    }
+                );
+
+
                 setResponseMsg(
-                    error.response.data.message
+                    "Registration successful"
+                );
+
+
+                setTimeout(
+                    () => {
+
+                        router.push(
+                            "/login"
+                        );
+
+                    },
+                    1200
                 );
 
             }
 
-            else {
+            catch (error) {
 
-                setResponseMsg(
-                    "Registration failed"
+                if (
+                    axios.isAxiosError(
+                        error
+                    ) &&
+                    error.response
+                        ?.data
+                        ?.message
+                ) {
+
+                    const message =
+                        error.response
+                            .data
+                            .message;
+
+
+                    setErr(
+                        Array.isArray(
+                            message
+                        )
+                            ? message.join(
+                                ", "
+                            )
+                            : message
+                    );
+
+                }
+
+                else {
+
+                    setErr(
+                        "Registration failed"
+                    );
+
+                }
+
+            }
+
+            finally {
+
+                setLoading(
+                    false
                 );
 
             }
 
-        }
-
-    };
+        };
 
 
     return (
         <div className="min-h-[80vh] flex items-center justify-center py-10">
+
+            <ToastMessage
+                message={
+                    responseMsg
+                }
+                type="success"
+            />
+
+
+            <ToastMessage
+                message={
+                    err
+                }
+                type="error"
+            />
+
 
             <div className="card bg-base-100 shadow-xl w-full max-w-lg">
 
@@ -163,7 +285,11 @@ export default function RegisterPage() {
                     </h1>
 
 
-                    <form onSubmit={onSubmitHandle}>
+                    <form
+                        onSubmit={
+                            onSubmitHandle
+                        }
+                    >
 
                         <fieldset className="fieldset">
 
@@ -176,8 +302,12 @@ export default function RegisterPage() {
                                 name="fullName"
                                 placeholder="Enter your full name"
                                 className="input input-bordered w-full"
-                                onChange={onChangeHandle}
-                                value={formData.fullName}
+                                onChange={
+                                    onChangeHandle
+                                }
+                                value={
+                                    formData.fullName
+                                }
                                 required
                             />
 
@@ -191,8 +321,12 @@ export default function RegisterPage() {
                                 name="email"
                                 placeholder="Enter your email"
                                 className="input input-bordered w-full"
-                                onChange={onChangeHandle}
-                                value={formData.email}
+                                onChange={
+                                    onChangeHandle
+                                }
+                                value={
+                                    formData.email
+                                }
                                 required
                             />
 
@@ -206,8 +340,12 @@ export default function RegisterPage() {
                                 name="phone"
                                 placeholder="Enter your phone number"
                                 className="input input-bordered w-full"
-                                onChange={onChangeHandle}
-                                value={formData.phone}
+                                onChange={
+                                    onChangeHandle
+                                }
+                                value={
+                                    formData.phone
+                                }
                             />
 
 
@@ -220,8 +358,12 @@ export default function RegisterPage() {
                                 name="password"
                                 placeholder="Enter password"
                                 className="input input-bordered w-full"
-                                onChange={onChangeHandle}
-                                value={formData.password}
+                                onChange={
+                                    onChangeHandle
+                                }
+                                value={
+                                    formData.password
+                                }
                                 required
                             />
 
@@ -235,33 +377,35 @@ export default function RegisterPage() {
                                 name="confirmPassword"
                                 placeholder="Confirm password"
                                 className="input input-bordered w-full"
-                                onChange={onChangeHandle}
-                                value={formData.confirmPassword}
+                                onChange={
+                                    onChangeHandle
+                                }
+                                value={
+                                    formData.confirmPassword
+                                }
                                 required
                             />
 
 
-                            <input
+                            <button
                                 type="submit"
-                                value="Register"
                                 className="btn btn-primary w-full mt-6"
-                            />
+                                disabled={
+                                    loading
+                                }
+                            >
+
+                                {
+                                    loading
+                                        ? "Registering..."
+                                        : "Register"
+                                }
+
+                            </button>
 
                         </fieldset>
 
                     </form>
-
-
-                    {
-                        responseMsg &&
-                        <div className="alert mt-4">
-
-                            <span>
-                                {responseMsg}
-                            </span>
-
-                        </div>
-                    }
 
                 </div>
 

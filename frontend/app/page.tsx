@@ -1,6 +1,12 @@
 import Link from "next/link";
 
+
+export const dynamic =
+    "force-static";
+
+
 export default function Home() {
+
     return (
         <div className="min-h-[80vh] flex items-center justify-center">
 
@@ -10,12 +16,14 @@ export default function Home() {
                     Smart Queue Management System
                 </h1>
 
+
                 <p className="text-lg mb-8">
                     Manage services, queues and tickets easily without
                     waiting unnecessarily.
                 </p>
 
-                <div className="flex justify-center gap-4">
+
+                <div className="flex flex-wrap justify-center gap-4">
 
                     <Link
                         href="/login"
@@ -24,12 +32,14 @@ export default function Home() {
                         Login
                     </Link>
 
+
                     <Link
                         href="/register"
                         className="btn btn-outline"
                     >
                         Register
                     </Link>
+
 
                     <Link
                         href="/services"
@@ -44,4 +54,5 @@ export default function Home() {
 
         </div>
     );
+
 }

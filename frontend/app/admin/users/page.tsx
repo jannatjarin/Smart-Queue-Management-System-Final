@@ -1,29 +1,45 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import {
+    useEffect,
+    useState,
+} from "react";
+
 import axios from "axios";
 
+import api from "@/lib/axios";
+
+
 interface User {
-    id: number,
-    fullName: string,
-    email: string,
-    phone?: string,
-    role: string
+
+    id: number;
+    fullName: string;
+    email: string;
+    phone: string | null;
+    role: string;
+
 }
 
+
 interface UsersResponse {
-    data: User[],
-    total: number,
-    page: number,
-    limit: number
+
+    data: User[];
+    total: number;
+    page: number;
+    limit: number;
+
 }
+
 
 export default function AdminUsersPage() {
 
     const [users, setUsers] =
         useState<User[]>([]);
 
-    const [searchInput, setSearchInput] =
+    const [
+        searchInput,
+        setSearchInput
+    ] =
         useState("");
 
     const [search, setSearch] =
@@ -44,137 +60,167 @@ export default function AdminUsersPage() {
     const [refresh, setRefresh] =
         useState(0);
 
-    const [responseMsg, setResponseMsg] =
+    const [
+        responseMsg,
+        setResponseMsg
+    ] =
         useState("");
 
     const [err, setErr] =
         useState("");
 
+    const [loading, setLoading] =
+        useState(true);
+
     const limit = 10;
 
-    useEffect(() => {
 
-        const getUsers = async () => {
+    useEffect(
+        () => {
 
-            const token =
-                localStorage.getItem(
-                    "access_token"
-                );
+            const getUsers =
+                async () => {
+
+                    setLoading(
+                        true
+                    );
+
+
+                    try {
+
+                        let url =
+                            `/users?page=${page}&limit=${limit}&sort=${sort}`;
+
+
+                        if (search) {
+
+                            url =
+                                url +
+                                `&search=${encodeURIComponent(
+                                    search
+                                )}`;
+
+                        }
+
+
+                        if (role) {
+
+                            url =
+                                url +
+                                `&role=${role}`;
+
+                        }
+
+
+                        const response =
+                            await api.get<UsersResponse>(
+                                url
+                            );
+
+
+                        setUsers(
+                            response.data.data
+                        );
+
+                        setTotal(
+                            response.data.total
+                        );
+
+                        setErr("");
+
+                    }
+
+                    catch (error) {
+
+                        if (
+                            axios.isAxiosError(
+                                error
+                            ) &&
+                            error.response
+                                ?.data
+                                ?.message
+                        ) {
+
+                            const message =
+                                error.response
+                                    .data
+                                    .message;
+
+                            setErr(
+                                Array.isArray(
+                                    message
+                                )
+                                    ? message.join(
+                                        ", "
+                                    )
+                                    : message
+                            );
+
+                        }
+
+                        else {
+
+                            setErr(
+                                "Could not load users"
+                            );
+
+                        }
+
+                    }
+
+                    finally {
+
+                        setLoading(
+                            false
+                        );
+
+                    }
+
+                };
+
+
+            getUsers();
+
+        },
+        [
+            search,
+            role,
+            sort,
+            page,
+            refresh,
+        ]
+    );
+
+
+    const updateRole =
+        async (
+            id: number,
+            newRole: string
+        ) => {
+
+            setResponseMsg("");
+            setErr("");
+
 
             try {
 
-                let url =
-                    `http://localhost:3000/users?page=${page}&limit=${limit}&sort=${sort}`;
-
-                if (search) {
-
-                    url =
-                        url +
-                        `&search=${encodeURIComponent(search)}`;
-
-                }
-
-                if (role) {
-
-                    url =
-                        url +
-                        `&role=${role}`;
-
-                }
-
-                const response =
-                    await axios.get<UsersResponse>(
-                        url,
-                        {
-                            headers: {
-                                Authorization:
-                                    `Bearer ${token}`
-                            }
-                        }
-                    );
-
-                setUsers(
-                    response.data.data
-                );
-
-                setTotal(
-                    response.data.total
-                );
-
-                setErr("");
-
-            }
-
-            catch (error) {
-
-                if (
-                    axios.isAxiosError(error) &&
-                    error.response?.data?.message
-                ) {
-
-                    setErr(
-                        error.response.data.message
-                    );
-
-                }
-
-                else {
-
-                    setErr(
-                        "Could not load users"
-                    );
-
-                }
-
-            }
-
-        }
-
-        getUsers();
-
-    }, [
-        search,
-        role,
-        sort,
-        page,
-        refresh
-    ]);
-
-    const updateRole = (
-        id: number,
-        newRole: string
-    ) => {
-
-        const updateData = async () => {
-
-            const token =
-                localStorage.getItem(
-                    "access_token"
-                );
-
-            try {
-
-                await axios.patch(
-                    `http://localhost:3000/users/${id}/role`,
+                await api.patch(
+                    `/users/${id}/role`,
                     {
-                        role: newRole
-                    },
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`
-                        }
+                        role:
+                            newRole,
                     }
                 );
+
 
                 setResponseMsg(
                     "User role updated successfully"
                 );
 
-                setErr("");
 
                 setRefresh(
-                    refresh + 1
+                    (value) =>
+                        value + 1
                 );
 
             }
@@ -182,12 +228,28 @@ export default function AdminUsersPage() {
             catch (error) {
 
                 if (
-                    axios.isAxiosError(error) &&
-                    error.response?.data?.message
+                    axios.isAxiosError(
+                        error
+                    ) &&
+                    error.response
+                        ?.data
+                        ?.message
                 ) {
 
+                    const message =
+                        error.response
+                            .data
+                            .message;
+
+
                     setErr(
-                        error.response.data.message
+                        Array.isArray(
+                            message
+                        )
+                            ? message.join(
+                                ", "
+                            )
+                            : message
                     );
 
                 }
@@ -202,16 +264,43 @@ export default function AdminUsersPage() {
 
             }
 
-        }
+        };
 
-        updateData();
 
-    }
+    const searchUsers =
+        () => {
+
+            setPage(
+                1
+            );
+
+            setSearch(
+                searchInput
+            );
+
+        };
+
+
+    const clearFilters =
+        () => {
+
+            setSearchInput("");
+            setSearch("");
+            setRole("");
+            setSort("DESC");
+            setPage(1);
+
+        };
+
 
     const totalPages =
-        Math.ceil(
-            total / limit
+        Math.max(
+            1,
+            Math.ceil(
+                total / limit
+            )
         );
+
 
     return (
         <div className="max-w-7xl mx-auto py-8">
@@ -221,8 +310,9 @@ export default function AdminUsersPage() {
             </h1>
 
             <p className="mb-6">
-                Search users and manage roles
+                Search users and manage user roles.
             </p>
+
 
             {
                 responseMsg &&
@@ -235,6 +325,7 @@ export default function AdminUsersPage() {
                 </div>
             }
 
+
             {
                 err &&
                 <div className="alert alert-error mb-4">
@@ -246,6 +337,7 @@ export default function AdminUsersPage() {
                 </div>
             }
 
+
             <div className="card bg-base-100 shadow border mb-6">
 
                 <div className="card-body">
@@ -256,7 +348,9 @@ export default function AdminUsersPage() {
                             type="text"
                             className="input input-bordered w-full"
                             placeholder="Search name or email"
-                            value={searchInput}
+                            value={
+                                searchInput
+                            }
                             onChange={
                                 (e) =>
                                     setSearchInput(
@@ -264,6 +358,7 @@ export default function AdminUsersPage() {
                                     )
                             }
                         />
+
 
                         <select
                             className="select select-bordered w-full"
@@ -275,7 +370,9 @@ export default function AdminUsersPage() {
                                         e.target.value
                                     );
 
-                                    setPage(1);
+                                    setPage(
+                                        1
+                                    );
 
                                 }
                             }
@@ -299,6 +396,7 @@ export default function AdminUsersPage() {
 
                         </select>
 
+
                         <select
                             className="select select-bordered w-full"
                             value={sort}
@@ -309,7 +407,9 @@ export default function AdminUsersPage() {
                                         e.target.value
                                     );
 
-                                    setPage(1);
+                                    setPage(
+                                        1
+                                    );
 
                                 }
                             }
@@ -325,18 +425,11 @@ export default function AdminUsersPage() {
 
                         </select>
 
+
                         <button
                             className="btn btn-primary"
                             onClick={
-                                () => {
-
-                                    setPage(1);
-
-                                    setSearch(
-                                        searchInput
-                                    );
-
-                                }
+                                searchUsers
                             }
                         >
                             Search
@@ -344,107 +437,154 @@ export default function AdminUsersPage() {
 
                     </div>
 
+
+                    <button
+                        className="btn btn-ghost btn-sm mt-3"
+                        onClick={
+                            clearFilters
+                        }
+                    >
+                        Clear Filters
+                    </button>
+
                 </div>
 
             </div>
 
-            <div className="overflow-x-auto">
 
-                <table className="table table-zebra">
+            <div className="mb-4">
 
-                    <thead>
-
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Role</th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                        {
-                            users &&
-                            users.map(
-                                (user: User) => (
-
-                                    <tr key={user.id}>
-
-                                        <td>
-                                            {user.id}
-                                        </td>
-
-                                        <td>
-                                            {user.fullName}
-                                        </td>
-
-                                        <td>
-                                            {user.email}
-                                        </td>
-
-                                        <td>
-                                            {user.phone || "-"}
-                                        </td>
-
-                                        <td>
-
-                                            <select
-                                                className="select select-bordered select-sm"
-                                                value={user.role}
-                                                onChange={
-                                                    (e) =>
-                                                        updateRole(
-                                                            user.id,
-                                                            e.target.value
-                                                        )
-                                                }
-                                            >
-
-                                                <option value="admin">
-                                                    Admin
-                                                </option>
-
-                                                <option value="staff">
-                                                    Staff
-                                                </option>
-
-                                                <option value="customer">
-                                                    Customer
-                                                </option>
-
-                                            </select>
-
-                                        </td>
-
-                                    </tr>
-
-                                )
-                            )
-                        }
-
-                    </tbody>
-
-                </table>
+                <span className="font-semibold">
+                    Total Users: {total}
+                </span>
 
             </div>
 
-            {
-                users.length == 0 &&
-                !err &&
 
-                <p className="mt-4">
-                    No users found
-                </p>
+            {
+                loading
+                    ? (
+                        <div className="flex items-center justify-center p-10">
+
+                            <span className="loading loading-spinner"></span>
+
+                            <span className="ml-3">
+                                Loading users...
+                            </span>
+
+                        </div>
+                    )
+                    : (
+                        <div className="overflow-x-auto">
+
+                            <table className="table table-zebra">
+
+                                <thead>
+
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Role</th>
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody>
+
+                                    {
+                                        users.map(
+                                            (user) => (
+
+                                                <tr
+                                                    key={
+                                                        user.id
+                                                    }
+                                                >
+
+                                                    <td>
+                                                        {user.id}
+                                                    </td>
+
+                                                    <td>
+                                                        {user.fullName}
+                                                    </td>
+
+                                                    <td>
+                                                        {user.email}
+                                                    </td>
+
+                                                    <td>
+                                                        {
+                                                            user.phone ||
+                                                            "-"
+                                                        }
+                                                    </td>
+
+                                                    <td>
+
+                                                        <select
+                                                            className="select select-bordered select-sm"
+                                                            value={
+                                                                user.role
+                                                            }
+                                                            onChange={
+                                                                (e) =>
+                                                                    updateRole(
+                                                                        user.id,
+                                                                        e.target.value
+                                                                    )
+                                                            }
+                                                        >
+
+                                                            <option value="admin">
+                                                                Admin
+                                                            </option>
+
+                                                            <option value="staff">
+                                                                Staff
+                                                            </option>
+
+                                                            <option value="customer">
+                                                                Customer
+                                                            </option>
+
+                                                        </select>
+
+                                                    </td>
+
+                                                </tr>
+
+                                            )
+                                        )
+                                    }
+
+                                </tbody>
+
+                            </table>
+
+
+                            {
+                                users.length == 0 &&
+                                <p className="mt-4">
+                                    No users found.
+                                </p>
+                            }
+
+                        </div>
+                    )
             }
 
-            <div className="flex justify-between items-center mt-6">
+
+            <div className="flex items-center justify-center gap-4 mt-8">
 
                 <button
                     className="btn btn-outline"
-                    disabled={page <= 1}
+                    disabled={
+                        page <= 1
+                    }
                     onClick={
                         () =>
                             setPage(
@@ -455,14 +595,17 @@ export default function AdminUsersPage() {
                     Previous
                 </button>
 
+
                 <span>
-                    Page {page} of {totalPages || 1}
+                    Page {page} of {totalPages}
                 </span>
+
 
                 <button
                     className="btn btn-outline"
                     disabled={
-                        page >= totalPages
+                        page >=
+                        totalPages
                     }
                     onClick={
                         () =>
@@ -477,5 +620,6 @@ export default function AdminUsersPage() {
             </div>
 
         </div>
-    )
+    );
+
 }

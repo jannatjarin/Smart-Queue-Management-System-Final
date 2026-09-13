@@ -1,16 +1,26 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react";
+import {
+    useEffect,
+    useState,
+} from "react";
+
 import axios from "axios";
 
+import api from "@/lib/axios";
+
+
 interface Service {
-    id: number,
-    name: string,
-    description: string,
-    estimatedTime: number,
-    department: string,
-    isActive: boolean
+
+    id: number;
+    name: string;
+    description: string | null;
+    estimatedTime: number;
+    department: string;
+    isActive: boolean;
+
 }
+
 
 export default function ServicesPage() {
 
@@ -20,48 +30,105 @@ export default function ServicesPage() {
     const [err, setErr] =
         useState("");
 
-    useEffect(() => {
+    const [loading, setLoading] =
+        useState(true);
 
-        const getServices = async () => {
 
-            try {
+    useEffect(
+        () => {
 
-                const response =
-                    await axios.get(
-                        "http://localhost:3000/services"
-                    );
+            const getServices =
+                async () => {
 
-                setServices(
-                    response.data
-                );
+                    try {
 
-            }
+                        const response =
+                            await api.get<Service[]>(
+                                "/services"
+                            );
 
-            catch (error: any) {
 
-                if (error.response?.data?.message) {
+                        setServices(
+                            response.data
+                        );
 
-                    setErr(
-                        error.response.data.message
-                    );
+                        setErr("");
 
-                }
+                    }
 
-                else {
+                    catch (error) {
 
-                    setErr(
-                        "Could not load services"
-                    );
+                        if (
+                            axios.isAxiosError(
+                                error
+                            ) &&
+                            error.response
+                                ?.data
+                                ?.message
+                        ) {
 
-                }
+                            const message =
+                                error.response
+                                    .data
+                                    .message;
 
-            }
 
-        }
+                            setErr(
+                                Array.isArray(
+                                    message
+                                )
+                                    ? message.join(
+                                        ", "
+                                    )
+                                    : message
+                            );
 
-        getServices();
+                        }
 
-    }, []);
+                        else {
+
+                            setErr(
+                                "Could not load services"
+                            );
+
+                        }
+
+                    }
+
+                    finally {
+
+                        setLoading(
+                            false
+                        );
+
+                    }
+
+                };
+
+
+            getServices();
+
+        },
+        []
+    );
+
+
+    if (loading) {
+
+        return (
+            <div className="flex items-center justify-center p-10">
+
+                <span className="loading loading-spinner"></span>
+
+                <span className="ml-3">
+                    Loading services...
+                </span>
+
+            </div>
+        );
+
+    }
+
 
     return (
         <div className="max-w-6xl mx-auto py-8">
@@ -71,25 +138,32 @@ export default function ServicesPage() {
             </h1>
 
             <p className="mb-6">
-                Select from the available services below.
+                View the services available in the Smart Queue Management System.
             </p>
+
 
             {
                 err &&
                 <div className="alert alert-error mb-4">
-                    {err}
+
+                    <span>
+                        {err}
+                    </span>
+
                 </div>
             }
+
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
 
                 {
-                    services &&
                     services.map(
-                        (service: Service) => (
+                        (service) => (
 
                             <div
-                                key={service.id}
+                                key={
+                                    service.id
+                                }
                                 className="card bg-base-100 shadow-md border"
                             >
 
@@ -99,17 +173,27 @@ export default function ServicesPage() {
                                         {service.name}
                                     </h2>
 
-                                    <p>
-                                        {service.description}
-                                    </p>
 
                                     <p>
-                                        <b>Department:</b>{" "}
+                                        {
+                                            service.description ||
+                                            "No description available."
+                                        }
+                                    </p>
+
+
+                                    <p>
+                                        <b>
+                                            Department:
+                                        </b>{" "}
                                         {service.department}
                                     </p>
 
+
                                     <p>
-                                        <b>Estimated Time:</b>{" "}
+                                        <b>
+                                            Estimated Time:
+                                        </b>{" "}
                                         {service.estimatedTime} minutes
                                     </p>
 
@@ -123,15 +207,20 @@ export default function ServicesPage() {
 
             </div>
 
-            {
-                services.length === 0 &&
-                !err &&
 
-                <p>
-                    No services available.
-                </p>
+            {
+                services.length == 0 &&
+                !err &&
+                <div className="alert">
+
+                    <span>
+                        No services available.
+                    </span>
+
+                </div>
             }
 
         </div>
-    )
+    );
+
 }
