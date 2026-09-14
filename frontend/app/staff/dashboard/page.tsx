@@ -190,19 +190,28 @@ export default function StaffDashboard() {
             )}
 
             <section className="mb-8 grid gap-4 sm:grid-cols-3">
-                <div className="rounded-[24px] border border-[#dfca70] bg-[#f7e49a] p-5">
-                    <p className="text-sm font-bold text-[#735e20]">
-                        Waiting
-                    </p>
+                <Link
+    href="/staff/queue"
+    className="rounded-[24px] border border-[#dfca70] bg-[#f7e49a] p-5 transition hover:-translate-y-0.5"
+>
+    <p className="text-sm font-bold text-[#735e20]">
+        Waiting
+    </p>
 
-                    <p className="mt-3 text-4xl font-black text-[#5d4c1a]">
-                        {waitingCount}
-                    </p>
+    <p className="mt-3 text-4xl font-black text-[#5d4c1a]">
+        {waitingCount}
+    </p>
 
-                    <p className="mt-1 text-sm text-[#7d6c35]">
-                        Tickets waiting
-                    </p>
-                </div>
+    <p className="mt-1 text-sm text-[#7d6c35]">
+        Tickets waiting
+    </p>
+
+    {waitingCount > 0 && (
+        <p className="mt-4 text-sm font-bold text-[#5d4c1a] underline">
+            Manage waiting tickets →
+        </p>
+    )}
+</Link>
 
                 <div className="rounded-[24px] border border-[#b8ceda] bg-[#deedf5] p-5">
                     <p className="text-sm font-bold text-[#4d6b7a]">

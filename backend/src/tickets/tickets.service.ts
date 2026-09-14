@@ -284,8 +284,10 @@ export class TicketsService {
                   'service',
                 )
                 .setLock(
-                  'pessimistic_write',
-                )
+                'pessimistic_write',
+                undefined,
+                ['queue'],
+              )
                 .where(
                   'queue.id = :id',
 

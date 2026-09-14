@@ -159,10 +159,17 @@ export default function StaffQueuePage() {
                             return currentValue;
                         }
 
+                        if (
+                            supportedQueues.length > 0
+                        ) {
+                            return String(
+                                supportedQueues[0].id
+                            );
+                        }
+
                         return "";
                     }
                 );
-
                 setErr("");
             } catch (error) {
                 if (
