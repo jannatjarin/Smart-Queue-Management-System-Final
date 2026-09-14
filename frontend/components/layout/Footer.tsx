@@ -12,9 +12,7 @@ export default function Footer() {
                     </p>
                 </div>
 
-                <p className="text-sm font-medium text-[#817369]">
-                    Advanced Web Technology Project
-                </p>
+                
             </div>
         </footer>
     );
