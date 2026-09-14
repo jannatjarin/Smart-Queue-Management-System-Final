@@ -85,12 +85,10 @@ export default function AdminUsersPage() {
                         true
                     );
 
-
                     try {
 
                         let url =
                             `/users?page=${page}&limit=${limit}&sort=${sort}`;
-
 
                         if (search) {
 
@@ -99,24 +97,19 @@ export default function AdminUsersPage() {
                                 `&search=${encodeURIComponent(
                                     search
                                 )}`;
-
                         }
-
 
                         if (role) {
 
                             url =
                                 url +
                                 `&role=${role}`;
-
                         }
-
 
                         const response =
                             await api.get<UsersResponse>(
                                 url
                             );
-
 
                         setUsers(
                             response.data.data
@@ -163,7 +156,6 @@ export default function AdminUsersPage() {
                             setErr(
                                 "Could not load users"
                             );
-
                         }
 
                     }
@@ -201,7 +193,6 @@ export default function AdminUsersPage() {
             setResponseMsg("");
             setErr("");
 
-
             try {
 
                 await api.patch(
@@ -212,11 +203,9 @@ export default function AdminUsersPage() {
                     }
                 );
 
-
                 setResponseMsg(
                     "User role updated successfully"
                 );
-
 
                 setRefresh(
                     (value) =>
@@ -241,7 +230,6 @@ export default function AdminUsersPage() {
                             .data
                             .message;
 
-
                     setErr(
                         Array.isArray(
                             message
@@ -259,7 +247,96 @@ export default function AdminUsersPage() {
                     setErr(
                         "Could not update user role"
                     );
+                }
 
+            }
+
+        };
+
+
+    const deleteUser =
+        async (
+            id: number,
+            name: string
+        ) => {
+
+            const confirmed =
+                window.confirm(
+                    `Are you sure you want to delete ${name}?`
+                );
+
+            if (!confirmed) {
+                return;
+            }
+
+            setResponseMsg("");
+            setErr("");
+
+            try {
+
+                await api.delete(
+                    `/users/${id}`
+                );
+
+                setResponseMsg(
+                    "User deleted successfully"
+                );
+
+                if (
+                    users.length === 1 &&
+                    page > 1
+                ) {
+
+                    setPage(
+                        page - 1
+                    );
+
+                }
+
+                else {
+
+                    setRefresh(
+                        (value) =>
+                            value + 1
+                    );
+
+                }
+
+            }
+
+            catch (error) {
+
+                if (
+                    axios.isAxiosError(
+                        error
+                    ) &&
+                    error.response
+                        ?.data
+                        ?.message
+                ) {
+
+                    const message =
+                        error.response
+                            .data
+                            .message;
+
+                    setErr(
+                        Array.isArray(
+                            message
+                        )
+                            ? message.join(
+                                ", "
+                            )
+                            : message
+                    );
+
+                }
+
+                else {
+
+                    setErr(
+                        "Could not delete user"
+                    );
                 }
 
             }
@@ -310,7 +387,7 @@ export default function AdminUsersPage() {
             </h1>
 
             <p className="mb-6">
-                Search users and manage user roles.
+                Search users, manage roles, and delete user accounts.
             </p>
 
 
@@ -487,6 +564,7 @@ export default function AdminUsersPage() {
                                         <th>Email</th>
                                         <th>Phone</th>
                                         <th>Role</th>
+                                        <th>Actions</th>
                                     </tr>
 
                                 </thead>
@@ -552,6 +630,24 @@ export default function AdminUsersPage() {
                                                             </option>
 
                                                         </select>
+
+                                                    </td>
+
+                                                    <td>
+
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-error btn-sm"
+                                                            onClick={
+                                                                () =>
+                                                                    deleteUser(
+                                                                        user.id,
+                                                                        user.fullName
+                                                                    )
+                                                            }
+                                                        >
+                                                            Delete
+                                                        </button>
 
                                                     </td>
 

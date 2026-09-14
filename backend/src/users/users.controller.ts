@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -152,6 +153,30 @@ export class UsersController {
       .updateRole(
         id,
         dto.role,
+        currentAdminId,
+      );
+  }
+
+  @UseGuards(
+    JwtGuard,
+    RolesGuard,
+  )
+  @roles(Role.ADMIN)
+  @Delete(':id')
+  remove(
+    @Param(
+      'id',
+      ParseIntPipe,
+    )
+    id: number,
+
+    @CurrentUser('id')
+    currentAdminId: number,
+  ) {
+
+    return this.usersService
+      .remove(
+        id,
         currentAdminId,
       );
   }

@@ -191,7 +191,7 @@ export default function Navbar() {
                                     onClick={
                                         logout
                                     }
-                                    className="ml-1 rounded-full border border-[#bca997] bg-[#fffaf0] px-4 py-2 text-sm font-bold text-[#70584b] transition hover:border-[#8f3d27] hover:text-[#8f3d27]"
+                                    className="ml-1 rounded-full border border-[#9b1c31] bg-[#9b1c31] px-4 py-2 text-sm font-bold text-white transition hover:border-[#7f1728] hover:bg-[#7f1728]"
                                 >
                                     Logout
                                 </button>

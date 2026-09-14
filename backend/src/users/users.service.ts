@@ -98,7 +98,6 @@ export class UsersService {
       throw new NotFoundException(
         'User not found',
       );
-
     }
 
     return user;
@@ -174,7 +173,6 @@ export class UsersService {
       throw new BadRequestException(
         'You cannot remove your own admin role',
       );
-
     }
 
     if (
@@ -212,7 +210,6 @@ export class UsersService {
           throw new BadRequestException(
             'Complete the currently called ticket before changing this staff role',
           );
-
         }
 
         counter.status =
@@ -237,12 +234,91 @@ export class UsersService {
           role,
         },
       );
-
     }
 
     return this.getUserById(
       id,
     );
+  }
+
+  async remove(
+    id: number,
+    currentAdminId: number,
+  ) {
+
+    if (
+      id ==
+      currentAdminId
+    ) {
+
+      throw new BadRequestException(
+        'You cannot delete your own account',
+      );
+    }
+
+    const user =
+      await this.getUserById(
+        id,
+      );
+
+    if (
+      user.role ==
+      Role.STAFF
+    ) {
+
+      const counter =
+        await this.countersRepo
+          .findOne(
+            {
+              where: {
+                staff: {
+                  id,
+                },
+              },
+
+              relations: [
+                'staff',
+                'tickets',
+              ],
+            },
+          );
+
+      if (counter) {
+
+        const hasCalledTicket =
+          counter.tickets?.some(
+            (ticket) =>
+              ticket.status ==
+              TicketStatus.CALLED,
+          );
+
+        if (hasCalledTicket) {
+
+          throw new BadRequestException(
+            'Complete the currently called ticket before deleting this staff user',
+          );
+        }
+
+        counter.status =
+          CounterStatus.CLOSED;
+
+        counter.staff =
+          null;
+
+        await this.countersRepo.save(
+          counter,
+        );
+      }
+    }
+
+    await this.usersRepo.remove(
+      user,
+    );
+
+    return {
+      message:
+        'User deleted successfully',
+    };
   }
 
   async findAll(
@@ -269,7 +345,6 @@ export class UsersService {
             `%${search}%`,
         },
       );
-
     }
 
     if (role) {
@@ -281,7 +356,6 @@ export class UsersService {
           role,
         },
       );
-
     }
 
     qb.orderBy(
