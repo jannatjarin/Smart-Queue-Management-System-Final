@@ -1,44 +1,38 @@
 "use client";
 
-export default function Error(
-    {
-        reset
-    }: {
-        error: Error & {
-            digest?: string
-        },
-        reset: () => void
-    }
-) {
-
+export default function Error({
+    reset,
+}: {
+    error: Error & {
+        digest?: string;
+    };
+    reset: () => void;
+}) {
     return (
-        <div className="min-h-[70vh] flex items-center justify-center">
+        <main className="flex min-h-[65vh] items-center justify-center py-10">
+            <section className="w-full max-w-md rounded-[28px] border border-[#dfb4b7] bg-[#f4d5d7] p-7 text-center">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#9a5358]">
+                    Error
+                </p>
 
-            <div className="card bg-base-100 shadow-xl w-full max-w-md">
+                <h1 className="mt-2 text-3xl font-bold text-[#6f3e42]">
+                    Something went wrong
+                </h1>
 
-                <div className="card-body text-center">
+                <p className="mt-3 text-sm leading-6 text-[#875b5e]">
+                    We could not complete that request.
+                </p>
 
-                    <h1 className="text-2xl font-bold">
-                        Something went wrong
-                    </h1>
-
-                    <p>
-                        An unexpected error occurred.
-                    </p>
-
-                    <button
-                        onClick={
-                            () => reset()
-                        }
-                        className="btn btn-primary mt-4"
-                    >
-                        Try Again
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
+                <button
+                    type="button"
+                    onClick={() =>
+                        reset()
+                    }
+                    className="mt-6 min-h-11 rounded-full bg-[#5d7d5f] px-6 text-sm font-bold text-white transition hover:bg-[#4e6c50]"
+                >
+                    Try again
+                </button>
+            </section>
+        </main>
     );
 }

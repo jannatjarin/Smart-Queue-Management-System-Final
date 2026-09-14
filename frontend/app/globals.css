@@ -11,603 +11,143 @@ html {
 
 body {
     margin: 0;
-    color: #403a4c;
-
-    background:
-        radial-gradient(
-            circle at 8% 8%,
-            rgba(229, 218, 255, 0.82),
-            transparent 25rem
-        ),
-        radial-gradient(
-            circle at 92% 12%,
-            rgba(255, 226, 207, 0.72),
-            transparent 25rem
-        ),
-        radial-gradient(
-            circle at 80% 86%,
-            rgba(214, 239, 255, 0.68),
-            transparent 28rem
-        ),
-        #fbf8ff;
-
-    font-family:
-        var(--font-geist-sans),
-        "Segoe UI",
-        sans-serif;
+    background: #f7f1e7;
+    color: #40372f;
+    font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
 }
 
 h1,
 h2,
 h3 {
-    font-family:
-        Georgia,
-        "Times New Roman",
-        serif;
-
-    color: #3f3949;
-
-    letter-spacing: -0.03em;
+    font-family: Georgia, "Times New Roman", serif;
+    letter-spacing: -0.025em;
 }
-
-
-/* =====================================================
-   FORCE DAISYUI TO STAY LIGHT
-   This fixes the black cards you were seeing.
-   ===================================================== */
 
 .bg-base-100,
 .card {
-    background:
-        rgba(
-            255,
-            253,
-            255,
-            0.92
-        ) !important;
-
-    color:
-        #403a4c !important;
+    background: #fffaf0 !important;
+    color: #40372f !important;
 }
 
 .card {
-    border:
-        1px solid
-        #e5dced !important;
-
-    border-radius:
-        24px !important;
-
-    box-shadow:
-        0 14px 36px
-        rgba(
-            90,
-            72,
-            116,
-            0.08
-        ) !important;
+    border: 1px solid #d7c6b1 !important;
+    border-radius: 24px !important;
+    box-shadow: 0 10px 28px rgba(80, 60, 45, 0.07) !important;
 }
 
 .text-base-content {
-    color:
-        #403a4c !important;
+    color: #40372f !important;
 }
-
-
-/* =====================================================
-   FORMS
-   ===================================================== */
 
 .input,
 .select,
 .textarea {
-    background:
-        #fffdfd !important;
-
-    color:
-        #403a4c !important;
-
-    border-color:
-        #ddd4e7 !important;
-
-    border-radius:
-        14px !important;
+    background: #fffdf8 !important;
+    color: #443b34 !important;
+    border-color: #cbbba8 !important;
+    border-radius: 14px !important;
 }
 
 .input:focus,
 .select:focus,
 .textarea:focus {
-    outline:
-        none !important;
-
-    border-color:
-        #8c7ab8 !important;
-
-    box-shadow:
-        0 0 0 4px
-        rgba(
-            140,
-            122,
-            184,
-            0.12
-        ) !important;
+    outline: none !important;
+    border-color: #8f3d27 !important;
+    box-shadow: 0 0 0 3px rgba(143, 61, 39, 0.12) !important;
 }
 
-
-/* =====================================================
-   DAISYUI BUTTONS
-   ===================================================== */
-
 .btn {
-    border-radius:
-        999px !important;
-
-    font-weight:
-        700 !important;
-
-    min-height:
-        44px !important;
+    min-height: 44px !important;
+    border-radius: 999px !important;
+    font-weight: 700 !important;
 }
 
 .btn-primary {
-    background:
-        #7566a5 !important;
-
-    border-color:
-        #7566a5 !important;
-
-    color:
-        white !important;
+    background: #5d7d5f !important;
+    border-color: #5d7d5f !important;
+    color: white !important;
 }
 
 .btn-primary:hover {
-    background:
-        #65568f !important;
+    background: #4e6c50 !important;
+    border-color: #4e6c50 !important;
+}
 
-    border-color:
-        #65568f !important;
+.btn-error {
+    background: #b85c62 !important;
+    border-color: #b85c62 !important;
+    color: white !important;
+}
+
+.btn-warning {
+    background: #f1d875 !important;
+    border-color: #d7ba52 !important;
+    color: #67531a !important;
 }
 
 .btn-outline {
-    background:
-        rgba(
-            255,
-            255,
-            255,
-            0.72
-        ) !important;
-
-    border-color:
-        #cfc3dc !important;
-
-    color:
-        #62577d !important;
+    background: #fffaf0 !important;
+    border-color: #bca997 !important;
+    color: #66574d !important;
 }
 
 .btn-ghost {
-    color:
-        #62577d !important;
+    color: #66574d !important;
 }
 
 .btn-ghost:hover {
-    background:
-        #eee7ff !important;
+    background: #f0dfc9 !important;
+    color: #8f3d27 !important;
 }
 
-
-/* =====================================================
-   ALERTS
-   ===================================================== */
-
 .alert {
-    border-radius:
-        16px !important;
-
-    border:
-        1px solid
-        #ddd4e7 !important;
-
-    background:
-        #f3eff8 !important;
-
-    color:
-        #514a5e !important;
+    border-radius: 16px !important;
 }
 
 .alert-success {
-    background:
-        #e2f3e8 !important;
-
-    border-color:
-        #c6e2d2 !important;
-
-    color:
-        #416651 !important;
+    background: #dcebd8 !important;
+    border: 1px solid #b6ceb2 !important;
+    color: #416343 !important;
 }
 
 .alert-error {
-    background:
-        #f9e1e9 !important;
-
-    border-color:
-        #e7c3cf !important;
-
-    color:
-        #7b4c5b !important;
+    background: #f4d5d7 !important;
+    border: 1px solid #dfb4b7 !important;
+    color: #82464b !important;
 }
 
-
-/* =====================================================
-   TABLES
-   ===================================================== */
+.alert-warning {
+    background: #f7e49a !important;
+    border: 1px solid #dfca70 !important;
+    color: #69571d !important;
+}
 
 .table {
-    color:
-        #4d4757 !important;
+    color: #4c433b !important;
 }
 
 .table thead {
-    background:
-        #eee7ff !important;
-
-    color:
-        #5e5670 !important;
+    background: #f0dfc9 !important;
+    color: #5e5045 !important;
 }
 
 .table tbody tr {
-    border-color:
-        #ece5f1 !important;
+    border-color: #e8dccb !important;
 }
 
 .table tbody tr:hover {
-    background:
-        #fbf8ff !important;
+    background: #fff7ea !important;
 }
 
 .loading {
-    color:
-        #7566a5 !important;
+    color: #8f3d27 !important;
 }
 
-
-/* =====================================================
-   SHARED PAGE STYLES
-   ===================================================== */
-
-.sq-page {
-    width:
-        100%;
-
-    max-width:
-        1180px;
-
-    margin:
-        0 auto;
-
-    padding:
-        32px 0 44px;
+.checkbox {
+    border-color: #9f8870 !important;
 }
 
-.sq-auth-page {
-    min-height:
-        76vh;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    padding:
-        32px 0;
-}
-
-.sq-auth-card {
-    width:
-        100%;
-
-    max-width:
-        480px;
-
-    border:
-        1px solid
-        #e3d9ec;
-
-    border-radius:
-        28px;
-
-    background:
-        rgba(
-            255,
-            253,
-            255,
-            0.92
-        );
-
-    box-shadow:
-        0 20px 50px
-        rgba(
-            89,
-            71,
-            116,
-            0.10
-        );
-
-    padding:
-        28px;
-}
-
-
-/* =====================================================
-   TYPOGRAPHY
-   ===================================================== */
-
-.sq-title {
-    margin:
-        0;
-
-    font-size:
-        clamp(
-            2rem,
-            4vw,
-            3rem
-        );
-
-    line-height:
-        1.05;
-
-    font-weight:
-        700;
-}
-
-.sq-subtitle {
-    margin-top:
-        8px;
-
-    color:
-        #756f7d;
-
-    font-size:
-        0.95rem;
-}
-
-
-/* =====================================================
-   CARDS
-   ===================================================== */
-
-.sq-panel {
-    border:
-        1px solid
-        #e4dbea;
-
-    border-radius:
-        24px;
-
-    background:
-        rgba(
-            255,
-            253,
-            255,
-            0.88
-        );
-
-    box-shadow:
-        0 14px 34px
-        rgba(
-            89,
-            71,
-            116,
-            0.07
-        );
-}
-
-
-/* PASTEL PALETTE */
-
-.sq-lavender {
-    background:
-        #ece5ff;
-
-    border-color:
-        #d9cdf2;
-}
-
-.sq-butter {
-    background:
-        #fff2ba;
-
-    border-color:
-        #e8d692;
-}
-
-.sq-orange {
-    background:
-        #ffe4d3;
-
-    border-color:
-        #efcdbb;
-}
-
-.sq-blue {
-    background:
-        #dceeff;
-
-    border-color:
-        #c7dfef;
-}
-
-.sq-mint {
-    background:
-        #dff2e6;
-
-    border-color:
-        #c8e2d3;
-}
-
-.sq-pink {
-    background:
-        #f9e1e9;
-
-    border-color:
-        #e9c8d4;
-}
-
-
-/* =====================================================
-   CUSTOM BUTTONS
-   ===================================================== */
-
-.sq-primary {
-    display:
-        inline-flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    min-height:
-        44px;
-
-    padding:
-        10px 20px;
-
-    border-radius:
-        999px;
-
-    border:
-        1px solid
-        #7566a5;
-
-    background:
-        #7566a5;
-
-    color:
-        white;
-
-    font-size:
-        0.875rem;
-
-    font-weight:
-        800;
-
-    transition:
-        0.18s ease;
-}
-
-.sq-primary:hover {
-    background:
-        #65568f;
-
-    border-color:
-        #65568f;
-}
-
-.sq-secondary {
-    display:
-        inline-flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    min-height:
-        44px;
-
-    padding:
-        10px 20px;
-
-    border-radius:
-        999px;
-
-    border:
-        1px solid
-        #cfc3dc;
-
-    background:
-        rgba(
-            255,
-            255,
-            255,
-            0.75
-        );
-
-    color:
-        #62577d;
-
-    font-size:
-        0.875rem;
-
-    font-weight:
-        800;
-}
-
-
-/* =====================================================
-   CUSTOM FORM ELEMENTS
-   ===================================================== */
-
-.sq-label {
-    display:
-        block;
-
-    margin-bottom:
-        7px;
-
-    color:
-        #57515f;
-
-    font-size:
-        0.875rem;
-
-    font-weight:
-        700;
-}
-
-.sq-input {
-    width:
-        100%;
-
-    min-height:
-        46px;
-
-    border:
-        1px solid
-        #ddd4e7;
-
-    border-radius:
-        14px;
-
-    background:
-        #fffdfd;
-
-    color:
-        #403a4c;
-
-    padding:
-        0 14px;
-}
-
-.sq-input:focus {
-    outline:
-        none;
-
-    border-color:
-        #8c7ab8;
-
-    box-shadow:
-        0 0 0 4px
-        rgba(
-            140,
-            122,
-            184,
-            0.12
-        );
+.checkbox:checked {
+    background: #5d7d5f !important;
+    border-color: #5d7d5f !important;
 }
