@@ -599,7 +599,7 @@ export default function CustomerDashboard() {
                             text-[#8f3d27]
                         "
                     >
-                        Most important
+                    
                     </p>
 
                     <h2
