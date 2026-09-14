@@ -8,6 +8,8 @@ import {
 
 import axios from "axios";
 
+import Link from "next/link";
+
 import {
     useRouter,
 } from "next/navigation";
@@ -20,8 +22,13 @@ export default function ResetPasswordPage() {
     const router =
         useRouter();
 
-    const [err, setErr] =
+
+    const [
+        err,
+        setErr
+    ] =
         useState("");
+
 
     const [
         responseMsg,
@@ -29,7 +36,18 @@ export default function ResetPasswordPage() {
     ] =
         useState("");
 
-    const [formData, setFormData] =
+
+    const [
+        loading,
+        setLoading
+    ] =
+        useState(false);
+
+
+    const [
+        formData,
+        setFormData
+    ] =
         useState(
             {
                 token: "",
@@ -40,208 +58,303 @@ export default function ResetPasswordPage() {
 
 
     const onChangeHandle = (
-        e: ChangeEvent<HTMLInputElement>
+        e:
+            ChangeEvent<
+                HTMLInputElement
+            >
     ) => {
 
         const {
             name,
             value,
-        } = e.target;
+        } =
+            e.target;
+
 
         setFormData(
             {
                 ...formData,
-                [name]: value,
+                [name]:
+                    value,
             }
         );
 
     };
 
 
-    const onSubmitHandle = async (
-        e: FormEvent<HTMLFormElement>
-    ) => {
+    const onSubmitHandle =
+        async (
+            e:
+                FormEvent<
+                    HTMLFormElement
+                >
+        ) => {
 
-        e.preventDefault();
+            e.preventDefault();
 
-        setErr("");
-        setResponseMsg("");
+            setErr("");
+            setResponseMsg("");
 
-
-        if (
-            formData.newPassword.length < 6
-        ) {
-
-            setErr(
-                "Password must be at least 6 characters"
-            );
-
-            return;
-
-        }
-
-
-        if (
-            formData.newPassword !=
-            formData.confirmPassword
-        ) {
-
-            setErr(
-                "Passwords do not match"
-            );
-
-            return;
-
-        }
-
-
-        try {
-
-            const response =
-                await api.post(
-                    "/auth/reset-password",
-                    {
-                        token:
-                            formData.token,
-
-                        newPassword:
-                            formData.newPassword,
-                    }
-                );
-
-
-            setResponseMsg(
-                response.data.message
-            );
-
-
-            setTimeout(
-                () => {
-
-                    router.push(
-                        "/login"
-                    );
-
-                },
-                1500
-            );
-
-        }
-
-        catch (error) {
 
             if (
-                axios.isAxiosError(error) &&
-                error.response?.data?.message
+                formData
+                    .newPassword
+                    .length <
+                6
             ) {
 
                 setErr(
-                    error.response.data.message
+                    "Password must be at least 6 characters"
                 );
+
+                return;
 
             }
 
-            else {
+
+            if (
+                formData.newPassword !=
+                formData.confirmPassword
+            ) {
 
                 setErr(
-                    "Could not reset password"
+                    "Passwords do not match"
+                );
+
+                return;
+
+            }
+
+
+            setLoading(
+                true
+            );
+
+
+            try {
+
+                const response =
+                    await api.post(
+                        "/auth/reset-password",
+                        {
+                            token:
+                                formData.token,
+
+                            newPassword:
+                                formData.newPassword,
+                        }
+                    );
+
+
+                setResponseMsg(
+                    response.data.message
+                );
+
+
+                setTimeout(
+                    () =>
+                        router.push(
+                            "/login"
+                        ),
+                    1500
                 );
 
             }
 
-        }
+            catch (error) {
 
-    };
+                if (
+                    axios.isAxiosError(
+                        error
+                    ) &&
+                    error.response
+                        ?.data
+                        ?.message
+                ) {
+
+                    setErr(
+                        error.response
+                            .data
+                            .message
+                    );
+
+                }
+
+                else {
+
+                    setErr(
+                        "Could not reset password"
+                    );
+
+                }
+
+            }
+
+            finally {
+
+                setLoading(
+                    false
+                );
+
+            }
+
+        };
 
 
     return (
-        <div className="max-w-md mx-auto py-10">
+        <div className="sq-auth-page">
 
-            <h1 className="text-3xl font-bold mb-2">
-                Reset Password
-            </h1>
+            <section className="sq-auth-card">
 
-            <p className="mb-6">
-                Enter the reset token and your new password
-            </p>
+                <h1 className="sq-title text-center">
+                    Reset password
+                </h1>
 
-
-            {
-                responseMsg &&
-                <div className="alert alert-success mb-4">
-
-                    <span>
-                        {responseMsg}
-                    </span>
-
-                </div>
-            }
+                <p className="sq-subtitle text-center">
+                    Paste your token and choose a new password.
+                </p>
 
 
-            {
-                err &&
-                <div className="alert alert-error mb-4">
+                {
+                    responseMsg &&
+                    <div className="alert alert-success mt-5">
 
-                    <span>
-                        {err}
-                    </span>
+                        <span>
+                            {responseMsg}
+                        </span>
 
-                </div>
-            }
-
-
-            <form onSubmit={onSubmitHandle}>
-
-                <label className="label">
-                    Reset Token
-                </label>
-
-                <input
-                    type="text"
-                    name="token"
-                    className="input input-bordered w-full"
-                    value={formData.token}
-                    onChange={onChangeHandle}
-                    required
-                />
+                    </div>
+                }
 
 
-                <label className="label mt-4">
-                    New Password
-                </label>
+                {
+                    err &&
+                    <div className="alert alert-error mt-5">
 
-                <input
-                    type="password"
-                    name="newPassword"
-                    className="input input-bordered w-full"
-                    value={formData.newPassword}
-                    onChange={onChangeHandle}
-                    required
-                />
+                        <span>
+                            {err}
+                        </span>
+
+                    </div>
+                }
 
 
-                <label className="label mt-4">
-                    Confirm Password
-                </label>
-
-                <input
-                    type="password"
-                    name="confirmPassword"
-                    className="input input-bordered w-full"
-                    value={formData.confirmPassword}
-                    onChange={onChangeHandle}
-                    required
-                />
-
-
-                <button
-                    type="submit"
-                    className="btn btn-primary w-full mt-6"
+                <form
+                    onSubmit={
+                        onSubmitHandle
+                    }
+                    className="mt-6 space-y-4"
                 >
-                    Reset Password
-                </button>
 
-            </form>
+                    <div>
+
+                        <label
+                            htmlFor="token"
+                            className="sq-label"
+                        >
+                            Reset token
+                        </label>
+
+                        <input
+                            id="token"
+                            type="text"
+                            name="token"
+                            className="sq-input"
+                            value={
+                                formData.token
+                            }
+                            onChange={
+                                onChangeHandle
+                            }
+                            required
+                        />
+
+                    </div>
+
+
+                    <div>
+
+                        <label
+                            htmlFor="newPassword"
+                            className="sq-label"
+                        >
+                            New password
+                        </label>
+
+                        <input
+                            id="newPassword"
+                            type="password"
+                            name="newPassword"
+                            className="sq-input"
+                            value={
+                                formData
+                                    .newPassword
+                            }
+                            onChange={
+                                onChangeHandle
+                            }
+                            required
+                        />
+
+                    </div>
+
+
+                    <div>
+
+                        <label
+                            htmlFor="confirmPassword"
+                            className="sq-label"
+                        >
+                            Confirm password
+                        </label>
+
+                        <input
+                            id="confirmPassword"
+                            type="password"
+                            name="confirmPassword"
+                            className="sq-input"
+                            value={
+                                formData
+                                    .confirmPassword
+                            }
+                            onChange={
+                                onChangeHandle
+                            }
+                            required
+                        />
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        className="sq-primary w-full"
+                        disabled={
+                            loading
+                        }
+                    >
+                        {
+                            loading
+                                ? "Resetting..."
+                                : "Reset password"
+                        }
+                    </button>
+
+                </form>
+
+
+                <p className="mt-6 text-center text-sm">
+
+                    <Link
+                        href="/login"
+                        className="font-bold text-[#6b5b95] hover:underline"
+                    >
+                        Back to login
+                    </Link>
+
+                </p>
+
+            </section>
 
         </div>
     );

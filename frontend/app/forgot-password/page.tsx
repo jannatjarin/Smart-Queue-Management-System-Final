@@ -8,17 +8,23 @@ import {
 
 import axios from "axios";
 
+import Link from "next/link";
+
 import api from "@/lib/axios";
 
 
 export default function ForgotPasswordPage() {
 
-    const [formData, setFormData] =
+    const [
+        formData,
+        setFormData
+    ] =
         useState(
             {
                 email: "",
             }
         );
+
 
     const [
         responseMsg,
@@ -26,143 +32,231 @@ export default function ForgotPasswordPage() {
     ] =
         useState("");
 
-    const [err, setErr] =
+
+    const [
+        err,
+        setErr
+    ] =
         useState("");
 
 
+    const [
+        loading,
+        setLoading
+    ] =
+        useState(false);
+
+
     const onChangeHandle = (
-        e: ChangeEvent<HTMLInputElement>
+        e:
+            ChangeEvent<
+                HTMLInputElement
+            >
     ) => {
 
         const {
             name,
             value,
-        } = e.target;
+        } =
+            e.target;
+
 
         setFormData(
             {
                 ...formData,
-                [name]: value,
+                [name]:
+                    value,
             }
         );
 
     };
 
 
-    const onSubmitHandle = async (
-        e: FormEvent<HTMLFormElement>
-    ) => {
+    const onSubmitHandle =
+        async (
+            e:
+                FormEvent<
+                    HTMLFormElement
+                >
+        ) => {
 
-        e.preventDefault();
+            e.preventDefault();
 
-        setResponseMsg("");
-        setErr("");
+            setResponseMsg("");
+            setErr("");
 
-
-        try {
-
-            const response =
-                await api.post(
-                    "/auth/forgot-password",
-                    {
-                        email:
-                            formData.email,
-                    }
-                );
-
-
-            setResponseMsg(
-                response.data.message
+            setLoading(
+                true
             );
 
-        }
 
-        catch (error) {
+            try {
 
-            if (
-                axios.isAxiosError(error) &&
-                error.response?.data?.message
-            ) {
+                const response =
+                    await api.post(
+                        "/auth/forgot-password",
+                        {
+                            email:
+                                formData.email,
+                        }
+                    );
 
-                setErr(
-                    error.response.data.message
+
+                setResponseMsg(
+                    response.data.message
                 );
 
             }
 
-            else {
+            catch (error) {
 
-                setErr(
-                    "Could not send reset request"
+                if (
+                    axios.isAxiosError(
+                        error
+                    ) &&
+                    error.response
+                        ?.data
+                        ?.message
+                ) {
+
+                    setErr(
+                        error.response
+                            .data
+                            .message
+                    );
+
+                }
+
+                else {
+
+                    setErr(
+                        "Could not send reset request"
+                    );
+
+                }
+
+            }
+
+            finally {
+
+                setLoading(
+                    false
                 );
 
             }
 
-        }
-
-    };
+        };
 
 
     return (
-        <div className="max-w-md mx-auto py-10">
+        <div className="sq-auth-page">
 
-            <h1 className="text-3xl font-bold mb-2">
-                Forgot Password
-            </h1>
+            <section className="sq-auth-card">
 
-            <p className="mb-6">
-                Enter your account email
-            </p>
+                <h1 className="sq-title text-center">
+                    Forgot password?
+                </h1>
 
-
-            {
-                responseMsg &&
-                <div className="alert alert-success mb-4">
-
-                    <span>
-                        {responseMsg}
-                    </span>
-
-                </div>
-            }
+                <p className="sq-subtitle text-center">
+                    Enter your email to receive a reset token.
+                </p>
 
 
-            {
-                err &&
-                <div className="alert alert-error mb-4">
+                {
+                    responseMsg &&
+                    <div className="alert alert-success mt-5">
 
-                    <span>
-                        {err}
-                    </span>
+                        <span>
+                            {responseMsg}
+                        </span>
 
-                </div>
-            }
-
-
-            <form onSubmit={onSubmitHandle}>
-
-                <label className="label">
-                    Email
-                </label>
-
-                <input
-                    type="email"
-                    name="email"
-                    className="input input-bordered w-full"
-                    value={formData.email}
-                    onChange={onChangeHandle}
-                    required
-                />
+                    </div>
+                }
 
 
-                <button
-                    type="submit"
-                    className="btn btn-primary w-full mt-6"
+                {
+                    err &&
+                    <div className="alert alert-error mt-5">
+
+                        <span>
+                            {err}
+                        </span>
+
+                    </div>
+                }
+
+
+                <form
+                    onSubmit={
+                        onSubmitHandle
+                    }
+                    className="mt-6 space-y-4"
                 >
-                    Send Reset Token
-                </button>
 
-            </form>
+                    <div>
+
+                        <label
+                            htmlFor="email"
+                            className="sq-label"
+                        >
+                            Email
+                        </label>
+
+                        <input
+                            id="email"
+                            type="email"
+                            name="email"
+                            className="sq-input"
+                            placeholder="you@example.com"
+                            value={
+                                formData.email
+                            }
+                            onChange={
+                                onChangeHandle
+                            }
+                            required
+                        />
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        className="sq-primary w-full"
+                        disabled={
+                            loading
+                        }
+                    >
+                        {
+                            loading
+                                ? "Sending..."
+                                : "Send reset token"
+                        }
+                    </button>
+
+                </form>
+
+
+                <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm">
+
+                    <Link
+                        href="/reset-password"
+                        className="font-bold text-[#6b5b95] hover:underline"
+                    >
+                        I already have a token
+                    </Link>
+
+
+                    <Link
+                        href="/login"
+                        className="font-bold text-[#77707e] hover:underline"
+                    >
+                        Back to login
+                    </Link>
+
+                </div>
+
+            </section>
 
         </div>
     );

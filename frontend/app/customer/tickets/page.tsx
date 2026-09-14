@@ -16,6 +16,7 @@ import StatusBadge from
 
 
 interface Ticket {
+
     id: number;
     ticketNumber: string;
     status: string;
@@ -41,6 +42,7 @@ interface Ticket {
         id: number;
         name: string;
     } | null;
+
 }
 
 
@@ -110,7 +112,6 @@ export default function CustomerTicketsPage() {
                             response.data
                         );
 
-
                         setErr("");
 
                     }
@@ -150,14 +151,18 @@ export default function CustomerTicketsPage() {
             getTickets();
 
         },
-        [refresh]
+        [
+            refresh,
+        ]
     );
 
 
     const filteredTickets =
         status
             ? tickets.filter(
-                (ticket) =>
+                (
+                    ticket
+                ) =>
                     ticket.status ==
                     status
             )
@@ -166,7 +171,8 @@ export default function CustomerTicketsPage() {
 
     const cancelTicket =
         async (
-            id: number
+            id:
+                number
         ) => {
 
             setErr("");
@@ -193,8 +199,11 @@ export default function CustomerTicketsPage() {
 
 
                 setRefresh(
-                    (value) =>
-                        value + 1
+                    (
+                        value
+                    ) =>
+                        value +
+                        1
                 );
 
             }
@@ -233,7 +242,8 @@ export default function CustomerTicketsPage() {
 
     const showEstimatedWait =
         (
-            ticket: Ticket
+            ticket:
+                Ticket
         ) => {
 
             if (
@@ -257,12 +267,12 @@ export default function CustomerTicketsPage() {
             }
 
 
-            return `${ticket.estimatedWaitMinutes} minutes`;
+            return `${ticket.estimatedWaitMinutes} min`;
 
         };
 
 
-    const cardTone =
+    const toneForStatus =
         (
             ticketStatus:
                 string
@@ -273,7 +283,7 @@ export default function CustomerTicketsPage() {
                 "waiting"
             ) {
 
-                return "from-[#fff8df] to-[#fffdf7] border-[#eadcae]";
+                return "sq-butter";
 
             }
 
@@ -283,7 +293,7 @@ export default function CustomerTicketsPage() {
                 "called"
             ) {
 
-                return "from-[#edf5ff] to-[#fffdfd] border-[#d6e4f5]";
+                return "sq-blue";
 
             }
 
@@ -293,7 +303,7 @@ export default function CustomerTicketsPage() {
                 "completed"
             ) {
 
-                return "from-[#eaf7f1] to-[#fffdfd] border-[#d0e8dc]";
+                return "sq-mint";
 
             }
 
@@ -303,349 +313,120 @@ export default function CustomerTicketsPage() {
                 "cancelled"
             ) {
 
-                return "from-[#fdf0f4] to-[#fffdfd] border-[#efd7df]";
+                return "sq-pink";
 
             }
 
 
-            return "from-[#f8f4ff] to-[#fffdfd] border-[#e4ddec]";
+            return "sq-lavender";
 
         };
 
 
     return (
-        <div
-            className="
-                mx-auto
-                max-w-6xl
-                py-8
-                sm:py-10
-            "
-        >
+        <div className="sq-page">
 
-            <section
-                className="
-                    relative
-                    mb-8
-                    overflow-hidden
-                    rounded-[30px]
-                    border
-                    border-white/80
-                    bg-[linear-gradient(120deg,#ffe8dc_0%,#fce4ec_44%,#ece7ff_100%)]
-                    px-6
-                    py-7
-                    shadow-[0_20px_55px_rgba(100,83,128,0.1)]
-                    sm:px-8
-                "
-            >
+            <header className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 
-                <div
-                    className="
-                        absolute
-                        -left-10
-                        -top-12
-                        h-36
-                        w-36
-                        rounded-full
-                        bg-white/30
-                    "
-                />
+                <div>
 
+                    <h1 className="sq-title">
+                        My tickets
+                    </h1>
 
-                <div
-                    className="
-                        relative
-                        flex
-                        flex-col
-                        gap-5
-                        sm:flex-row
-                        sm:items-end
-                        sm:justify-between
-                    "
-                >
-
-                    <div>
-
-                        <p className="sqms-eyebrow">
-                            Your visits, all in one place
-                        </p>
-
-
-                        <h1
-                            className="
-                                sqms-title
-                                mt-1
-                                text-4xl
-                                sm:text-5xl
-                            "
-                        >
-                            My tickets
-                        </h1>
-
-
-                        <p
-                            className="
-                                mt-3
-                                max-w-2xl
-                                text-[15px]
-                                font-medium
-                                leading-7
-                                text-[#666174]
-                            "
-                        >
-                            Track what is active now,
-                            check where you were served,
-                            and look back at previous
-                            queue visits.
-                        </p>
-
-                    </div>
-
-
-                    <Link
-                        href="/customer/queues"
-                        className="
-                            sqms-primary-button
-                            inline-flex
-                            min-h-11
-                            items-center
-                            justify-center
-                            rounded-full
-                            px-5
-                            py-2.5
-                            text-sm
-                            font-bold
-                            transition
-                        "
-                    >
-                        Get a new ticket
-
-                        <span
-                            className="ml-2"
-                            aria-hidden="true"
-                        >
-                            →
-                        </span>
-                    </Link>
+                    <p className="sq-subtitle">
+                        Track current and previous tickets.
+                    </p>
 
                 </div>
 
-            </section>
+
+                <Link
+                    href="/customer/queues"
+                    className="sq-primary"
+                >
+                    Get a ticket
+                </Link>
+
+            </header>
 
 
             {
                 responseMsg &&
-                <div
-                    className="
-                        mb-5
-                        rounded-[20px]
-                        border
-                        border-[#c6e5d6]
-                        bg-[#e2f5ec]
-                        px-4
-                        py-3.5
-                        text-sm
-                        font-bold
-                        text-[#3f6a53]
-                        shadow-sm
-                    "
-                >
-                    {responseMsg}
+                <div className="alert alert-success mb-5">
+
+                    <span>
+                        {responseMsg}
+                    </span>
+
                 </div>
             }
 
 
             {
                 err &&
-                <div
-                    className="
-                        mb-5
-                        rounded-[20px]
-                        border
-                        border-[#efc9d5]
-                        bg-[#fce4ec]
-                        px-4
-                        py-3.5
-                        text-sm
-                        font-semibold
-                        text-[#82495a]
-                        shadow-sm
-                    "
-                >
-                    {err}
-                </div>
-            }
+                <div className="alert alert-error mb-5">
 
-
-            <section
-                className="
-                    sqms-glass
-                    mb-7
-                    rounded-[25px]
-                    p-4
-                    sm:p-5
-                "
-            >
-
-                <div
-                    className="
-                        flex
-                        flex-col
-                        gap-4
-                        sm:flex-row
-                        sm:items-center
-                        sm:justify-between
-                    "
-                >
-
-                    <div>
-
-                        <p
-                            className="
-                                text-sm
-                                font-extrabold
-                                text-[#4c4858]
-                            "
-                        >
-                            Find the ticket you need
-                        </p>
-
-                        <p
-                            className="
-                                mt-1
-                                text-sm
-                                font-medium
-                                text-[#858092]
-                            "
-                        >
-                            Filter by status without
-                            changing your ticket history.
-                        </p>
-
-                    </div>
-
-
-                    <select
-                        className="
-                            select
-                            sqms-input
-                            min-h-11
-                            w-full
-                            rounded-[15px]
-                            sm:max-w-xs
-                        "
-                        value={
-                            status
-                        }
-                        onChange={
-                            (e) =>
-                                setStatus(
-                                    e.target.value
-                                )
-                        }
-                        aria-label="Filter tickets by status"
-                    >
-
-                        <option value="">
-                            All tickets
-                        </option>
-
-                        <option value="waiting">
-                            Waiting
-                        </option>
-
-                        <option value="called">
-                            Called
-                        </option>
-
-                        <option value="completed">
-                            Completed
-                        </option>
-
-                        <option value="cancelled">
-                            Cancelled
-                        </option>
-
-                    </select>
-
-                </div>
-
-            </section>
-
-
-            {
-                filteredTickets
-                    .length ==
-                    0 &&
-                !err &&
-                <div
-                    className="
-                        rounded-[28px]
-                        border
-                        border-dashed
-                        border-[#d8cde5]
-                        bg-white/65
-                        px-6
-                        py-12
-                        text-center
-                        shadow-sm
-                    "
-                >
-
-                    <div
-                        className="
-                            mx-auto
-                            mb-4
-                            flex
-                            h-14
-                            w-14
-                            items-center
-                            justify-center
-                            rounded-full
-                            bg-[#ece7ff]
-                            text-xl
-                            font-black
-                            text-[#6d6398]
-                        "
-                    >
-                        Q
-                    </div>
-
-
-                    <p
-                        className="
-                            text-lg
-                            font-extrabold
-                            text-[#4d495a]
-                        "
-                    >
-                        No tickets found.
-                    </p>
-
-
-                    <p
-                        className="
-                            mt-1
-                            text-sm
-                            font-medium
-                            text-[#817c8d]
-                        "
-                    >
-                        Your tickets will appear
-                        here after you join a queue.
-                    </p>
+                    <span>
+                        {err}
+                    </span>
 
                 </div>
             }
 
 
-            <div
-                className="
-                    grid
-                    gap-5
-                    md:grid-cols-2
-                "
-            >
+            <div className="sq-panel mb-6 p-4 sm:max-w-sm">
+
+                <label
+                    htmlFor="statusFilter"
+                    className="sq-label"
+                >
+                    Status
+                </label>
+
+                <select
+                    id="statusFilter"
+                    className="select w-full"
+                    value={
+                        status
+                    }
+                    onChange={
+                        (
+                            e
+                        ) =>
+                            setStatus(
+                                e.target
+                                    .value
+                            )
+                    }
+                >
+
+                    <option value="">
+                        All tickets
+                    </option>
+
+                    <option value="waiting">
+                        Waiting
+                    </option>
+
+                    <option value="called">
+                        Called
+                    </option>
+
+                    <option value="completed">
+                        Completed
+                    </option>
+
+                    <option value="cancelled">
+                        Cancelled
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div className="grid gap-4 md:grid-cols-2">
 
                 {
                     filteredTickets.map(
@@ -656,73 +437,20 @@ export default function CustomerTicketsPage() {
                                 key={
                                     ticket.id
                                 }
-                                className={`
-                                    relative
-                                    overflow-hidden
-                                    rounded-[28px]
-                                    border
-                                    bg-gradient-to-br
-                                    ${cardTone(
-                                        ticket.status
-                                    )}
-                                    p-5
-                                    shadow-[0_14px_38px_rgba(91,74,115,0.08)]
-                                    transition
-                                    hover:-translate-y-0.5
-                                    hover:shadow-[0_18px_45px_rgba(91,74,115,0.11)]
-                                    sm:p-6
-                                `}
+                                className={`sq-panel ${toneForStatus(
+                                    ticket.status
+                                )} p-5`}
                             >
 
-                                <div
-                                    className="
-                                        absolute
-                                        right-0
-                                        top-0
-                                        h-20
-                                        w-20
-                                        translate-x-6
-                                        -translate-y-6
-                                        rounded-full
-                                        bg-white/35
-                                    "
-                                />
-
-
-                                <div
-                                    className="
-                                        relative
-                                        flex
-                                        items-start
-                                        justify-between
-                                        gap-4
-                                    "
-                                >
+                                <div className="flex items-start justify-between gap-4">
 
                                     <div>
 
-                                        <p
-                                            className="
-                                                text-xs
-                                                font-extrabold
-                                                uppercase
-                                                tracking-[0.13em]
-                                                text-[#8a8495]
-                                            "
-                                        >
-                                            Ticket number
+                                        <p className="text-sm font-semibold text-[#81798b]">
+                                            Ticket
                                         </p>
 
-
-                                        <h2
-                                            className="
-                                                mt-1.5
-                                                text-3xl
-                                                font-black
-                                                tracking-[-0.05em]
-                                                text-[#403c4e]
-                                            "
-                                        >
+                                        <h2 className="text-3xl font-black">
                                             {
                                                 ticket
                                                     .ticketNumber
@@ -741,46 +469,15 @@ export default function CustomerTicketsPage() {
                                 </div>
 
 
-                                <div
-                                    className="
-                                        relative
-                                        mt-5
-                                        grid
-                                        grid-cols-2
-                                        gap-3
-                                        text-sm
-                                    "
-                                >
+                                <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
 
-                                    <div
-                                        className="
-                                            col-span-2
-                                            rounded-[18px]
-                                            bg-white/60
-                                            p-4
-                                            sm:col-span-1
-                                        "
-                                    >
+                                    <div>
 
-                                        <p
-                                            className="
-                                                text-xs
-                                                font-bold
-                                                uppercase
-                                                tracking-[0.09em]
-                                                text-[#8b8594]
-                                            "
-                                        >
+                                        <p className="text-[#81798b]">
                                             Service
                                         </p>
 
-                                        <p
-                                            className="
-                                                mt-1.5
-                                                font-extrabold
-                                                text-[#504b5b]
-                                            "
-                                        >
+                                        <p className="font-bold">
                                             {
                                                 ticket
                                                     .service
@@ -791,35 +488,13 @@ export default function CustomerTicketsPage() {
                                     </div>
 
 
-                                    <div
-                                        className="
-                                            col-span-2
-                                            rounded-[18px]
-                                            bg-white/60
-                                            p-4
-                                            sm:col-span-1
-                                        "
-                                    >
+                                    <div>
 
-                                        <p
-                                            className="
-                                                text-xs
-                                                font-bold
-                                                uppercase
-                                                tracking-[0.09em]
-                                                text-[#8b8594]
-                                            "
-                                        >
+                                        <p className="text-[#81798b]">
                                             Queue
                                         </p>
 
-                                        <p
-                                            className="
-                                                mt-1.5
-                                                font-extrabold
-                                                text-[#504b5b]
-                                            "
-                                        >
+                                        <p className="font-bold">
                                             {
                                                 ticket
                                                     .queue
@@ -830,108 +505,33 @@ export default function CustomerTicketsPage() {
                                     </div>
 
 
-                                    <div
-                                        className="
-                                            rounded-[18px]
-                                            bg-white/52
-                                            p-4
-                                        "
-                                    >
+                                    <div>
 
-                                        <p
-                                            className="
-                                                text-xs
-                                                font-bold
-                                                uppercase
-                                                tracking-[0.09em]
-                                                text-[#8b8594]
-                                            "
-                                        >
-                                            Priority
-                                        </p>
-
-                                        <p
-                                            className="
-                                                mt-1.5
-                                                font-extrabold
-                                                capitalize
-                                                text-[#504b5b]
-                                            "
-                                        >
-                                            {
-                                                ticket
-                                                    .priority
-                                            }
-                                        </p>
-
-                                    </div>
-
-
-                                    <div
-                                        className="
-                                            rounded-[18px]
-                                            bg-white/52
-                                            p-4
-                                        "
-                                    >
-
-                                        <p
-                                            className="
-                                                text-xs
-                                                font-bold
-                                                uppercase
-                                                tracking-[0.09em]
-                                                text-[#8b8594]
-                                            "
-                                        >
+                                        <p className="text-[#81798b]">
                                             Counter
                                         </p>
 
-                                        <p
-                                            className="
-                                                mt-1.5
-                                                font-extrabold
-                                                text-[#504b5b]
-                                            "
-                                        >
+                                        <p className="font-bold">
+
                                             {
                                                 ticket
                                                     .counter
                                                     ?.name ||
                                                 "Not assigned"
                                             }
+
                                         </p>
 
                                     </div>
 
 
-                                    <div
-                                        className="
-                                            rounded-[18px]
-                                            bg-white/52
-                                            p-4
-                                        "
-                                    >
+                                    <div>
 
-                                        <p
-                                            className="
-                                                text-xs
-                                                font-bold
-                                                uppercase
-                                                tracking-[0.09em]
-                                                text-[#8b8594]
-                                            "
-                                        >
-                                            Estimated wait
+                                        <p className="text-[#81798b]">
+                                            Wait
                                         </p>
 
-                                        <p
-                                            className="
-                                                mt-1.5
-                                                font-extrabold
-                                                text-[#504b5b]
-                                            "
-                                        >
+                                        <p className="font-bold">
                                             {
                                                 showEstimatedWait(
                                                     ticket
@@ -941,74 +541,14 @@ export default function CustomerTicketsPage() {
 
                                     </div>
 
-
-                                    <div
-                                        className="
-                                            rounded-[18px]
-                                            bg-white/52
-                                            p-4
-                                        "
-                                    >
-
-                                        <p
-                                            className="
-                                                text-xs
-                                                font-bold
-                                                uppercase
-                                                tracking-[0.09em]
-                                                text-[#8b8594]
-                                            "
-                                        >
-                                            Issued
-                                        </p>
-
-                                        <p
-                                            className="
-                                                mt-1.5
-                                                text-xs
-                                                font-bold
-                                                leading-5
-                                                text-[#5e5967]
-                                            "
-                                        >
-                                            {
-                                                new Date(
-                                                    ticket
-                                                        .issuedAt
-                                                )
-                                                    .toLocaleString()
-                                            }
-                                        </p>
-
-                                    </div>
-
                                 </div>
 
 
-                                <div
-                                    className="
-                                        relative
-                                        mt-5
-                                        flex
-                                        flex-col
-                                        gap-2
-                                        sm:flex-row
-                                    "
-                                >
+                                <div className="mt-5 flex gap-2">
 
                                     <button
                                         type="button"
-                                        className="
-                                            sqms-secondary-button
-                                            min-h-11
-                                            flex-1
-                                            rounded-full
-                                            px-4
-                                            py-2.5
-                                            text-sm
-                                            font-bold
-                                            transition
-                                        "
+                                        className="sq-secondary flex-1"
                                         onClick={
                                             () =>
                                                 setSelectedTicket(
@@ -1016,30 +556,16 @@ export default function CustomerTicketsPage() {
                                                 )
                                         }
                                     >
-                                        View details
+                                        Details
                                     </button>
 
 
                                     {
                                         ticket.status ==
-                                        "waiting" &&
+                                            "waiting" &&
                                         <button
                                             type="button"
-                                            className="
-                                                min-h-11
-                                                flex-1
-                                                rounded-full
-                                                border
-                                                border-[#e6bfc9]
-                                                bg-[#fce4ec]
-                                                px-4
-                                                py-2.5
-                                                text-sm
-                                                font-bold
-                                                text-[#8a4c5f]
-                                                transition
-                                                hover:bg-[#f8d7e1]
-                                            "
+                                            className="flex-1 rounded-full border border-[#e4bcc8] bg-[#f9e1e9] px-4 py-2.5 text-sm font-bold text-[#805165]"
                                             onClick={
                                                 () =>
                                                     cancelTicket(
@@ -1047,7 +573,7 @@ export default function CustomerTicketsPage() {
                                                     )
                                             }
                                         >
-                                            Cancel ticket
+                                            Cancel
                                         </button>
                                     }
 
@@ -1062,54 +588,28 @@ export default function CustomerTicketsPage() {
 
 
             {
-                selectedTicket &&
-                <section
-                    className="
-                        sqms-glass
-                        mt-8
-                        overflow-hidden
-                        rounded-[30px]
-                    "
-                >
+                filteredTickets.length ==
+                    0 &&
+                !err &&
+                <div className="sq-panel sq-lavender p-6 text-center font-semibold">
+                    No tickets found.
+                </div>
+            }
 
-                    <div
-                        className="
-                            flex
-                            items-start
-                            justify-between
-                            gap-4
-                            border-b
-                            border-[#e8e1ef]
-                            bg-[linear-gradient(90deg,#f1ecff,#fff0e9)]
-                            px-5
-                            py-5
-                            sm:px-6
-                        "
-                    >
+
+            {
+                selectedTicket &&
+                <section className="sq-panel mt-7 p-5 sm:p-6">
+
+                    <div className="flex items-start justify-between gap-4">
 
                         <div>
 
-                            <p
-                                className="
-                                    text-xs
-                                    font-extrabold
-                                    uppercase
-                                    tracking-[0.13em]
-                                    text-[#847b98]
-                                "
-                            >
+                            <p className="text-sm text-[#81798b]">
                                 Ticket details
                             </p>
 
-                            <h2
-                                className="
-                                    mt-1
-                                    text-2xl
-                                    font-black
-                                    tracking-[-0.04em]
-                                    text-[#423e50]
-                                "
-                            >
+                            <h2 className="text-2xl font-bold">
                                 {
                                     selectedTicket
                                         .ticketNumber
@@ -1121,15 +621,7 @@ export default function CustomerTicketsPage() {
 
                         <button
                             type="button"
-                            className="
-                                sqms-secondary-button
-                                rounded-full
-                                px-4
-                                py-2
-                                text-sm
-                                font-bold
-                                transition
-                            "
+                            className="sq-secondary"
                             onClick={
                                 () =>
                                     setSelectedTicket(
@@ -1143,38 +635,15 @@ export default function CustomerTicketsPage() {
                     </div>
 
 
-                    <div
-                        className="
-                            grid
-                            gap-3
-                            p-5
-                            sm:grid-cols-2
-                            sm:p-6
-                            lg:grid-cols-3
-                        "
-                    >
+                    <div className="mt-5 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
 
-                        <div
-                            className="
-                                rounded-[18px]
-                                bg-[#f5f0fb]
-                                p-4
-                            "
-                        >
+                        <div>
 
-                            <p
-                                className="
-                                    text-xs
-                                    font-bold
-                                    uppercase
-                                    tracking-[0.09em]
-                                    text-[#8b8496]
-                                "
-                            >
+                            <p className="text-[#81798b]">
                                 Status
                             </p>
 
-                            <div className="mt-2">
+                            <div className="mt-1">
 
                                 <StatusBadge
                                     status={
@@ -1188,209 +657,29 @@ export default function CustomerTicketsPage() {
                         </div>
 
 
-                        <div
-                            className="
-                                rounded-[18px]
-                                bg-[#fff0e8]
-                                p-4
-                            "
-                        >
-                            <p
-                                className="
-                                    text-xs
-                                    font-bold
-                                    uppercase
-                                    tracking-[0.09em]
-                                    text-[#99796a]
-                                "
-                            >
-                                Service
-                            </p>
+                        <div>
 
-                            <p
-                                className="
-                                    mt-1.5
-                                    font-extrabold
-                                    text-[#5b4b45]
-                                "
-                            >
-                                {
-                                    selectedTicket
-                                        .service
-                                        ?.name
-                                }
-                            </p>
-                        </div>
-
-
-                        <div
-                            className="
-                                rounded-[18px]
-                                bg-[#eaf7f1]
-                                p-4
-                            "
-                        >
-                            <p
-                                className="
-                                    text-xs
-                                    font-bold
-                                    uppercase
-                                    tracking-[0.09em]
-                                    text-[#668477]
-                                "
-                            >
-                                Queue
-                            </p>
-
-                            <p
-                                className="
-                                    mt-1.5
-                                    font-extrabold
-                                    text-[#466156]
-                                "
-                            >
-                                {
-                                    selectedTicket
-                                        .queue
-                                        ?.name
-                                }
-                            </p>
-                        </div>
-
-
-                        <div
-                            className="
-                                rounded-[18px]
-                                bg-[#fff6d9]
-                                p-4
-                            "
-                        >
-                            <p
-                                className="
-                                    text-xs
-                                    font-bold
-                                    uppercase
-                                    tracking-[0.09em]
-                                    text-[#8d7740]
-                                "
-                            >
+                            <p className="text-[#81798b]">
                                 Priority
                             </p>
 
-                            <p
-                                className="
-                                    mt-1.5
-                                    font-extrabold
-                                    capitalize
-                                    text-[#665526]
-                                "
-                            >
+                            <p className="font-bold capitalize">
                                 {
                                     selectedTicket
                                         .priority
                                 }
                             </p>
+
                         </div>
 
 
-                        <div
-                            className="
-                                rounded-[18px]
-                                bg-[#edf5ff]
-                                p-4
-                            "
-                        >
-                            <p
-                                className="
-                                    text-xs
-                                    font-bold
-                                    uppercase
-                                    tracking-[0.09em]
-                                    text-[#7289a4]
-                                "
-                            >
-                                Estimated wait
+                        <div>
+
+                            <p className="text-[#81798b]">
+                                Issued
                             </p>
 
-                            <p
-                                className="
-                                    mt-1.5
-                                    font-extrabold
-                                    text-[#4c6684]
-                                "
-                            >
-                                {
-                                    showEstimatedWait(
-                                        selectedTicket
-                                    )
-                                }
-                            </p>
-                        </div>
-
-
-                        <div
-                            className="
-                                rounded-[18px]
-                                bg-[#f8edf1]
-                                p-4
-                            "
-                        >
-                            <p
-                                className="
-                                    text-xs
-                                    font-bold
-                                    uppercase
-                                    tracking-[0.09em]
-                                    text-[#91727c]
-                                "
-                            >
-                                Counter
-                            </p>
-
-                            <p
-                                className="
-                                    mt-1.5
-                                    font-extrabold
-                                    text-[#655159]
-                                "
-                            >
-                                {
-                                    selectedTicket
-                                        .counter
-                                        ?.name ||
-                                    "Not assigned"
-                                }
-                            </p>
-                        </div>
-
-
-                        <div
-                            className="
-                                rounded-[18px]
-                                bg-white/75
-                                p-4
-                            "
-                        >
-                            <p
-                                className="
-                                    text-xs
-                                    font-bold
-                                    uppercase
-                                    tracking-[0.09em]
-                                    text-[#8b8496]
-                                "
-                            >
-                                Issued at
-                            </p>
-
-                            <p
-                                className="
-                                    mt-1.5
-                                    text-sm
-                                    font-bold
-                                    text-[#5c5765]
-                                "
-                            >
+                            <p className="font-bold">
                                 {
                                     new Date(
                                         selectedTicket
@@ -1399,36 +688,18 @@ export default function CustomerTicketsPage() {
                                         .toLocaleString()
                                 }
                             </p>
+
                         </div>
 
 
-                        <div
-                            className="
-                                rounded-[18px]
-                                bg-white/75
-                                p-4
-                            "
-                        >
-                            <p
-                                className="
-                                    text-xs
-                                    font-bold
-                                    uppercase
-                                    tracking-[0.09em]
-                                    text-[#8b8496]
-                                "
-                            >
-                                Called at
+                        <div>
+
+                            <p className="text-[#81798b]">
+                                Called
                             </p>
 
-                            <p
-                                className="
-                                    mt-1.5
-                                    text-sm
-                                    font-bold
-                                    text-[#5c5765]
-                                "
-                            >
+                            <p className="font-bold">
+
                                 {
                                     selectedTicket
                                         .calledAt
@@ -1439,37 +710,20 @@ export default function CustomerTicketsPage() {
                                             .toLocaleString()
                                         : "-"
                                 }
+
                             </p>
+
                         </div>
 
 
-                        <div
-                            className="
-                                rounded-[18px]
-                                bg-white/75
-                                p-4
-                            "
-                        >
-                            <p
-                                className="
-                                    text-xs
-                                    font-bold
-                                    uppercase
-                                    tracking-[0.09em]
-                                    text-[#8b8496]
-                                "
-                            >
-                                Completed at
+                        <div>
+
+                            <p className="text-[#81798b]">
+                                Completed
                             </p>
 
-                            <p
-                                className="
-                                    mt-1.5
-                                    text-sm
-                                    font-bold
-                                    text-[#5c5765]
-                                "
-                            >
+                            <p className="font-bold">
+
                                 {
                                     selectedTicket
                                         .completedAt
@@ -1480,7 +734,9 @@ export default function CustomerTicketsPage() {
                                             .toLocaleString()
                                         : "-"
                                 }
+
                             </p>
+
                         </div>
 
                     </div>

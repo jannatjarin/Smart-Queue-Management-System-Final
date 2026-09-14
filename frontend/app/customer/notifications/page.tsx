@@ -208,7 +208,7 @@ export default function NotificationsPage() {
 
                 <div
                     className="
-                        sqms-glass
+                        sq-panel
                         flex
                         items-center
                         gap-3
@@ -286,14 +286,14 @@ export default function NotificationsPage() {
 
                 <div className="relative">
 
-                    <p className="sqms-eyebrow">
+                    <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[#8a7ea7]">
                         Nothing important gets lost
                     </p>
 
 
                     <h1
                         className="
-                            sqms-title
+                            sq-title
                             mt-1
                             text-4xl
                             sm:text-5xl
@@ -469,7 +469,7 @@ export default function NotificationsPage() {
 
                                 <div
                                     className="
-                                        sqms-card
+                                        sq-card
                                         rounded-[26px]
                                         p-5
                                         transition

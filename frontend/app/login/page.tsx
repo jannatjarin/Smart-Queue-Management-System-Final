@@ -11,6 +11,7 @@ import axios from "axios";
 import {
     useRouter,
 } from "next/navigation";
+import Link from "next/link";
 
 import api from "@/lib/axios";
 
@@ -230,6 +231,15 @@ export default function LoginPage() {
                                 value={formData.pass}
                                 required
                             />
+
+                            <div className="mt-2 text-right">
+                                <Link
+                                    href="/forgot-password"
+                                    className="text-sm font-bold text-[#6b5b95] hover:underline"
+                                >
+                                    Forgot password?
+                                </Link>
+                            </div>
 
 
                             <input
