@@ -2,138 +2,72 @@ interface StatusBadgeProps {
     status: string;
 }
 
+export default function StatusBadge({
+    status,
+}: StatusBadgeProps) {
+    const normalizedStatus = status.toLowerCase();
 
-export default function StatusBadge(
-    {
-        status,
-    }: StatusBadgeProps
-) {
-
-    const normalizedStatus =
-        status.toLowerCase();
-
-
-    const styles:
-        Record<
-            string,
-            string
-        > =
-    {
+    const styles: Record<string, string> = {
         waiting:
-            "border-[#ead79b] bg-[#fff3cd] text-[#775b17]",
+            "border-[#e1c86c] bg-[#f7e49a] text-[#705b1e]",
 
         called:
-            "border-[#cddcf1] bg-[#e6f1ff] text-[#3e6189]",
+            "border-[#abcadb] bg-[#dcebf3] text-[#3d6275]",
 
         completed:
-            "border-[#c8e7d8] bg-[#e2f5ec] text-[#35664f]",
+            "border-[#b5ceb2] bg-[#dcebd8] text-[#3f6542]",
 
         cancelled:
-            "border-[#edcbd5] bg-[#fce4ec] text-[#8a4c5f]",
+            "border-[#deb1b5] bg-[#f4d5d7] text-[#82464b]",
 
         open:
-            "border-[#c8e7d8] bg-[#e2f5ec] text-[#35664f]",
+            "border-[#b5ceb2] bg-[#dcebd8] text-[#3f6542]",
 
         closed:
-            "border-[#ddd7e5] bg-[#f0edf4] text-[#686274]",
+            "border-[#cdc4ba] bg-[#e8e1d8] text-[#665e57]",
 
         on_break:
-            "border-[#ead79b] bg-[#fff3cd] text-[#775b17]",
+            "border-[#e1c86c] bg-[#f7e49a] text-[#705b1e]",
 
         sent:
-            "border-[#d7ceef] bg-[#ece7ff] text-[#5d5488]",
+            "border-[#abcadb] bg-[#dcebf3] text-[#3d6275]",
     };
 
-
-    const dotStyles:
-        Record<
-            string,
-            string
-        > =
-    {
-        waiting:
-            "bg-[#d3a93e]",
-
-        called:
-            "bg-[#6e9dd0]",
-
-        completed:
-            "bg-[#67a982]",
-
-        cancelled:
-            "bg-[#c9788f]",
-
-        open:
-            "bg-[#67a982]",
-
-        closed:
-            "bg-[#918a99]",
-
-        on_break:
-            "bg-[#d3a93e]",
-
-        sent:
-            "bg-[#8b7ebd]",
+    const dotStyles: Record<string, string> = {
+        waiting: "bg-[#c49d29]",
+        called: "bg-[#689ab3]",
+        completed: "bg-[#69936b]",
+        cancelled: "bg-[#bd6970]",
+        open: "bg-[#69936b]",
+        closed: "bg-[#847b73]",
+        on_break: "bg-[#c49d29]",
+        sent: "bg-[#689ab3]",
     };
 
-
-    const label =
-        status
-            .replaceAll(
-                "_",
-                " "
-            )
-            .replace(
-                /\b\w/g,
-                (
-                    letter
-                ) =>
-                    letter
-                        .toUpperCase()
-            );
-
+    const label = status
+        .replaceAll("_", " ")
+        .replace(
+            /\b\w/g,
+            (letter) =>
+                letter.toUpperCase()
+        );
 
     return (
         <span
-            className={`
-                inline-flex
-                w-fit
-                items-center
-                gap-1.5
-                rounded-full
-                border
-                px-3
-                py-1.5
-                text-xs
-                font-bold
-                ${
-                    styles[
-                        normalizedStatus
-                    ] ||
-                    "border-[#ddd7e5] bg-[#f5f2f7] text-[#686274]"
-                }
-            `}
+            className={`inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold ${
+                styles[normalizedStatus] ||
+                "border-[#cdc4ba] bg-[#eee7de] text-[#665e57]"
+            }`}
         >
-
             <span
-                className={`
-                    h-1.5
-                    w-1.5
-                    rounded-full
-                    ${
-                        dotStyles[
-                            normalizedStatus
-                        ] ||
-                        "bg-[#918a99]"
-                    }
-                `}
+                className={`h-2 w-2 rounded-full ${
+                    dotStyles[normalizedStatus] ||
+                    "bg-[#847b73]"
+                }`}
                 aria-hidden="true"
             />
 
-
             {label}
-
         </span>
     );
-
 }

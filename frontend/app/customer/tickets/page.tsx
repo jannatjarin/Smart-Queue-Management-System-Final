@@ -1,22 +1,13 @@
 "use client";
 
-import {
-    useEffect,
-    useState,
-} from "react";
-
+import { useEffect, useState } from "react";
 import axios from "axios";
-
 import Link from "next/link";
 
 import api from "@/lib/axios";
-
-import StatusBadge from
-    "@/components/ui/StatusBadge";
-
+import StatusBadge from "@/components/ui/StatusBadge";
 
 interface Ticket {
-
     id: number;
     ticketNumber: string;
     status: string;
@@ -24,9 +15,7 @@ interface Ticket {
     issuedAt: string;
     calledAt: string | null;
     completedAt: string | null;
-
-    estimatedWaitMinutes:
-        number | null;
+    estimatedWaitMinutes: number | null;
 
     service: {
         id: number;
@@ -42,365 +31,213 @@ interface Ticket {
         id: number;
         name: string;
     } | null;
-
 }
 
-
 export default function CustomerTicketsPage() {
+    const [tickets, setTickets] =
+        useState<Ticket[]>([]);
 
-    const [
-        tickets,
-        setTickets
-    ] =
-        useState<Ticket[]>(
-            []
-        );
-
-
-    const [
-        err,
-        setErr
-    ] =
+    const [err, setErr] =
         useState("");
 
-
-    const [
-        status,
-        setStatus
-    ] =
+    const [status, setStatus] =
         useState("");
 
+    const [selectedTicket, setSelectedTicket] =
+        useState<Ticket | null>(null);
 
-    const [
-        selectedTicket,
-        setSelectedTicket
-    ] =
-        useState<Ticket | null>(
-            null
-        );
-
-
-    const [
-        refresh,
-        setRefresh
-    ] =
+    const [refresh, setRefresh] =
         useState(0);
 
-
-    const [
-        responseMsg,
-        setResponseMsg
-    ] =
+    const [responseMsg, setResponseMsg] =
         useState("");
 
+    useEffect(() => {
+        const getTickets = async () => {
+            try {
+                const response =
+                    await api.get<Ticket[]>(
+                        "/tickets/mytickets"
+                    );
 
-    useEffect(
-        () => {
+                setTickets(response.data);
+                setErr("");
+            } catch (error) {
+                if (
+                    axios.isAxiosError(error) &&
+                    error.response?.data?.message
+                ) {
+                    setErr(
+                        error.response.data.message
+                    );
+                } else {
+                    setErr(
+                        "Could not load tickets"
+                    );
+                }
+            }
+        };
 
-            const getTickets =
-                async () => {
-
-                    try {
-
-                        const response =
-                            await api.get<Ticket[]>(
-                                "/tickets/mytickets"
-                            );
-
-
-                        setTickets(
-                            response.data
-                        );
-
-                        setErr("");
-
-                    }
-
-                    catch (error) {
-
-                        if (
-                            axios.isAxiosError(
-                                error
-                            ) &&
-                            error.response
-                                ?.data
-                                ?.message
-                        ) {
-
-                            setErr(
-                                error.response
-                                    .data
-                                    .message
-                            );
-
-                        }
-
-                        else {
-
-                            setErr(
-                                "Could not load tickets"
-                            );
-
-                        }
-
-                    }
-
-                };
-
-
-            getTickets();
-
-        },
-        [
-            refresh,
-        ]
-    );
-
+        getTickets();
+    }, [refresh]);
 
     const filteredTickets =
         status
             ? tickets.filter(
-                (
-                    ticket
-                ) =>
+                (ticket) =>
                     ticket.status ==
                     status
             )
             : tickets;
 
+    const cancelTicket = async (
+        id: number
+    ) => {
+        setErr("");
+        setResponseMsg("");
 
-    const cancelTicket =
-        async (
-            id:
-                number
-        ) => {
+        try {
+            await api.patch(
+                `/tickets/${id}/cancel`,
+                {}
+            );
 
-            setErr("");
+            setResponseMsg(
+                "Ticket cancelled successfully"
+            );
 
-            setResponseMsg("");
+            setSelectedTicket(null);
 
-
-            try {
-
-                await api.patch(
-                    `/tickets/${id}/cancel`,
-                    {}
+            setRefresh(
+                (value) =>
+                    value + 1
+            );
+        } catch (error) {
+            if (
+                axios.isAxiosError(error) &&
+                error.response?.data?.message
+            ) {
+                setErr(
+                    error.response.data.message
                 );
-
-
-                setResponseMsg(
-                    "Ticket cancelled successfully"
+            } else {
+                setErr(
+                    "Could not cancel ticket"
                 );
-
-
-                setSelectedTicket(
-                    null
-                );
-
-
-                setRefresh(
-                    (
-                        value
-                    ) =>
-                        value +
-                        1
-                );
-
             }
+        }
+    };
 
-            catch (error) {
+    const showEstimatedWait = (
+        ticket: Ticket
+    ) => {
+        if (
+            ticket.status !=
+            "waiting"
+        ) {
+            return "-";
+        }
 
-                if (
-                    axios.isAxiosError(
-                        error
-                    ) &&
-                    error.response
-                        ?.data
-                        ?.message
-                ) {
+        if (
+            ticket
+                .estimatedWaitMinutes ===
+            null
+        ) {
+            return "Not available";
+        }
 
-                    setErr(
-                        error.response
-                            .data
-                            .message
-                    );
+        return `${ticket.estimatedWaitMinutes} min`;
+    };
 
-                }
+    const toneForStatus = (
+        ticketStatus: string
+    ) => {
+        if (
+            ticketStatus ==
+            "waiting"
+        ) {
+            return "border-[#dfc969] bg-[#f8e8a6]";
+        }
 
-                else {
+        if (
+            ticketStatus ==
+            "called"
+        ) {
+            return "border-[#b8ceda] bg-[#deedf5]";
+        }
 
-                    setErr(
-                        "Could not cancel ticket"
-                    );
+        if (
+            ticketStatus ==
+            "completed"
+        ) {
+            return "border-[#b9d0b6] bg-[#dfeedd]";
+        }
 
-                }
+        if (
+            ticketStatus ==
+            "cancelled"
+        ) {
+            return "border-[#e0b7ba] bg-[#f4d8da]";
+        }
 
-            }
-
-        };
-
-
-    const showEstimatedWait =
-        (
-            ticket:
-                Ticket
-        ) => {
-
-            if (
-                ticket.status !=
-                "waiting"
-            ) {
-
-                return "-";
-
-            }
-
-
-            if (
-                ticket
-                    .estimatedWaitMinutes ===
-                null
-            ) {
-
-                return "Not available";
-
-            }
-
-
-            return `${ticket.estimatedWaitMinutes} min`;
-
-        };
-
-
-    const toneForStatus =
-        (
-            ticketStatus:
-                string
-        ) => {
-
-            if (
-                ticketStatus ==
-                "waiting"
-            ) {
-
-                return "sq-butter";
-
-            }
-
-
-            if (
-                ticketStatus ==
-                "called"
-            ) {
-
-                return "sq-blue";
-
-            }
-
-
-            if (
-                ticketStatus ==
-                "completed"
-            ) {
-
-                return "sq-mint";
-
-            }
-
-
-            if (
-                ticketStatus ==
-                "cancelled"
-            ) {
-
-                return "sq-pink";
-
-            }
-
-
-            return "sq-lavender";
-
-        };
-
+        return "border-[#d7c8b6] bg-[#fff8ea]";
+    };
 
     return (
-        <div className="sq-page">
-
+        <div className="mx-auto max-w-6xl py-8 sm:py-10">
             <header className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-
                 <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8f3d27]">
+                        Your queue history
+                    </p>
 
-                    <h1 className="sq-title">
+                    <h1 className="mt-1 text-4xl font-bold text-[#332c26]">
                         My tickets
                     </h1>
 
-                    <p className="sq-subtitle">
+                    <p className="mt-2 text-sm text-[#746960]">
                         Track current and previous tickets.
                     </p>
-
                 </div>
-
 
                 <Link
                     href="/customer/queues"
-                    className="sq-primary"
+                    className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#5d7d5f] px-5 text-sm font-bold text-white transition hover:bg-[#4e6c50]"
                 >
                     Get a ticket
                 </Link>
-
             </header>
 
-
-            {
-                responseMsg &&
-                <div className="alert alert-success mb-5">
-
-                    <span>
-                        {responseMsg}
-                    </span>
-
+            {responseMsg && (
+                <div className="mb-5 rounded-[18px] border border-[#b6ceb2] bg-[#dcebd8] px-4 py-3 text-sm font-bold text-[#416343]">
+                    {responseMsg}
                 </div>
-            }
+            )}
 
-
-            {
-                err &&
-                <div className="alert alert-error mb-5">
-
-                    <span>
-                        {err}
-                    </span>
-
+            {err && (
+                <div className="mb-5 rounded-[18px] border border-[#dfb4b7] bg-[#f4d5d7] px-4 py-3 text-sm font-bold text-[#82464b]">
+                    {err}
                 </div>
-            }
+            )}
 
-
-            <div className="sq-panel mb-6 p-4 sm:max-w-sm">
-
+            <section className="mb-6 max-w-sm rounded-[22px] border border-[#d5c4b0] bg-[#fffaf0] p-4">
                 <label
                     htmlFor="statusFilter"
-                    className="sq-label"
+                    className="mb-2 block text-sm font-bold text-[#574d44]"
                 >
                     Status
                 </label>
 
                 <select
                     id="statusFilter"
-                    className="select w-full"
-                    value={
-                        status
-                    }
-                    onChange={
-                        (
-                            e
-                        ) =>
-                            setStatus(
-                                e.target
-                                    .value
-                            )
+                    className="select w-full border-[#cabaa7] bg-[#fffdf8] text-[#443b34]"
+                    value={status}
+                    onChange={(e) =>
+                        setStatus(
+                            e.target.value
+                        )
                     }
                 >
-
                     <option value="">
                         All tickets
                     </option>
@@ -420,331 +257,271 @@ export default function CustomerTicketsPage() {
                     <option value="cancelled">
                         Cancelled
                     </option>
-
                 </select>
-
-            </div>
-
+            </section>
 
             <div className="grid gap-4 md:grid-cols-2">
+                {filteredTickets.map(
+                    (ticket) => (
+                        <article
+                            key={ticket.id}
+                            className={`rounded-[24px] border p-5 ${toneForStatus(
+                                ticket.status
+                            )}`}
+                        >
+                            <div className="flex items-start justify-between gap-4">
+                                <div>
+                                    <p className="text-sm font-semibold text-[#766c63]">
+                                        Ticket
+                                    </p>
 
-                {
-                    filteredTickets.map(
-                        (
-                            ticket
-                        ) => (
-                            <article
-                                key={
-                                    ticket.id
-                                }
-                                className={`sq-panel ${toneForStatus(
-                                    ticket.status
-                                )} p-5`}
-                            >
-
-                                <div className="flex items-start justify-between gap-4">
-
-                                    <div>
-
-                                        <p className="text-sm font-semibold text-[#81798b]">
-                                            Ticket
-                                        </p>
-
-                                        <h2 className="text-3xl font-black">
-                                            {
-                                                ticket
-                                                    .ticketNumber
-                                            }
-                                        </h2>
-
-                                    </div>
-
-
-                                    <StatusBadge
-                                        status={
-                                            ticket.status
+                                    <h2 className="mt-1 text-3xl font-black text-[#40372f]">
+                                        {
+                                            ticket
+                                                .ticketNumber
                                         }
-                                    />
-
+                                    </h2>
                                 </div>
 
+                                <StatusBadge
+                                    status={
+                                        ticket.status
+                                    }
+                                />
+                            </div>
 
-                                <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                            <div className="mt-5 grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p className="text-[#7d7269]">
+                                        Service
+                                    </p>
 
-                                    <div>
-
-                                        <p className="text-[#81798b]">
-                                            Service
-                                        </p>
-
-                                        <p className="font-bold">
-                                            {
-                                                ticket
-                                                    .service
-                                                    ?.name
-                                            }
-                                        </p>
-
-                                    </div>
-
-
-                                    <div>
-
-                                        <p className="text-[#81798b]">
-                                            Queue
-                                        </p>
-
-                                        <p className="font-bold">
-                                            {
-                                                ticket
-                                                    .queue
-                                                    ?.name
-                                            }
-                                        </p>
-
-                                    </div>
-
-
-                                    <div>
-
-                                        <p className="text-[#81798b]">
-                                            Counter
-                                        </p>
-
-                                        <p className="font-bold">
-
-                                            {
-                                                ticket
-                                                    .counter
-                                                    ?.name ||
-                                                "Not assigned"
-                                            }
-
-                                        </p>
-
-                                    </div>
-
-
-                                    <div>
-
-                                        <p className="text-[#81798b]">
-                                            Wait
-                                        </p>
-
-                                        <p className="font-bold">
-                                            {
-                                                showEstimatedWait(
-                                                    ticket
-                                                )
-                                            }
-                                        </p>
-
-                                    </div>
-
+                                    <p className="mt-1 font-bold text-[#433a33]">
+                                        {
+                                            ticket
+                                                .service
+                                                ?.name
+                                        }
+                                    </p>
                                 </div>
 
+                                <div>
+                                    <p className="text-[#7d7269]">
+                                        Queue
+                                    </p>
 
-                                <div className="mt-5 flex gap-2">
+                                    <p className="mt-1 font-bold text-[#433a33]">
+                                        {
+                                            ticket
+                                                .queue
+                                                ?.name
+                                        }
+                                    </p>
+                                </div>
 
+                                <div>
+                                    <p className="text-[#7d7269]">
+                                        Counter
+                                    </p>
+
+                                    <p className="mt-1 font-bold text-[#433a33]">
+                                        {
+                                            ticket
+                                                .counter
+                                                ?.name ||
+                                            "Not assigned"
+                                        }
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <p className="text-[#7d7269]">
+                                        Wait
+                                    </p>
+
+                                    <p className="mt-1 font-bold text-[#433a33]">
+                                        {
+                                            showEstimatedWait(
+                                                ticket
+                                            )
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="mt-5 flex gap-2">
+                                <button
+                                    type="button"
+                                    className="min-h-11 flex-1 rounded-full border border-[#bba996] bg-[#fffaf0] px-4 text-sm font-bold text-[#63564b] transition hover:border-[#8f3d27] hover:text-[#8f3d27]"
+                                    onClick={() =>
+                                        setSelectedTicket(
+                                            ticket
+                                        )
+                                    }
+                                >
+                                    Details
+                                </button>
+
+                                {ticket.status ==
+                                    "waiting" && (
                                     <button
                                         type="button"
-                                        className="sq-secondary flex-1"
-                                        onClick={
-                                            () =>
-                                                setSelectedTicket(
-                                                    ticket
-                                                )
+                                        className="min-h-11 flex-1 rounded-full border border-[#c98287] bg-[#b85c62] px-4 text-sm font-bold text-white transition hover:bg-[#a64d53]"
+                                        onClick={() =>
+                                            cancelTicket(
+                                                ticket.id
+                                            )
                                         }
                                     >
-                                        Details
+                                        Cancel
                                     </button>
-
-
-                                    {
-                                        ticket.status ==
-                                            "waiting" &&
-                                        <button
-                                            type="button"
-                                            className="flex-1 rounded-full border border-[#e4bcc8] bg-[#f9e1e9] px-4 py-2.5 text-sm font-bold text-[#805165]"
-                                            onClick={
-                                                () =>
-                                                    cancelTicket(
-                                                        ticket.id
-                                                    )
-                                            }
-                                        >
-                                            Cancel
-                                        </button>
-                                    }
-
-                                </div>
-
-                            </article>
-                        )
+                                )}
+                            </div>
+                        </article>
                     )
-                }
-
+                )}
             </div>
 
+            {filteredTickets.length ==
+                0 &&
+                !err && (
+                    <div className="rounded-[24px] border border-dashed border-[#cdbba7] bg-[#fffaf0] p-8 text-center">
+                        <p className="font-bold text-[#4b423a]">
+                            No tickets found.
+                        </p>
+                    </div>
+                )}
 
-            {
-                filteredTickets.length ==
-                    0 &&
-                !err &&
-                <div className="sq-panel sq-lavender p-6 text-center font-semibold">
-                    No tickets found.
-                </div>
-            }
-
-
-            {
-                selectedTicket &&
-                <section className="sq-panel mt-7 p-5 sm:p-6">
-
+            {selectedTicket && (
+                <section className="mt-7 rounded-[26px] border border-[#d5c4b0] bg-[#fffaf0] p-5 sm:p-6">
                     <div className="flex items-start justify-between gap-4">
-
                         <div>
-
-                            <p className="text-sm text-[#81798b]">
+                            <p className="text-sm text-[#7d7269]">
                                 Ticket details
                             </p>
 
-                            <h2 className="text-2xl font-bold">
+                            <h2 className="mt-1 text-3xl font-bold text-[#40372f]">
                                 {
                                     selectedTicket
                                         .ticketNumber
                                 }
                             </h2>
-
                         </div>
-
 
                         <button
                             type="button"
-                            className="sq-secondary"
-                            onClick={
-                                () =>
-                                    setSelectedTicket(
-                                        null
-                                    )
+                            className="rounded-full border border-[#bba996] bg-white px-4 py-2 text-sm font-bold text-[#63564b] transition hover:border-[#8f3d27] hover:text-[#8f3d27]"
+                            onClick={() =>
+                                setSelectedTicket(
+                                    null
+                                )
                             }
                         >
                             Close
                         </button>
-
                     </div>
 
-
-                    <div className="mt-5 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
-
+                    <div className="mt-6 grid gap-5 text-sm sm:grid-cols-2 lg:grid-cols-3">
                         <div>
-
-                            <p className="text-[#81798b]">
+                            <p className="text-[#81766d]">
                                 Status
                             </p>
 
                             <div className="mt-1">
-
                                 <StatusBadge
                                     status={
                                         selectedTicket
                                             .status
                                     }
                                 />
-
                             </div>
-
                         </div>
 
-
                         <div>
-
-                            <p className="text-[#81798b]">
+                            <p className="text-[#81766d]">
                                 Priority
                             </p>
 
-                            <p className="font-bold capitalize">
+                            <p className="mt-1 font-bold capitalize">
                                 {
                                     selectedTicket
                                         .priority
                                 }
                             </p>
-
                         </div>
 
+                        <div>
+                            <p className="text-[#81766d]">
+                                Service
+                            </p>
+
+                            <p className="mt-1 font-bold">
+                                {
+                                    selectedTicket
+                                        .service
+                                        .name
+                                }
+                            </p>
+                        </div>
 
                         <div>
+                            <p className="text-[#81766d]">
+                                Queue
+                            </p>
 
-                            <p className="text-[#81798b]">
+                            <p className="mt-1 font-bold">
+                                {
+                                    selectedTicket
+                                        .queue
+                                        .name
+                                }
+                            </p>
+                        </div>
+
+                        <div>
+                            <p className="text-[#81766d]">
                                 Issued
                             </p>
 
-                            <p className="font-bold">
-                                {
-                                    new Date(
-                                        selectedTicket
-                                            .issuedAt
-                                    )
-                                        .toLocaleString()
-                                }
+                            <p className="mt-1 font-bold">
+                                {new Date(
+                                    selectedTicket
+                                        .issuedAt
+                                ).toLocaleString()}
                             </p>
-
                         </div>
 
-
                         <div>
-
-                            <p className="text-[#81798b]">
+                            <p className="text-[#81766d]">
                                 Called
                             </p>
 
-                            <p className="font-bold">
-
-                                {
-                                    selectedTicket
-                                        .calledAt
-                                        ? new Date(
-                                            selectedTicket
-                                                .calledAt
-                                        )
-                                            .toLocaleString()
-                                        : "-"
-                                }
-
+                            <p className="mt-1 font-bold">
+                                {selectedTicket.calledAt
+                                    ? new Date(
+                                        selectedTicket.calledAt
+                                    ).toLocaleString()
+                                    : "-"}
                             </p>
-
                         </div>
 
-
                         <div>
-
-                            <p className="text-[#81798b]">
+                            <p className="text-[#81766d]">
                                 Completed
                             </p>
 
-                            <p className="font-bold">
-
-                                {
-                                    selectedTicket
-                                        .completedAt
-                                        ? new Date(
-                                            selectedTicket
-                                                .completedAt
-                                        )
-                                            .toLocaleString()
-                                        : "-"
-                                }
-
+                            <p className="mt-1 font-bold">
+                                {selectedTicket
+                                    .completedAt
+                                    ? new Date(
+                                        selectedTicket.completedAt
+                                    ).toLocaleString()
+                                    : "-"}
                             </p>
-
                         </div>
-
                     </div>
-
                 </section>
-            }
-
+            )}
         </div>
     );
-
 }
